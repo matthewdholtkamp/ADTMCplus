@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale-1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ADTMC+ Medic Sick Call Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -66,22 +66,11 @@
     <div class="max-w-2xl mx-auto p-4 sm:p-8">
         
         <header class="text-center mb-6">
+            <!-- Removed SVG Icon and unnecessary div wrapper -->
             <h1 class="text-3xl font-bold text-orange-500">ADTMC +</h1>
             <p class="text-lg text-gray-300">Medic Decision Support Tool</p>
         </header>
 
-        <!-- 
-        =======================================================================
-        REMOVED: API KEY SECTION
-        =======================================================================
-        -->
-
-        <!-- 
-        =======================================================================
-        REMOVED: WRAPPER FOR MAIN APP CONTENT
-        =======================================================================
-        -->
-        
         <!-- 
         =======================================================================
         IMPROVED: CRITICAL DISCLAIMER (Now collapsible)
@@ -154,6 +143,7 @@
             
             <h2 class="text-xl font-semibold mb-4">1. De-identified Chief Complaint</h2>
 
+            <!-- NEW: Error message container -->
             <div id="error-message-symptoms" class="error-box"></div>
 
             <form id="symptom-form">
@@ -179,6 +169,7 @@
             <h2 class="text-xl font-semibold mb-4">2. Guided Intake Questions</h2>
             <p class="text-sm text-gray-400 mb-4">Ask the patient these follow-up questions and record their de-identified answers.</p>
             
+            <!-- NEW: Error message container -->
             <div id="error-message-questions" class="error-box"></div>
 
             <form id="questions-form">
@@ -190,6 +181,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
                         Back
                     </button>
+                    <!-- UPDATED: Button text and function -->
                     <button type="submit" class="flex-1 btn btn-primary flex items-center justify-center">
                         Continue to History
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
@@ -207,6 +199,7 @@
             <h2 class="text-xl font-semibold mb-4">3. Patient History</h2>
             <p class="text-sm text-gray-400 mb-4">Record the patient's past medical history, allergies, and current medications.</p>
             
+            <!-- NEW: Error message container -->
             <div id="error-message-history" class="error-box"></div>
 
             <form id="history-form" class="space-y-4">
@@ -228,6 +221,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
                         Back
                     </button>
+                    <!-- NEW: This button now triggers the AI call -->
                     <button type="submit" id="history-continue-btn" class="flex-1 btn btn-primary flex items-center justify-center">
                         Finalize HPI / Generate Plan
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
@@ -243,6 +237,7 @@
         -->
         <div id="section-imaging" class="hidden bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700 mt-8">
             
+            <!-- Emergency Triage Alert -->
             <div id="emergency-alert" class="hidden bg-red-900/50 border-l-4 border-red-600 text-red-300 p-4 rounded-md mb-6" role="alert">
                 <p class="font-bold">Urgent Triage Recommendation</p>
                 <p>The AI suggests this case may be an emergency requiring immediate ER triage.</p>
@@ -294,13 +289,18 @@
                 <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                     <button type="button" id="medication-back-btn" class="flex-1 btn btn-back flex items-center justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
-                            Back
-                        </button>
+                        Back
+                    </button>
                     <button type="button" id="medication-continue-btn" class="flex-1 btn btn-primary flex items-center justify-center">
                         Proceed to Consults
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
                     </button>
                 </div>
+                <!-- 
+                =======================================================================
+                REMOVED: Alternative Med Buttons
+                =======================================================================
+                -->
             </div>
         </div>
 
@@ -324,8 +324,8 @@
             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
                 <button type="button" id="consults-back-btn" class="flex-1 btn btn-back flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
-                        Back
-                    </button>
+                    Back
+                </button>
                 <button type="button" id="consults-continue-btn" class="flex-1 btn btn-primary flex items-center justify-center">
                     Proceed to Profile
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
@@ -355,8 +355,8 @@
             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
                 <button type="button" id="profile-back-btn" class="flex-1 btn btn-back flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
-                        Back
-                    </button>
+                    Back
+                </button>
                 <button type="button" id="profile-continue-btn" class="flex-1 btn btn-primary flex items-center justify-center">
                     Generate AAR / Note
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
@@ -389,7 +389,7 @@
             <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4 mt-6">
                 <button type="button" id="note-back-btn" class="flex-1 btn btn-back flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z" clip-rule="evenodd" /></svg>
-                        Back to Profile
+                    Back to Profile
                 </button>
                 <button type="button" id="start-over-btn" class="flex-1 btn btn-secondary flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.004 14a1 1 0 01.996-.928A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 111.885-.666A5.002 5.002 0 005.004 17z" clip-rule="evenodd" /></svg>
@@ -397,8 +397,8 @@
                 </button>
             </div>
         </div>
-        
-    </div> <!-- End of main content div -->
+
+    </div>
 
     <script>
         // --- State Management ---
@@ -406,14 +406,17 @@
             chiefComplaint: "",
             questions: [],
             answers: [],
+            // NEW: History fields
             pastMedicalHistory: "",
             allergies: "",
             currentMedications: "",
+            // ---
             hpi: "",
             assessmentAndPlan: "",
             emergencyTriage: null,
             recommendedImaging: [],
             recommendedMeds: [],
+            // REMOVED: originalRecommendedMeds
             recommendedConsults: [],
             recommendedEducation: [],
             recommendedProfile: {},
@@ -427,9 +430,6 @@
         };
 
         // --- DOM Elements ---
-        
-        // REMOVED: API Key Elements
-
         const symptomForm = document.getElementById('symptom-form');
         const exampleComplaintBtn = document.getElementById('example-complaint-btn');
         const initialSymptomsEl = document.getElementById('initial-symptoms');
@@ -438,6 +438,7 @@
         const questionsContainer = document.getElementById('questions-container');
         const questionsBackBtn = document.getElementById('questions-back-btn');
 
+        // NEW: History elements
         const historyForm = document.getElementById('history-form');
         const historyBackBtn = document.getElementById('history-back-btn');
         const historyContinueBtn = document.getElementById('history-continue-btn');
@@ -454,8 +455,10 @@
 
         const medicationContinueBtn = document.getElementById('medication-continue-btn');
         const medicationBackBtn = document.getElementById('medication-back-btn');
+        // REMOVED: requestAlternativesBtn
         const medicationListContainer = document.getElementById('medication-list-container');
         const noMedsMessage = document.getElementById('no-meds-message');
+        // REMOVED: returnToOriginalMedsBtn
 
         const consultsContinueBtn = document.getElementById('consults-continue-btn');
         const consultsBackBtn = document.getElementById('consults-back-btn');
@@ -476,7 +479,7 @@
         const sections = {
             symptoms: document.getElementById('section-symptoms'),
             questions: document.getElementById('section-questions'),
-            history: document.getElementById('section-history'),
+            history: document.getElementById('section-history'), // NEW
             imaging: document.getElementById('section-imaging'),
             medication: document.getElementById('section-medication'),
             consults: document.getElementById('section-consults'),
@@ -485,20 +488,17 @@
         };
         const loadingSpinner = document.getElementById('loading-spinner');
 
+        // NEW: All error message containers
         const errorBoxes = {
-            // REMOVED: apiKey
             symptoms: document.getElementById('error-message-symptoms'),
             questions: document.getElementById('error-message-questions'),
-            history: document.getElementById('error-message-history'),
+            history: document.getElementById('error-message-history'), // NEW
             imaging: document.getElementById('error-message-imaging'),
             medication: document.getElementById('error-message-medication'),
             consults: document.getElementById('error-message-consults'),
             profile: document.getElementById('error-message-profile'),
             providerNote: document.getElementById('error-message-providerNote'),
         };
-
-        // --- REMOVED: API Key Logic ---
-        
 
         // --- UI Helpers ---
 
@@ -557,15 +557,17 @@
 
         // --- Render Helpers ---
 
+        // Helper to render AI-generated questions
         function renderQuestions(questions) {
             const container = document.getElementById('questions-container');
-            container.innerHTML = '';
+            container.innerHTML = ''; // Clear previous
             if (!questions || questions.length === 0) {
                 container.innerHTML = '<p class.text-gray-400">No follow-up questions were generated. You can proceed directly.</p>';
                 return;
             }
             questions.forEach((q, index) => {
                 const qId = `q-answer-${index}`;
+                // NEW: Pre-fill existing answer if it exists in state
                 const existingAnswer = intakeState.answers.find(a => a.question === q)?.answer || '';
                 const questionHtml = `
                     <div>
@@ -577,10 +579,13 @@
             });
         }
 
+        // Helper to render imaging list
         function renderImagingList() {
             const container = document.getElementById('imaging-list-container');
             container.innerHTML = '';
             const recommendedImaging = intakeState.recommendedImaging;
+
+            // NEW: Get names of already selected items
             const selectedNames = new Set(intakeState.selectedImaging.map(item => item.name));
 
             if (!recommendedImaging || recommendedImaging.length === 0) {
@@ -591,6 +596,7 @@
             noImagingMessage.classList.add('hidden');
             recommendedImaging.forEach((img, index) => {
                 const imgId = `img-check-${index}`;
+                // NEW: Check if this item was previously selected
                 const isChecked = selectedNames.has(img.name);
                 const imgHtml = `
                     <div class="btn-toggle">
@@ -607,10 +613,13 @@
             });
         }
 
+        // --- NEW: Helper to render categorized medication list ---
         function renderMedicationList() {
             const container = document.getElementById('medication-list-container');
             container.innerHTML = '';
             const recommendedMeds = intakeState.recommendedMeds;
+
+            // Get names of already selected items
             const selectedNames = new Set(intakeState.selectedMeds.map(item => item.name));
 
             if (!recommendedMeds || recommendedMeds.length === 0) {
@@ -620,6 +629,7 @@
             
             noMedsMessage.classList.add('hidden');
 
+            // 1. Group medications by 'line'
             const groupedMeds = recommendedMeds.reduce((acc, med) => {
                 const line = med.line || 'Other';
                 if (!acc[line]) {
@@ -629,15 +639,21 @@
                 return acc;
             }, {});
 
+            // 2. Define the order
             const lineOrder = ['1st Line', '2nd Line', '3rd Line', 'Other'];
 
+            // 3. Render in order
             lineOrder.forEach(line => {
                 if (groupedMeds[line]) {
+                    // Add a header for the group
                     container.innerHTML += `<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-200">${line}</h3>`;
                     
+                    // Render each med in that group
                     groupedMeds[line].forEach((med, index) => {
                         const medId = `med-check-${line}-${index}`;
                         const isChecked = selectedNames.has(med.name);
+                        
+                        // Store the full med object data as a data-attribute, find by index in the original array
                         const originalIndex = intakeState.recommendedMeds.findIndex(m => m.name === med.name && m.line === med.line);
 
                         const medHtml = `
@@ -657,21 +673,25 @@
             });
         }
 
+        // Helper to render consults and education list
         function renderConsultsList() {
             const container = document.getElementById('consults-list-container');
             container.innerHTML = '';
             const { recommendedConsults, recommendedEducation } = intakeState;
 
+            // NEW: Get names/topics of already selected items
             const selectedConsultNames = new Set(intakeState.selectedConsults.map(item => item.name));
             const selectedEduTopics = new Set(intakeState.selectedEducation.map(item => item.topic));
 
             let hasContent = false;
 
+            // Render Consults
             if (recommendedConsults && recommendedConsults.length > 0) {
                 hasContent = true;
                 container.innerHTML += '<h3 class="text-lg font-semibold mb-2 text-gray-200">Consults</h3>';
                 recommendedConsults.forEach((consult, index) => {
                     const consultId = `consult-check-${index}`;
+                    // NEW: Check if this item was previously selected
                     const isChecked = selectedConsultNames.has(consult.name);
                     const consultHtml = `
                         <div class="btn-toggle">
@@ -688,11 +708,13 @@
                 });
             }
             
+            // Render Education
             if (recommendedEducation && recommendedEducation.length > 0) {
                 hasContent = true;
                 container.innerHTML += '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-200">Patient Education</h3>';
                 recommendedEducation.forEach((edu, index) => {
                     const eduId = `edu-check-${index}`;
+                    // NEW: Check if this item was previously selected
                     const isChecked = selectedEduTopics.has(edu.topic);
                     const eduHtml = `
                         <div class="btn-toggle">
@@ -716,11 +738,13 @@
             }
         }
 
+        // --- Helper to render profile recommendations ---
         function renderProfileRecommendations() {
             const container = document.getElementById('profile-recommendations-container');
             container.innerHTML = '';
             const profile = intakeState.recommendedProfile;
 
+            // NEW: Get previously selected values from state
             const profileDays = intakeState.selectedProfileDays || profile.days || 0;
             const selectedLimitations = new Set(intakeState.selectedProfileLimitations);
             const selectedPtInfo = new Set(intakeState.selectedProfilePatientInfo);
@@ -734,6 +758,7 @@
             
             let profileHtml = '';
 
+            // 1. Profile Days
             profileHtml += `
                 <div>
                     <label for="profile-days-input" class="block text-sm font-medium text-gray-300 mb-1">Recommended Profile Duration (Days):</label>
@@ -741,10 +766,12 @@
                 </div>
             `;
 
+            // 2. Military Limitations
             if (profile.limitations && profile.limitations.length > 0) {
                 profileHtml += '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-200">Military Limitations</h3>';
                 profile.limitations.forEach((item, index) => {
                     const itemId = `limitation-check-${index}`;
+                    // NEW: Check if this item was previously selected
                     const isChecked = selectedLimitations.has(item);
                     profileHtml += `
                         <div class="btn-toggle">
@@ -757,10 +784,12 @@
                 });
             }
             
+            // 3. Patient Information
             if (profile.patientInfo && profile.patientInfo.length > 0) {
                 profileHtml += '<h3 class="text-lg font-semibold mt-4 mb-2 text-gray-200">Patient Information / Education</h3>';
                 profile.patientInfo.forEach((item, index) => {
                     const itemId = `pt-info-check-${index}`;
+                    // NEW: Check if this item was previously selected
                     const isChecked = selectedPtInfo.has(item);
                     profileHtml += `
                         <div class="btn-toggle">
@@ -788,18 +817,7 @@
          * @param {number} [delay=1000] - Initial delay in ms.
          */
         async function callGeminiApi(systemPrompt, userQuery, step, retries = 3, delay = 1000) {
-            
-            // --- UPDATED: Hard-coded API key ---
-            // PASTE YOUR NEW, PRIVATE API KEY HERE
-            const apiKey = "AIzaSyDz8uUjnzjhpG8BeUlZIB_HuwdhMhAh39g"; 
-            // ---------------------------------
-
-            if (apiKey === "AIzaSyDz8uUjnzjhpG8BeUlZIB_HuwdhMhAh39g") {
-                showErrorMessage('symptoms', 'API Key is missing. Please edit the .html file and add your API key to the "apiKey" variable in the script.');
-                showSection('symptoms');
-                return;
-            }
-            
+            const apiKey = ""; // API key is handled by the environment
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
 
             const payload = {
@@ -809,6 +827,7 @@
                 },
                 generationConfig: {
                     responseMimeType: "application/json",
+                    // We define the expected JSON schema for each step
                     responseSchema: getResponseSchemaForStep(step)
                 }
             };
@@ -821,12 +840,13 @@
                 });
 
                 if (!response.ok) {
+                    // Handle rate-limiting or server errors with retry
                     if ((response.status === 429 || response.status >= 500) && retries > 0) {
                         console.warn(`API Error ${response.status}. Retrying in ${delay}ms...`);
                         await new Promise(res => setTimeout(res, delay));
                         return callGeminiApi(systemPrompt, userQuery, step, retries - 1, delay * 2);
                     }
-                    // REMOVED: 400 error check for bad key
+                    // Handle other errors
                     const errorBody = await response.text();
                     throw new Error(`API Error ${response.status}: ${errorBody}`);
                 }
@@ -838,6 +858,7 @@
                     const parsedJson = JSON.parse(jsonText);
                     processApiResponse(step, parsedJson);
                 } else if (result.candidates && result.candidates[0].finishReason) {
+                    // Handle cases where the model finished but didn't return text (e.g., safety)
                     throw new Error(`API call finished with reason: ${result.candidates[0].finishReason}. No content returned.`);
                 } else {
                     console.error("Invalid API response structure:", result);
@@ -847,18 +868,22 @@
             } catch (error) {
                 console.error("Error during API call:", error);
                 
+                // Determine which section to show the error in
                 let errorSectionId = 'symptoms';
                 if (step === 'step1-questions') errorSectionId = 'symptoms';
-                if (step === 'step2-plan') errorSectionId = 'history';
+                if (step === 'step2-plan') errorSectionId = 'history'; // UPDATED: Error shows on history section
+                // REMOVED: step3-alt-meds case
 
                 showErrorMessage(errorSectionId, `Error: ${error.message}. Please try again.`);
                 showLoading(false);
-                showSection(errorSectionId);
+                showSection(errorSectionId); // Re-show the section the user was on
             }
         }
 
         /**
          * Returns the JSON schema for the expected API response based on the current step.
+         * @param {string} step - The identifier for the current API call.
+         * @returns {object} - The JSON schema.
          */
         function getResponseSchemaForStep(step) {
             const commonStringArray = { type: "ARRAY", items: { type: "STRING" } };
@@ -874,6 +899,7 @@
                 }
             };
 
+            // --- NEW: Schema for comprehensive medication list ---
             const comprehensiveMedsSchema = {
                 type: "ARRAY",
                 items: {
@@ -915,7 +941,7 @@
                                 required: ["isEmergency", "reasoning"]
                             },
                             recommendedImaging: commonNameReasoningArray,
-                            recommendedMeds: comprehensiveMedsSchema,
+                            recommendedMeds: comprehensiveMedsSchema, // UPDATED
                             recommendedConsults: commonNameReasoningArray,
                             recommendedEducation: {
                                 type: "ARRAY",
@@ -940,8 +966,11 @@
                         },
                         required: ["hpi", "assessmentAndPlan", "emergencyTriage", "recommendedImaging", "recommendedMeds", "recommendedConsults", "recommendedEducation", "recommendedProfile"]
                     };
+
+                // REMOVED: step3-alt-meds case
                 
                 default:
+                    // Return a basic schema to prevent errors
                     return { 
                         type: "OBJECT",
                         properties: {
@@ -953,6 +982,8 @@
 
         /**
          * Processes the structured JSON response from the API.
+         * @param {string} step - The identifier for the step that was executed.
+         * @param {object} data - The parsed JSON data from the API.
          */
         function processApiResponse(step, data) {
             try {
@@ -965,6 +996,7 @@
                         break;
                     
                     case 'step2-plan':
+                        // Validate all required fields
                         const requiredFields = ['hpi', 'assessmentAndPlan', 'emergencyTriage', 'recommendedImaging', 'recommendedMeds', 'recommendedConsults', 'recommendedEducation', 'recommendedProfile'];
                         for (const field of requiredFields) {
                             if (data[field] === undefined) {
@@ -978,11 +1010,12 @@
                         intakeState.emergencyTriage = data.emergencyTriage;
                         intakeState.recommendedImaging = data.recommendedImaging;
                         intakeState.recommendedMeds = data.recommendedMeds;
+                        // REMOVED: originalRecommendedMeds logic
                         intakeState.recommendedConsults = data.recommendedConsults;
                         intakeState.recommendedEducation = data.recommendedEducation;
                         intakeState.recommendedProfile = data.recommendedProfile;
 
-                        // Reset selected items from previous runs
+                        // NEW: Reset selected items from previous runs
                         intakeState.selectedImaging = [];
                         intakeState.selectedMeds = [];
                         intakeState.selectedConsults = [];
@@ -991,6 +1024,8 @@
                         intakeState.selectedProfileLimitations = [];
                         intakeState.selectedProfilePatientInfo = [];
 
+
+                        // Check for emergency
                         if (data.emergencyTriage && data.emergencyTriage.isEmergency) {
                             emergencyReason.textContent = data.emergencyTriage.reasoning;
                             emergencyAlert.classList.remove('hidden');
@@ -998,28 +1033,34 @@
                             emergencyAlert.classList.add('hidden');
                         }
                         
+                        // Render lists
                         renderImagingList();
-                        renderMedicationList();
+                        renderMedicationList(); // This will now render the new categorized list
                         renderConsultsList();
                         renderProfileRecommendations();
                         
+                        // Show the next section
                         showSection('imaging');
                         break;
+                    
+                    // REMOVED: step3-alt-meds case
                 }
             } catch (error) {
                 console.error("Error processing API response:", error, data);
+                // Determine which section to show the error in
                 let errorSectionId = 'symptoms';
                 if (step === 'step1-questions') errorSectionId = 'symptoms';
-                if (step === 'step2-plan') errorSectionId = 'history';
+                if (step === 'step2-plan') errorSectionId = 'history'; // Error shows on history
                 
                 showErrorMessage(errorSectionId, `Error processing data: ${error.message}`);
-                showSection(errorSectionId);
+                showSection(errorSectionId); // Go back to the section that initiated the call
             }
         }
 
 
         // --- Event Listeners ---
 
+        // --- Step 1: Submit Chief Complaint ---
         symptomForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const complaint = initialSymptomsEl.value;
@@ -1056,9 +1097,11 @@ Return a JSON object matching this schema:
         });
 
 
+        // --- Step 2: Submit Q&A ---
         questionsForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
+            // Collect answers
             intakeState.answers = [];
             const inputs = questionsContainer.querySelectorAll('input[type="text"]');
             
@@ -1078,29 +1121,34 @@ Return a JSON object matching this schema:
                 return;
             }
             
+            // NEW: Pre-fill history textareas from state
             pmhInput.value = intakeState.pastMedicalHistory;
             allergiesInput.value = intakeState.allergies;
             medsInput.value = intakeState.currentMedications;
 
+            // UPDATED: Simply move to the next section
             showSection('history');
         });
 
         questionsBackBtn.addEventListener('click', () => showSection('symptoms'));
 
+        // --- NEW: Step 3: Submit History for Full Plan ---
         historyForm.addEventListener('submit', (e) => {
             e.preventDefault();
             showLoading(true);
 
+            // Save history to state
             intakeState.pastMedicalHistory = pmhInput.value.trim();
             intakeState.allergies = allergiesInput.value.trim();
             intakeState.currentMedications = medsInput.value.trim();
 
+            // Construct the full context for the AI
             let fullHpiContext = `Chief Complaint: ${intakeState.chiefComplaint}\n`;
             intakeState.answers.forEach(qa => {
                 fullHpiContext += `Q: ${qa.question}\nA: ${qa.answer}\n`;
             });
 
-            // --- UPDATED: New system prompt with 6-med minimum ---
+            // --- UPDATED: New system prompt for comprehensive meds ---
             const systemPrompt = `
 You are an expert AI clinical assistant for a combat medic. Your role is to generate **only** a structured JSON output.
 The medic has provided a full HPI and Patient History.
@@ -1120,6 +1168,7 @@ Your task is to:
 If no items are needed for a list, return an empty array [].
 Return a JSON object matching the schema defined in 'getResponseSchemaForStep("step2-plan")'.
 `;
+            // UPDATED: User query now includes all history
             const userQuery = `
 Full HPI Context:
 ${fullHpiContext}
@@ -1134,6 +1183,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
         });
 
         historyBackBtn.addEventListener('click', () => {
+             // Save any entered history before going back
             intakeState.pastMedicalHistory = pmhInput.value.trim();
             intakeState.allergies = allergiesInput.value.trim();
             intakeState.currentMedications = medsInput.value.trim();
@@ -1141,7 +1191,9 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
         });
 
 
+        // --- Step 4: Continue from Imaging ---
         imagingContinueBtn.addEventListener('click', () => {
+            // Store selected imaging
             intakeState.selectedImaging = [];
             const checkboxes = imagingListContainer.querySelectorAll('input[type="checkbox"]:checked');
             checkboxes.forEach(cb => {
@@ -1152,35 +1204,48 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
         });
 
         imagingBackBtn.addEventListener('click', () => {
+            // Store selections before going back
             intakeState.selectedImaging = [];
             const checkboxes = imagingListContainer.querySelectorAll('input[type="checkbox"]:checked');
             checkboxes.forEach(cb => {
                 const index = parseInt(cb.value, 10);
                 intakeState.selectedImaging.push(intakeState.recommendedImaging[index]);
             });
+            // UPDATED: Go back to 'history'
             showSection('history');
         });
 
+        // --- Step 5: Continue from Medications ---
         medicationContinueBtn.addEventListener('click', () => {
+            // Store selected meds
             intakeState.selectedMeds = [];
             const checkboxes = medicationListContainer.querySelectorAll('input[type="checkbox"]:checked');
             checkboxes.forEach(cb => {
                 const index = parseInt(cb.value, 10);
+                // NEW: Find the med in the original array by its index
                 intakeState.selectedMeds.push(intakeState.recommendedMeds[index]);
             });
+
+            // REMOVED: "undo" state logic
             showSection('consults');
         });
 
         medicationBackBtn.addEventListener('click', () => {
+             // Store selections before going back
             intakeState.selectedMeds = [];
             const checkboxes = medicationListContainer.querySelectorAll('input[type="checkbox"]:checked');
             checkboxes.forEach(cb => {
                 const index = parseInt(cb.value, 10);
                 intakeState.selectedMeds.push(intakeState.recommendedMeds[index]);
             });
+            // REMOVED: "undo" state logic
             showSection('imaging');
         });
 
+        // REMOVED: requestAlternativesBtn listener
+        // REMOVED: returnToOriginalMedsBtn listener
+
+        // --- Step 6: Continue from Consults ---
         consultsContinueBtn.addEventListener('click', () => {
             intakeState.selectedConsults = [];
             const consultCheckboxes = consultsListContainer.querySelectorAll('input[id^="consult-check-"]:checked');
@@ -1215,6 +1280,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
             showSection('medication');
         });
 
+        // --- Step 7: Continue from Profile ---
         profileContinueBtn.addEventListener('click', () => {
             const daysInput = document.getElementById('profile-days-input');
             if (!daysInput) {
@@ -1231,7 +1297,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
                 });
 
                 intakeState.selectedProfilePatientInfo = [];
-                const ptInfoCheckboxes = profileRecommendationsContainer.querySelectorAll('input[id^"pt-info-check-"]:checked');
+                const ptInfoCheckboxes = profileRecommendationsContainer.querySelectorAll('input[id^="pt-info-check-"]:checked');
                 ptInfoCheckboxes.forEach(cb => {
                     intakeState.selectedProfilePatientInfo.push(cb.value);
                 });
@@ -1252,7 +1318,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
                 intakeState.selectedProfileLimitations.push(cb.value);
             });
             intakeState.selectedProfilePatientInfo = [];
-            const ptInfoCheckboxes = profileRecommendationsContainer.querySelectorAll('input[id^"pt-info-check-"]:checked');
+            const ptInfoCheckboxes = profileRecommendationsContainer.querySelectorAll('input[id^="pt-info-check-"]:checked');
             ptInfoCheckboxes.forEach(cb => {
                 intakeState.selectedProfilePatientInfo.push(cb.value);
             });
@@ -1260,6 +1326,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
         });
 
 
+        // --- Step 8: Show Final Note ---
         function showFinalNote() {
             let finalNote = "MEDIC-SELECTED PLAN (DE-IDENTIFIED):\n";
             finalNote += "====================================\n";
@@ -1273,6 +1340,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
 
             if (intakeState.selectedMeds.length > 0) {
                 finalNote += "\n--- MEDICATIONS ---\n";
+                // UPDATED: Include med type (Timed/PRN) in the note
                 intakeState.selectedMeds.forEach(item => finalNote += `- ${item.name} ${item.dosage} (${item.type})\n`);
             } else {
                 finalNote += "\n--- MEDICATIONS ---\n- None selected.\n";
@@ -1313,22 +1381,32 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
             finalNote += "\n\nAI-GENERATED FIELD NOTE (DE-IDENTIFIED):\n";
             finalNote += "========================================\n";
             
+            // HPI
             finalNote += "HISTORY OF PRESENT ILLNESS (AI-GENERATED):\n";
             finalNote += `${intakeState.hpi}\n`;
 
+            // NEW: Add Patient History to note
             finalNote += "\nPATIENT-PROVIDED HISTORY:\n";
             finalNote += `Past Medical History: ${intakeState.pastMedicalHistory || 'None'}\n`;
             finalNote += `Allergies: ${intakeState.allergies || 'None'}\n`;
             finalNote += `Current Medications: ${intakeState.currentMedications || 'None'}\n`;
             finalNote += "\n";
 
+            // ASSESSMENT & PLAN
             finalNote += "ASSESSMENT & PLAN (AI-GENERATED):\n";
             finalNote += `${intakeState.assessmentAndPlan}\n`;
 
             providerNoteContent.textContent = finalNote;
         }
 
+        // --- Step 9: Utility Buttons (Copy, Start Over) ---
+
+        /**
+         * Copies text to the clipboard.
+         * @param {string} text - The text to copy.
+         */
         function copyToClipboard(text) {
+            // Use textarea method for broad compatibility
             const ta = document.createElement('textarea');
             ta.value = text;
             ta.style.position = 'fixed';
@@ -1352,6 +1430,9 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
 
         noteBackBtn.addEventListener('click', () => showSection('profile'));
 
+        /**
+         * Resets the entire application state and returns to Step 1.
+         */
         function startOver() {
             intakeState = {
                 chiefComplaint: "",
@@ -1365,6 +1446,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
                 emergencyTriage: null,
                 recommendedImaging: [],
                 recommendedMeds: [],
+                // REMOVED: originalRecommendedMeds
                 recommendedConsults: [],
                 recommendedEducation: [],
                 recommendedProfile: {},
@@ -1380,9 +1462,11 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
             // Clear inputs and containers
             initialSymptomsEl.value = '';
             questionsContainer.innerHTML = '';
+            // NEW: Clear history inputs
             pmhInput.value = '';
             allergiesInput.value = '';
             medsInput.value = '';
+            // ---
             imagingListContainer.innerHTML = '';
             medicationListContainer.innerHTML = '';
             consultsListContainer.innerHTML = '';
@@ -1390,6 +1474,7 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
             providerNoteContent.textContent = '';
             emergencyAlert.classList.add('hidden');
             copySuccess.classList.add('hidden');
+            // REMOVED: returnToOriginalMedsBtn.classList.add('hidden');
             clearErrors();
 
             // Show first section
@@ -1399,11 +1484,12 @@ Current Medications: ${intakeState.currentMedications || 'None provided'}
         startOverBtn.addEventListener('click', startOver);
 
         // --- Initial Load ---
-        // UPDATED: Show the first section by default
+        // Show the first section by default when the page loads
         showSection('symptoms');
 
     </script>
 
 </body>
 </html>
+
 
