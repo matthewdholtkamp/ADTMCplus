@@ -167,8 +167,15 @@
             <h2 id="disclaimerTitle" class="text-2xl font-bold mb-1 text-white">Quick challenge — one small step</h2>
             <p class="text-sm text-slate-400">Use only de-identified examples. You'll be prompted if something looks like PHI.</p>
           </div>
-          <div class="hidden sm:inline-flex items-center gap-2 text-sm">
-            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium text-xs uppercase tracking-wider">Safety First</span>
+          <div class="flex items-center gap-2 text-sm">
+            <span class="hidden sm:inline-flex px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium text-xs uppercase tracking-wider">Safety First</span>
+            <button id="dismissDisclaimer"
+                    class="shrink-0 inline-flex items-center justify-center w-10 h-10 rounded-full border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 transition-colors"
+                    aria-label="Close disclaimer dialog">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -288,6 +295,34 @@
         
         <main class="bg-white dark:bg-slate-800/50 dark:border dark:border-slate-700/50 rounded-2xl p-6 sm:p-8 shadow-2xl relative backdrop-blur-sm">
 
+            <!-- Stepper / Progress Tracker -->
+            <div class="mb-8" aria-label="Progress through consult steps">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-3" data-step-indicator="1">
+                        <div class="step-circle w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center font-bold text-slate-300 bg-slate-800">1</div>
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-slate-400">Step 1 / 3</p>
+                            <p class="text-sm font-semibold text-slate-100">De-identified Intake</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3" data-step-indicator="2">
+                        <div class="step-circle w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center font-bold text-slate-400 bg-slate-900">2</div>
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-slate-400">Step 2 / 3</p>
+                            <p class="text-sm font-semibold text-slate-100">AI-Guided Intake</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3" data-step-indicator="3">
+                        <div class="step-circle w-12 h-12 rounded-full border border-slate-700 flex items-center justify-center font-bold text-slate-400 bg-slate-900">3</div>
+                        <div>
+                            <p class="text-xs uppercase tracking-wide text-slate-400">Step 3 / 3</p>
+                            <p class="text-sm font-semibold text-slate-100">Final Consult Note</p>
+                        </div>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-slate-400">We save your progress locally so you can pick up where you left off.</p>
+            </div>
+
             <!-- Speech Error Message -->
             <div id="speech-error" class="hidden bg-amber-950/30 border-l-4 border-amber-500 text-amber-200 p-4 rounded-md mb-6" role="alert">
                 <p class="font-bold">Microphone Error</p>
@@ -378,10 +413,14 @@
             <div id="follow-up-section" class="hidden mt-8 pt-8 border-t border-slate-700/60">
                 <h3 class="text-lg font-semibold text-slate-100 mb-3">Consult Refinement</h3>
                 <label for="follow-up-input" class="block text-sm font-medium text-slate-400 mb-2">Ask the AI to adjust the plan, explain the diagnosis, or check interactions:</label>
+                <div class="flex justify-between text-xs text-slate-500 mb-2">
+                    <span>Press Enter to send, Shift + Enter for a new line.</span>
+                    <span id="follow-up-counter">0 / 280</span>
+                </div>
                 <div class="relative">
-                    <textarea id="follow-up-input" rows="2" class="block w-full bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3 pr-24 transition-all"></textarea>
+                    <textarea id="follow-up-input" rows="2" maxlength="280" class="block w-full bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3 pr-24 transition-all"></textarea>
                     <div class="absolute bottom-2 right-2 flex items-center gap-2">
-                        <div id="follow-up-loader" class="hidden">
+                        <div id="follow-up-loader" class="hidden" aria-live="polite">
                             <div class="loader scale-75">
                                 <div class="bounce1"></div>
                                 <div class="bounce2"></div>
@@ -393,6 +432,7 @@
                         </button>
                     </div>
                 </div>
+                <p id="follow-up-status" class="mt-2 text-xs text-slate-400" aria-live="polite"></p>
             </div>
 
             <!-- Bottom Buttons (Copy/Back) -->
@@ -436,13 +476,15 @@
       } catch (e) {
         console.warn('localStorage not available for disclaimer persistence.');
       }
-    
+
       // Lock background scroll
       document.body.style.overflow = 'hidden';
-      
+
       // Focus management
       if(dialog) dialog.focus();
       if(ackCheckbox) ackCheckbox.focus();
+
+      let isModalOpen = true;
     
       // Button state
       ackCheckbox?.addEventListener('change', () => {
@@ -457,23 +499,26 @@
     
       // Modal trap
       modal?.addEventListener('click', (e) => {
-        if (e.target === modal) e.stopPropagation();
+        if (e.target === modal) {
+          closeModal();
+        }
       });
-    
+
       // Focus Trap Logic
       const FOCUSABLE_SELECTORS = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
       function trapFocus(e) {
+        if (!isModalOpen) return;
         const focusable = Array.from(dialog.querySelectorAll(FOCUSABLE_SELECTORS)).filter(el => el.offsetParent !== null);
         if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.key === 'Tab') {
-          if (e.shiftKey) { 
+          if (e.shiftKey) {
             if (document.activeElement === first) {
               e.preventDefault();
               last.focus();
             }
-          } else { 
+          } else {
             if (document.activeElement === last) {
               e.preventDefault();
               first.focus();
@@ -481,13 +526,31 @@
           }
         }
       }
+
+      function closeModal() {
+        if (!isModalOpen) return;
+        isModalOpen = false;
+        if (modal) {
+          modal.style.opacity = '0';
+          setTimeout(() => {
+            modal.style.display = 'none';
+          }, 300);
+        }
+        document.body.style.overflow = '';
+        window.removeEventListener('keydown', trapFocus);
+        window.removeEventListener('keydown', handleEscapeClose);
+      }
+
+      function handleEscapeClose(e) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeModal();
+        }
+      }
+
       window.addEventListener('keydown', trapFocus);
-    
-      // Prevent Escape
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') e.preventDefault();
-      });
-    
+      window.addEventListener('keydown', handleEscapeClose);
+
       // Accept function
       window.acceptDisclaimer = function() {
         try {
@@ -504,15 +567,10 @@
           console.warn('localStorage unavailable; audit/persistence may not be recorded.');
         }
     
-        if (modal) {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        }
-        document.body.style.overflow = '';
-        window.removeEventListener('keydown', trapFocus);
+        closeModal();
       };
+
+      document.getElementById('dismissDisclaimer')?.addEventListener('click', closeModal);
     })();
     </script>
 
@@ -529,14 +587,17 @@
             allergies: '',
             medications: '',
             ros_general: '',
-            unit_mos: '', 
+            unit_mos: '',
             opqrst: '',
             exam: '',
             point_of_care_tests: '',
             labs: '',
             imaging: ''
         };
-        let chatHistory = []; 
+        const DEFAULT_ROS = "Constitutional: \nHEENT: \nRespiratory: \nCardiovascular: \nGI: \nGU: \nMSK: \nNeuro: \nSkin: ";
+        const FORM_STORAGE_KEY = 'consultFormDraft_v1';
+        let currentStep = 1;
+        let chatHistory = [];
         
         // --- Speech Recognition State ---
         let recognition;
@@ -557,16 +618,71 @@
         const consultOutput = document.getElementById('consult-output');
         const copySuccessMessage = document.getElementById('copy-success');
         const bottomButtons = document.getElementById('bottom-buttons');
+        const stepIndicators = document.querySelectorAll('[data-step-indicator]');
+
+        // --- Persistence Helpers ---
+        function persistState(stepOverride) {
+            try {
+                const payload = { ...state, currentStep: stepOverride ?? currentStep };
+                localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(payload));
+            } catch (err) {
+                console.warn('Unable to persist form draft', err);
+            }
+        }
+
+        function loadStateFromStorage() {
+            try {
+                const raw = localStorage.getItem(FORM_STORAGE_KEY);
+                if (!raw) return null;
+                const saved = JSON.parse(raw);
+                Object.keys(state).forEach(key => {
+                    if (Object.prototype.hasOwnProperty.call(saved, key)) {
+                        state[key] = saved[key] || '';
+                    }
+                });
+                return saved.currentStep || 1;
+            } catch (err) {
+                console.warn('Unable to load saved form draft', err);
+                return null;
+            }
+        }
 
         // --- Step Navigation ---
+        function updateStepIndicators(stepNumber) {
+            stepIndicators.forEach(indicator => {
+                const step = Number(indicator.dataset.stepIndicator);
+                const circle = indicator.querySelector('.step-circle');
+                const isActive = step === stepNumber;
+                const isCompleted = step < stepNumber;
+
+                indicator.setAttribute('aria-current', isActive ? 'step' : 'false');
+                indicator.setAttribute('aria-disabled', step > stepNumber ? 'true' : 'false');
+                indicator.classList.toggle('opacity-60', step > stepNumber);
+
+                const baseClass = 'step-circle w-12 h-12 rounded-full flex items-center justify-center font-bold transition-colors';
+                if (circle) {
+                    if (isActive) {
+                        circle.className = `${baseClass} bg-indigo-600 text-white border border-indigo-300 shadow-lg shadow-indigo-900/40`;
+                    } else if (isCompleted) {
+                        circle.className = `${baseClass} bg-emerald-600 text-white border border-emerald-300`;
+                    } else {
+                        circle.className = `${baseClass} bg-slate-900 text-slate-400 border border-slate-700`;
+                    }
+                }
+            });
+        }
+
         function showStep(stepNumber) {
+            currentStep = stepNumber;
             Object.values(steps).forEach(step => step.classList.add('hidden'));
             if (steps[stepNumber]) {
                 steps[stepNumber].classList.remove('hidden');
             }
             // Hide bottom buttons unless on step 3
             bottomButtons.classList.toggle('hidden', stepNumber !== 3);
-            window.scrollTo(0, 0); 
+            updateStepIndicators(stepNumber);
+            persistState(stepNumber);
+            window.scrollTo(0, 0);
         }
 
         // --- Data Collection ---
@@ -578,6 +694,7 @@
             state.medications = document.getElementById('medications').value;
             state.ros_general = document.getElementById('ros_general').value;
             state.unit_mos = document.getElementById('unit_mos').value;
+            persistState();
         }
 
         function saveStep2Data() {
@@ -586,6 +703,18 @@
             state.point_of_care_tests = document.getElementById('point_of_care_tests').value;
             state.labs = document.getElementById('labs').value;
             state.imaging = document.getElementById('imaging').value;
+            persistState();
+        }
+
+        function bindAutosaveToIds(ids) {
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('input', () => {
+                    state[id] = el.value;
+                    persistState();
+                });
+            });
         }
 
         // --- AI Consult Logic ---
@@ -758,6 +887,23 @@ ${addSection('Imaging Findings', state.imaging)}
         }
 
         // --- Handle Follow-up Questions ---
+        function updateFollowUpCounter() {
+            const input = document.getElementById('follow-up-input');
+            const counter = document.getElementById('follow-up-counter');
+            if (!input || !counter) return;
+            const limit = input.maxLength || 280;
+            counter.textContent = `${input.value.length} / ${limit}`;
+        }
+
+        function setFollowUpStatus(message, tone = 'muted') {
+            const status = document.getElementById('follow-up-status');
+            if (!status) return;
+            status.textContent = message;
+            status.classList.remove('text-rose-400', 'text-emerald-400');
+            if (tone === 'error') status.classList.add('text-rose-400');
+            if (tone === 'success') status.classList.add('text-emerald-400');
+        }
+
         async function handleFollowUp() {
             const input = document.getElementById('follow-up-input');
             const followUpText = input.value.trim();
@@ -769,6 +915,7 @@ ${addSection('Imaging Findings', state.imaging)}
             loader.classList.remove('hidden');
             button.disabled = true;
             input.disabled = true;
+            setFollowUpStatus('Sending your update...', 'muted');
 
             chatHistory.push({ role: "user", parts: [{ text: followUpText }] });
             
@@ -869,21 +1016,26 @@ COMMANDER_BREAK_SOLDIER
                     if (!newSoldierText.includes("No change")) {
                         document.getElementById('profile-soldier-output').innerHTML = simpleMarkdownToHtml(newSoldierText);
                     }
-                    
+
                     input.value = '';
+                    setFollowUpStatus('Update added to the consult.', 'success');
+                    updateFollowUpCounter();
                     consultOutputContainer.scrollTop = consultOutputContainer.scrollHeight;
 
                 } else {
                      console.error("Invalid follow-up response");
+                     setFollowUpStatus('Something went wrong. Please try again.', 'error');
                 }
 
             } catch (error) {
                 console.error("Follow-up Fetch Error:", error);
+                setFollowUpStatus('Unable to send your update right now.', 'error');
             } finally {
                 loader.classList.add('hidden');
                 button.disabled = false;
                 input.disabled = false;
                 input.focus();
+                updateFollowUpCounter();
             }
         }
 
@@ -1045,23 +1197,33 @@ COMMANDER_BREAK_SOLDIER
             }
             document.getElementById('intake-form-1').reset();
             document.getElementById('intake-form-2').reset();
-            
+
             const rosTextarea = document.getElementById('ros_general');
             if (rosTextarea) {
-                rosTextarea.value = "Constitutional: \nHEENT: \nRespiratory: \nCardiovascular: \nGI: \nGU: \nMSK: \nNeuro: \nSkin: ";
+                rosTextarea.value = DEFAULT_ROS;
             }
             consultOutput.innerHTML = '';
-            
+
             chatHistory = [];
             document.getElementById('follow-up-section').classList.add('hidden');
             document.getElementById('follow-up-input').value = '';
             document.getElementById('follow-up-addendum-area').innerHTML = '';
             document.getElementById('follow-up-addendum-area').classList.add('hidden');
+            updateFollowUpCounter();
 
             document.getElementById('military-profile-section').classList.add('hidden');
             document.getElementById('profile-commander-output').innerHTML = '';
             document.getElementById('profile-soldier-output').innerHTML = '';
             document.getElementById('profile-days').value = '';
+
+            Object.keys(state).forEach(key => state[key] = '');
+            state.ros_general = DEFAULT_ROS;
+            try {
+                localStorage.removeItem(FORM_STORAGE_KEY);
+            } catch (err) {
+                console.warn('Unable to clear saved draft', err);
+            }
+            persistState(1);
 
             showStep(1);
         }
@@ -1099,48 +1261,54 @@ COMMANDER_BREAK_SOLDIER
             document.getElementById('start-over-1').addEventListener('click', startOver);
             document.getElementById('start-over-2').addEventListener('click', startOver);
             document.getElementById('start-over-3').addEventListener('click', startOver);
-            
+
             document.getElementById('submit-follow-up-btn').addEventListener('click', handleFollowUp);
             document.getElementById('follow-up-input').addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault(); 
+                    e.preventDefault();
                     handleFollowUp();
                 }
             });
+            document.getElementById('follow-up-input').addEventListener('input', updateFollowUpCounter);
 
             const form1 = document.getElementById('intake-form-1');
             const form2 = document.getElementById('intake-form-2');
-            
-            form1.innerHTML = 
-                FormSection({ title: "Chief Complaint & HPI:", id: "hpi", placeholder: "e.g., 21-year-old male with 3 days of cough, congestion, and low-grade fever. OR 30-year-old female reports rolling right ankle during PT...", rows: 5 }) +
-                FormSection({ title: "Soldier's Unit & MOS:", id: "unit_mos", placeholder: "e.g., Infantry Unit / 11B OR Admin Unit / 42A", rows: 2 }) +
+
+            const savedStep = loadStateFromStorage();
+            if (!state.ros_general) {
+                state.ros_general = DEFAULT_ROS;
+            }
+
+            form1.innerHTML =
+                FormSection({ title: "Chief Complaint & HPI:", id: "hpi", value: state.hpi, placeholder: "e.g., 21-year-old male with 3 days of cough, congestion, and low-grade fever. OR 30-year-old female reports rolling right ankle during PT...", rows: 5 }) +
+                FormSection({ title: "Soldier's Unit & MOS:", id: "unit_mos", value: state.unit_mos, placeholder: "e.g., Infantry Unit / 11B OR Admin Unit / 42A", rows: 2 }) +
                 `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">` +
-                FormSection({ title: "Past Medical History (PMH):", id: "pmh", placeholder: "e.g., GERD, seasonal allergies.", rows: 4 }) +
-                FormSection({ title: "Past Surgical History (PSH):", id: "psh", placeholder: "e.g., R-ACL repair (2022).", rows: 4 }) +
+                FormSection({ title: "Past Medical History (PMH):", id: "pmh", value: state.pmh, placeholder: "e.g., GERD, seasonal allergies.", rows: 4 }) +
+                FormSection({ title: "Past Surgical History (PSH):", id: "psh", value: state.psh, placeholder: "e.g., R-ACL repair (2022).", rows: 4 }) +
                 `</div>` +
                 `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">` +
-                FormSection({ title: "Allergies:", id: "allergies", placeholder: "e.g., NKDA, Penicillin (rash)", rows: 3 }) +
-                FormSection({ title: "Medications:", id: "medications", placeholder: "e.g., Loratadine 10mg PRN. OR None.", rows: 3 }) +
+                FormSection({ title: "Allergies:", id: "allergies", value: state.allergies, placeholder: "e.g., NKDA, Penicillin (rash)", rows: 3 }) +
+                FormSection({ title: "Medications:", id: "medications", value: state.medications, placeholder: "e.g., Loratadine 10mg PRN. OR None.", rows: 3 }) +
                 `</div>` +
-                FormSection({ 
-                    title: "General ROS (pertinent):", 
-                    id: "ros_general", 
-                    placeholder: "Note pertinent positives/negatives", 
-                    rows: 5, 
-                    value: "Constitutional: \nHEENT: \nRespiratory: \nCardiovascular: \nGI: \nGU: \nMSK: \nNeuro: \nSkin: " 
+                FormSection({
+                    title: "General ROS (pertinent):",
+                    id: "ros_general",
+                    placeholder: "Note pertinent positives/negatives",
+                    rows: 5,
+                    value: state.ros_general || DEFAULT_ROS
                 }) +
                 `<div class="pt-6 flex justify-end">
                     <button type="button" id="go-to-step-2-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-indigo-900/20 transition-all hover:scale-105 duration-200">
                         Start Guided Exam &rarr;
                     </button>
                 </div>`;
-            
-            form2.innerHTML = 
-                FormSection({ title: "Symptom Details (OPQRST):", id: "opqrst", placeholder: "Onset, Palliating/Provoking, Quality, Radiation, Severity, Timing", rows: 3 }) +
-                FormSection({ title: "Vital Signs & Physical Exam:", id: "exam", placeholder: "Vitals: T, P, R, BP, SpO2. Exam: (e.g., Lungs: CTA-B. Heart: RRR. Pharynx: Erythema, no exudate. OR e.g., MSK: R-ankle TTP over ATFL...)", rows: 5 }) +
-                FormSection({ title: "Point-of-Care Tests (if any):", id: "point_of_care_tests", placeholder: "e.g., Rapid Strep: Neg. UDS: Neg. Pregnancy: Neg. Glucose: 95.", rows: 3 }) +
-                FormSection({ title: "Other Labs:", id: "labs", placeholder: "e.g., CBC, BMP... (if drawn)", rows: 3 }) +
-                FormSection({ title: "Imaging Findings (if any):", id: "imaging", placeholder: "e.g., Ankle X-ray (3-view): No acute fracture.", rows: 3 }) +
+
+            form2.innerHTML =
+                FormSection({ title: "Symptom Details (OPQRST):", id: "opqrst", value: state.opqrst, placeholder: "Onset, Palliating/Provoking, Quality, Radiation, Severity, Timing", rows: 3 }) +
+                FormSection({ title: "Vital Signs & Physical Exam:", id: "exam", value: state.exam, placeholder: "Vitals: T, P, R, BP, SpO2. Exam: (e.g., Lungs: CTA-B. Heart: RRR. Pharynx: Erythema, no exudate. OR e.g., MSK: R-ankle TTP over ATFL...)", rows: 5 }) +
+                FormSection({ title: "Point-of-Care Tests (if any):", id: "point_of_care_tests", value: state.point_of_care_tests, placeholder: "e.g., Rapid Strep: Neg. UDS: Neg. Pregnancy: Neg. Glucose: 95.", rows: 3 }) +
+                FormSection({ title: "Other Labs:", id: "labs", value: state.labs, placeholder: "e.g., CBC, BMP... (if drawn)", rows: 3 }) +
+                FormSection({ title: "Imaging Findings (if any):", id: "imaging", value: state.imaging, placeholder: "e.g., Ankle X-ray (3-view): No acute fracture.", rows: 3 }) +
                 `<div class="pt-6 flex justify-between items-center">
                     <button type="button" id="back-to-step-1-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-200">
                         &larr; Back
@@ -1163,6 +1331,15 @@ COMMANDER_BREAK_SOLDIER
                     btn.addEventListener('click', handleMicClick);
                 });
             }
+
+            bindAutosaveToIds(['hpi','unit_mos','pmh','psh','allergies','medications','ros_general','opqrst','exam','point_of_care_tests','labs','imaging']);
+
+            if (savedStep) {
+                currentStep = savedStep;
+                showStep(savedStep);
+            } else {
+                showStep(1);
+            }
         }
 
         // --- App Initialization ---
@@ -1172,7 +1349,7 @@ COMMANDER_BREAK_SOLDIER
                     initializeSpeechRecognition();
                 }
                 registerEventListeners();
-                showStep(1); 
+                updateFollowUpCounter();
             } catch (error) {
                 console.error("Initialization Error:", error);
             }
