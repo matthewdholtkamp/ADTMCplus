@@ -1,1182 +1,710 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Sick Call Consult</title>
+    <title>ADTMC+ SOAP Generator</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Subtle scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1e293b; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #475569; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b; 
-        }
-
-        /* Simple loading spinner */
-        .loader {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 70px;
-            height: 40px;
-        }
-        .loader > div {
-            width: 12px;
-            height: 12px;
-            background-color: #818cf8; /* Indigo-300 */
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, summary, button { font-family: 'Roboto Condensed', sans-serif; letter-spacing: 0.5px; }
+        .hidden { display: none !important; }
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px; height: 36px;
             border-radius: 50%;
-            display: inline-block;
-            animation: bounce 1.4s infinite ease-in-out both;
-            margin: 0 4px;
+            border-left-color: #F97316;
+            animation: spin 1s ease infinite;
         }
-        .loader .bounce1 {
-            animation-delay: -0.32s;
-        }
-        .loader .bounce2 {
-            animation-delay: -0.16s;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        details > summary { cursor: pointer; }
         
-        /* Follow-up loader styling */
-        #follow-up-loader .loader {
-            width: 50px;
-            height: 24px;
+        .error-box { 
+            display: none; 
+            background-color: rgba(127, 29, 29, 0.5); 
+            border: 1px solid #dc2626; 
+            color: #fca5a5; 
+            padding: 1rem; 
+            border-radius: 0.375rem; 
+            margin-bottom: 1rem; 
         }
-        #follow-up-loader .loader > div {
-            width: 8px;
-            height: 8px;
-            margin: 0 2px;
-        }
-
-        /* Styling for the rendered consult output */
-        #consult-output h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #a5b4fc; /* indigo-300 */
-            margin-top: 1.5rem;
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid #475569;
-            padding-bottom: 0.25rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        #consult-output strong {
-            font-weight: 700;
-            color: #f1f5f9;
-        }
-        #consult-output ul {
-            list-style-type: disc;
-            margin-left: 1.5rem;
-            margin-bottom: 1rem;
-            color: #cbd5e1;
-        }
-        #consult-output li {
-            margin-bottom: 0.25rem;
-        }
-        #consult-output p {
-            margin-bottom: 1rem;
-            line-height: 1.6;
-            color: #e2e8f0;
-        }
+        /* Only show if explicitly explicitly active via JS removing the hidden class, handled by utility class logic mostly */
+        .error-box.active { display: block; }
         
-        /* Microphone Button Styles */
-        .mic-btn {
-            position: absolute;
-            bottom: 8px;
-            right: 8px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 6px;
-            border: none;
-            border-radius: 50%;
-            background-color: #334155;
-            color: #cbd5e1;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid #475569;
-        }
-        .mic-btn:hover {
-            background-color: #475569;
-            color: white;
-        }
-        .mic-btn.is-listening {
-            background-color: #dc2626;
-            color: white;
-            border-color: #ef4444;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0); } 
-            40% { transform: scale(1.0); }
-        }
+        /* Custom Scrollbar for Note Preview */
+        .note-preview::-webkit-scrollbar { width: 8px; }
+        .note-preview::-webkit-scrollbar-track { background: #1f2937; }
+        .note-preview::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
     </style>
 </head>
+<body class="bg-gray-900 text-zinc-200">
 
-<body class="bg-gray-50 dark:bg-gray-900 dark:text-gray-300 selection:bg-sky-500 selection:text-white min-h-screen">
-
-    <!-- =================================================================== -->
-    <!-- DISCLAIMER MODAL -->
-    <!-- =================================================================== -->
-    <div id="disclaimerModal"
-         role="dialog"
-         aria-modal="true"
-         aria-labelledby="disclaimerTitle"
-         aria-describedby="disclaimerDesc"
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 transition-opacity duration-300">
-      
-      <!-- Dialog container -->
-      <div id="disclaimerDialog"
-           class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-800 border border-slate-700 p-6 text-left text-slate-100 shadow-2xl ring-1 ring-white/10"
-           tabindex="-1">
-           
-        <!-- Header -->
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <h2 id="disclaimerTitle" class="text-2xl font-bold mb-1 text-white">Quick challenge — one small step</h2>
-            <p class="text-sm text-slate-400">Use only de-identified examples. You'll be prompted if something looks like PHI.</p>
-          </div>
-          <div class="hidden sm:inline-flex items-center gap-2 text-sm">
-            <span class="inline-block px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium text-xs uppercase tracking-wider">Safety First</span>
-          </div>
-        </div>
-
-        <hr class="my-4 border-slate-700/60"/>
-
-        <!-- Main message -->
-        <p id="disclaimerDesc" class="text-sm text-slate-300 mb-3 leading-relaxed">
-          This site generates consult drafts and provides clinical decision support. It does <strong>not</strong> replace your clinical judgment,
-          licensure, or medical decision-making. Enter only de-identified information here.
-        </p>
-
-        <div class="bg-amber-950/30 border-l-4 border-amber-500 p-3 mb-4 rounded-r">
-            <p class="text-sm font-semibold text-amber-200">
-            This platform is <u>NOT HIPAA compliant</u>. Do <strong>NOT</strong> enter Protected Health Information (PHI).
-            </p>
-        </div>
-
-        <p class="text-sm mb-2 font-medium text-slate-200">Do not enter any of the following 18 direct identifiers (HIPAA Safe Harbor):</p>
-
-        <div class="bg-slate-900/50 rounded-lg p-4 mb-4 border border-slate-700/50">
-            <ol class="list-decimal list-inside text-xs sm:text-sm space-y-1 text-slate-400 grid grid-cols-1 sm:grid-cols-2 gap-x-4">
-            <li>Names (Full or initials)</li>
-            <li>Geographic subdivisions &lt; State</li>
-            <li>Dates (except year) & Ages &gt; 89</li>
-            <li>Telephone numbers</li>
-            <li>Fax numbers</li>
-            <li>Email addresses</li>
-            <li>Social Security numbers</li>
-            <li>Medical record numbers</li>
-            <li>Health plan beneficiary #s</li>
-            <li>Account numbers</li>
-            <li>Certificate/license numbers</li>
-            <li>Vehicle identifiers/plates</li>
-            <li>Device identifiers/serials</li>
-            <li>Web URLs</li>
-            <li>IP addresses</li>
-            <li>Biometric identifiers</li>
-            <li>Full-face photos/images</li>
-            <li>Any other unique numbers/codes</li>
-            </ol>
-        </div>
-
-        <p class="text-sm font-semibold text-slate-200 mb-2">Additional — other details that can identify a person:</p>
-        <ul class="list-disc list-inside text-sm mb-4 text-slate-400 space-y-1">
-          <li>Unique combinations of demographics or clinical details (rare diagnosis + exact timestamp/location).</li>
-          <li>Occupation with a unique role/location (e.g., "the hospital CEO" at a small facility).</li>
-          <li>Free-text notes with household details, quoted speech, or local references that link to an individual.</li>
-        </ul>
-
-        <!-- Acknowledgement controls -->
-        <div class="flex flex-col gap-4 mt-6 pt-4 border-t border-slate-700/60">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div class="space-y-2">
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <div class="relative flex items-center">
-                        <input id="ackCheckbox" type="checkbox" class="peer h-5 w-5 rounded border-slate-600 bg-slate-700 text-amber-500 focus:ring-amber-500/50 focus:ring-offset-0 transition-all" />
-                    </div>
-                    <span class="text-sm text-slate-300 group-hover:text-white transition-colors">I confirm I will not enter PHI or identifiable information.</span>
-                </label>
-
-                <label class="flex items-center gap-3 cursor-pointer group">
-                    <div class="relative flex items-center">
-                        <input id="dontShowAgain" type="checkbox" class="peer h-5 w-5 rounded border-slate-600 bg-slate-700 text-sky-500 focus:ring-sky-500/50 focus:ring-offset-0 transition-all" />
-                    </div>
-                    <span class="text-sm text-slate-300 group-hover:text-white transition-colors">Don't show this again on this device</span>
-                </label>
-              </div>
-
-              <button id="ackBtn"
-                      onclick="acceptDisclaimer()"
-                      disabled
-                      class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-amber-600 text-white font-semibold shadow-lg shadow-amber-900/20 hover:bg-amber-500 hover:scale-[1.02] focus:ring-4 focus:ring-amber-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:shadow-none">
-                I Understand — Continue
-              </button>
-          </div>
-          
-          <p class="text-xs text-center sm:text-right text-slate-500">By continuing you acknowledge this tool is for support only.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- =================================================================== -->
-    <!-- HERO SECTION -->
-    <!-- =================================================================== -->
-    <header class="relative overflow-hidden rounded-b-3xl mb-8 shadow-2xl border-b border-white/5">
-
-      <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900 -z-10"></div>
-      
-      <!-- Decorative background elements -->
-      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl pointer-events-none overflow-hidden">
-          <div class="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-blue-600/10 blur-[100px]"></div>
-          <div class="absolute bottom-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/10 blur-[80px]"></div>
-      </div>
-
-      <div class="relative max-w-4xl mx-auto px-6 py-12 sm:py-16 text-center">
-          
-          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 backdrop-blur-md mb-6">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span class="text-xs font-medium text-slate-300 uppercase tracking-wide">System Operational</span>
-          </div>
-
-          <h1 class="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-400 leading-tight tracking-tight mb-4 drop-shadow-lg">
-              AI Sick Call Consult
-          </h1>
-
-          <p class="max-w-2xl mx-auto text-lg sm:text-xl text-slate-300/90 font-medium leading-relaxed">
-              Standardized Note & Profile Generator<br>
-              <span class="text-white/60">Decision support for Medics & Providers.</span>
-          </p>
-      </div>
-    </header>
-
-    <!-- =================================================================== -->
-    <!-- MAIN APP CONTAINER -->
-    <!-- =================================================================== -->
-    <div class="container mx-auto px-4 pb-24 max-w-5xl">
+    <div class="max-w-4xl mx-auto p-4 sm:p-8">
         
-        <main class="bg-white dark:bg-slate-800/50 dark:border dark:border-slate-700/50 rounded-2xl p-6 sm:p-8 shadow-2xl relative backdrop-blur-sm">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-orange-500">ADTMC + (The MAJ Russel Special)</h1>
+            <p class="text-lg text-gray-300">Medic Decision Support & Documentation Tool</p>
+        </header>
 
-            <!-- Speech Error Message -->
-            <div id="speech-error" class="hidden bg-amber-950/30 border-l-4 border-amber-500 text-amber-200 p-4 rounded-md mb-6" role="alert">
-                <p class="font-bold">Microphone Error</p>
-                <p id="speech-error-message" class="text-sm opacity-90">Could not start dictation.</p>
+        <!-- HIPAA WARNING & CHECKLIST -->
+        <details class="bg-red-900/50 border border-red-600 rounded-md mb-8">
+            <summary class="font-semibold text-red-300 p-3 cursor-pointer text-lg flex justify-between items-center">
+                <span>Click to Review: De-identified Data Only (HIPAA Warning)</span>
+                <span class="text-xs bg-red-800 px-2 py-1 rounded border border-red-500">Required Check</span>
+            </summary>
+            <div class="p-4 border-t border-red-700 text-sm">
+                <p class="font-bold text-red-200 mb-2">You MUST remove the following 18 identifiers:</p>
+                <ul class="list-disc ml-5 space-y-1 text-red-300 grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                    <li>Names</li>
+                    <li>Geographic subdivisions < State</li>
+                    <li>Dates (except year)</li>
+                    <li>Telephone #</li>
+                    <li>Fax #</li>
+                    <li>Email addresses</li>
+                    <li>SSN</li>
+                    <li>Medical Record #</li>
+                    <li>Health Plan Beneficiary #</li>
+                    <li>Account #</li>
+                    <li>Certificate/License #</li>
+                    <li>Vehicle IDs / Serial #</li>
+                    <li>Device IDs / Serial #</li>
+                    <li>Web URLs</li>
+                    <li>IP Addresses</li>
+                    <li>Biometric Identifiers</li>
+                    <li>Full face photos</li>
+                    <li>Any other unique ID number</li>
+                </ul>
+                <p class="mt-3 font-bold text-red-200">Do not enter unit specifics or unique events (e.g., "The Brigade Commander").</p>
             </div>
+        </details>
 
-            <!-- Step 1: De-identified Intake -->
-            <div id="step-1-intake">
-                <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-100">1) De-identified Intake</h2>
-                    <button id="start-over-1" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline transition-colors">Start Over</button>
-                </div>
+        <!-- LOADING SPINNER -->
+        <div id="loading-spinner" class="hidden flex justify-center items-center p-8">
+            <div class="spinner"></div>
+            <p class="ml-4 text-lg font-semibold text-gray-300">Processing Clinical Data...</p>
+        </div>
+
+        <!-- SECTION 1: CONSOLIDATED INTAKE -->
+        <div id="section-intake" class="hidden bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-orange-500 border-b border-gray-700 pb-2">1. Initial Intake & Vitals</h2>
+            <div id="error-message-intake" class="error-box hidden"></div>
+            
+            <form id="intake-form">
                 
-                <form id="intake-form-1" class="space-y-6">
-                    <!-- Content is dynamically injected by JavaScript -->
-                </form>
-            </div>
-
-            <!-- Step 2: AI-Guided Intake (Data/Exam) -->
-            <div id="step-2-questions" class="hidden">
-                <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-100">2) AI-Guided Intake (Data & Exam)</h2>
-                    <button id="start-over-2" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline transition-colors">Start Over</button>
-                </div>
-                
-                <form id="intake-form-2" class="space-y-6">
-                    <!-- Content is dynamically injected by JavaScript -->
-                </form>
-            </div>
-
-            <!-- Step 3: AI Sick Call Assessment -->
-            <div id="step-3-consult" class="hidden">
-                <div class="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
-                    <h2 class="text-2xl font-bold text-slate-100">3) Final Consult Note</h2>
-                    <button id="start-over-3" class="text-sm text-indigo-400 hover:text-indigo-300 hover:underline transition-colors">Start Over</button>
-                </div>
-                
-                <!-- Loading Spinner -->
-                <div id="loading-spinner" class="flex flex-col items-center justify-center min-h-[300px]">
-                    <div class="loader">
-                        <div class="bounce1"></div>
-                        <div class="bounce2"></div>
-                        <div class="bounce3"></div>
-                    </div>
-                    <p class="text-slate-400 mt-4 font-medium animate-pulse">Drafting assessment and profile instructions...</p>
-                </div>
-                
-                <!-- Consult Output -->
-                <div id="consult-output-container" class="hidden">
-                    <div id="consult-output" class="bg-slate-900/80 p-6 rounded-xl border border-slate-700/60 min-h-[200px] text-slate-300 shadow-inner">
-                    <!-- AI content will be injected here -->
-                    </div>
+                <!-- Location Selection -->
+                <div class="mb-6 bg-gray-900 p-3 rounded border border-gray-600">
+                     <label for="location-input" class="block text-sm font-bold text-orange-400 mb-1 uppercase tracking-wide">Current Location of Interview</label>
+                     <select id="location-input" class="w-full p-2 border border-gray-500 rounded bg-gray-800 text-white focus:ring-2 focus:ring-orange-500 outline-none">
+                         <option value="CTMC">Consolidated Troop Medical Center (CTMC)</option>
+                         <option value="BAS">Battalion Aid Station (BAS)</option>
+                         <option value="ER">Emergency Room (ER)</option>
+                         <option value="PCSL">Primary Care Clinic (PCSL)</option>
+                     </select>
                 </div>
 
-                <!-- NEW: Follow-up Addendum Area -->
-                <div id="follow-up-addendum-area" class="hidden mt-6 space-y-4">
-                    <!-- Follow-up Q&A will be injected here -->
-                </div>
-
-                <!-- Military Profile Section -->
-                <div id="military-profile-section" class="hidden mt-8 pt-8 border-t border-slate-700/60">
-                    <h3 class="text-xl font-bold text-indigo-400 uppercase tracking-wide mb-6 flex items-center gap-2">
-                        <span class="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
-                        Profile Generator (DA 3349)
-                    </h3>
-                    
-                    <div class="grid gap-6">
-                        <!-- 1. Commander Section -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Instructions for Commander</label>
-                            <div id="profile-commander-output" class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/60 min-h-[80px] text-slate-300 shadow-inner"></div>
-                        </div>
-                        <!-- 2. Soldier Section -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Instructions to Soldier</label>
-                            <div id="profile-soldier-output" class="bg-slate-900/80 p-4 rounded-xl border border-slate-700/60 min-h-[80px] text-slate-300 shadow-inner"></div>
-                        </div>
-                        <!-- 3. Profile Days Section -->
-                        <div>
-                            <label for="profile-days" class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wider">Profile Duration (Days)</label>
-                            <input type="number" id="profile-days" min="0" class="block w-32 bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3 transition-all" placeholder="e.g., 3">
-                        </div>
+                <!-- Chief Complaint Area -->
+                <div class="mb-6">
+                    <label for="initial-symptoms" class="block text-sm font-bold text-white mb-1">Chief Complaint & HPI Context (De-identified):</label>
+                    <textarea id="initial-symptoms" rows="3" class="w-full p-3 border border-gray-600 rounded-md focus:ring-2 focus:ring-orange-500 focus:outline-none bg-gray-700 text-white placeholder-gray-400" placeholder="e.g., 24yo Male with R ankle pain after twisting it on a ruck march this morning. Swelling noted immediately."></textarea>
+                    <div class="flex justify-end">
+                        <button type="button" id="example-complaint-btn" class="mt-1 text-xs text-orange-400 hover:text-orange-300 underline">Load Example Case</button>
                     </div>
                 </div>
-            </div>
 
-            <!-- Follow-up Section -->
-            <div id="follow-up-section" class="hidden mt-8 pt-8 border-t border-slate-700/60">
-                <h3 class="text-lg font-semibold text-slate-100 mb-3">Consult Refinement</h3>
-                <label for="follow-up-input" class="block text-sm font-medium text-slate-400 mb-2">Ask the AI to adjust the plan, explain the diagnosis, or check interactions:</label>
-                <div class="relative">
-                    <textarea id="follow-up-input" rows="2" class="block w-full bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3 pr-24 transition-all"></textarea>
-                    <div class="absolute bottom-2 right-2 flex items-center gap-2">
-                        <div id="follow-up-loader" class="hidden">
-                            <div class="loader scale-75">
-                                <div class="bounce1"></div>
-                                <div class="bounce2"></div>
-                                <div class="bounce3"></div>
-                            </div>
-                        </div>
-                        <button type="button" id="submit-follow-up-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold py-1.5 px-3 rounded-lg shadow-lg shadow-indigo-900/20 transition-all hover:scale-105">
-                            Update
-                        </button>
+                <!-- Vitals & History Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Vitals</label>
+                        <textarea id="vitals-input" rows="2" class="w-full p-2 border border-gray-600 rounded-md bg-gray-900 text-white text-sm focus:border-orange-500 outline-none" placeholder="BP, HR, RR, Temp, SpO2"></textarea>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Physical Exam / Initial Findings</label>
+                        <textarea id="pe-input" rows="2" class="w-full p-2 border border-gray-600 rounded-md bg-gray-900 text-white text-sm focus:border-orange-500 outline-none" placeholder="Brief objective findings (e.g., TTP, ROM, swelling)"></textarea>
+                    </div>
+                    <div>
+                         <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Current Meds</label>
+                        <input type="text" id="meds-input" class="w-full p-2 border border-gray-600 rounded-md bg-gray-900 text-white text-sm focus:border-orange-500 outline-none" placeholder="e.g., Lisinopril, Motrin">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Allergies</label>
+                        <input type="text" id="allergies-input" class="w-full p-2 border border-gray-600 rounded-md bg-gray-900 text-white text-sm focus:border-orange-500 outline-none" placeholder="e.g., NKDA, Penicillin">
+                    </div>
+                    <div class="md:col-span-2">
+                         <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Past Medical History (PMH)</label>
+                         <input type="text" id="pmh-input" class="w-full p-2 border border-gray-600 rounded-md bg-gray-900 text-white text-sm focus:border-orange-500 outline-none" placeholder="e.g., HTN, Chronic Low Back Pain, Previous Surgeries">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Prior Labs / Imaging</label>
+                        <input type="text" id="prior-labs-input" class="w-full p-2 border border-gray-600 rounded-md bg-gray-900 text-white text-sm focus:border-orange-500 outline-none" placeholder="Any relevant recent results">
+                   </div>
                 </div>
-            </div>
 
-            <!-- Bottom Buttons (Copy/Back) -->
-            <div id="bottom-buttons" class="hidden pt-8 mt-4 border-t border-slate-700/60 flex flex-col sm:flex-row justify-between gap-4">
-                <button type="button" id="back-to-step-2-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-200">
-                    &larr; Back
+                <!-- Unified Action Button (Start) -->
+                <button type="submit" class="w-full bg-orange-600 text-white font-bold text-lg py-4 px-6 rounded-lg shadow-lg border-2 border-orange-500 hover:bg-orange-500 hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center">
+                    <span class="mr-3">START AI INTERVIEW</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                 </button>
-                
-                <div class="flex flex-col sm:flex-row gap-3">
-                    <button type="button" id="copy-clipboard-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg shadow-emerald-900/20 transition-all duration-200 hover:scale-[1.02]">
-                        Copy Full Note
+                <p class="text-center text-xs text-gray-500 mt-2">Generates targeted follow-up questions based on the data above.</p>
+            </form>
+        </div>
+
+        <!-- SECTION 2: AI QUESTIONS -->
+        <div id="section-questions" class="hidden bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-orange-500 border-b border-gray-700 pb-2">2. Guided Intake Questions</h2>
+            <p class="text-sm text-gray-400 mb-4">The AI has generated specific questions to clarify the case.</p>
+            <div id="error-message-questions" class="error-box hidden"></div>
+            <form id="questions-form">
+                <div id="questions-container" class="space-y-4 mb-6"></div>
+                <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                    <!-- Unified Action Button (Back) -->
+                    <button type="button" id="questions-back-btn" class="flex-1 bg-gray-700 text-gray-200 font-bold text-lg py-4 px-6 rounded-lg shadow-lg border-2 border-gray-600 hover:bg-gray-600 hover:text-white hover:border-gray-500 hover:shadow-gray-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center">
+                        Back to Intake
                     </button>
-                    <div id="copy-success" class="text-emerald-400 text-sm items-center justify-center flex hidden font-bold animate-pulse">Copied!</div>
+                    <!-- Unified Action Button (Continue) -->
+                    <button type="submit" class="flex-1 bg-orange-600 text-white font-bold text-lg py-4 px-6 rounded-lg shadow-lg border-2 border-orange-500 hover:bg-orange-500 hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center">
+                        Generate Plan
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SECTION 3: PLAN REVIEW -->
+        <div id="section-review" class="hidden bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+             <!-- Emergency Alert -->
+             <div id="emergency-alert" class="hidden bg-red-900/50 border-l-4 border-red-600 text-red-300 p-4 rounded-md mb-6">
+                <p class="font-bold flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                    RED FLAG / TRIAGE ALERT
+                </p>
+                <p id="emergency-reason" class="mt-2 text-sm font-mono bg-red-900/30 p-2 rounded"></p>
+            </div>
+
+            <h2 class="text-xl font-semibold mb-4 text-orange-500 border-b border-gray-700 pb-2">3. Review & Select Plan Items</h2>
+            <p class="text-sm text-gray-400 mb-4">Review the AI suggestions. Uncheck items to exclude them from the final note.</p>
+            <div id="error-message-review" class="error-box hidden"></div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- Col 1 -->
+                <div class="space-y-4">
+                    <div class="bg-gray-900 p-4 rounded border border-gray-700">
+                        <h3 class="font-bold text-orange-400 mb-2 border-b border-gray-700 pb-1">Assessment</h3>
+                        <p id="review-diagnosis" class="text-sm text-gray-200 mb-2 italic"></p>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase mt-2">Differential (DDx) & Probability</h4>
+                        <ul id="review-ddx-list" class="text-sm text-gray-400 list-none space-y-1 mt-1"></ul>
+                    </div>
+
+                    <div class="bg-gray-900 p-4 rounded border border-gray-700">
+                        <h3 class="font-bold text-orange-400 mb-2 border-b border-gray-700 pb-1">Workup (Labs/Rads/Consults)</h3>
+                        <div id="review-workup-container" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Col 2 -->
+                <div class="space-y-4">
+                    <div class="bg-gray-900 p-4 rounded border border-gray-700">
+                        <h3 class="font-bold text-orange-400 mb-2 border-b border-gray-700 pb-1">Treatment (Meds/Edu)</h3>
+                        <div id="review-treatment-container" class="space-y-2"></div>
+                    </div>
+
+                    <div class="bg-gray-900 p-4 rounded border border-gray-700">
+                        <h3 class="font-bold text-orange-400 mb-2 border-b border-gray-700 pb-1">Profile / Limitations</h3>
+                        <div id="review-profile-container" class="space-y-2"></div>
+                        <div class="mt-3 flex items-center bg-gray-800 p-2 rounded">
+                             <label class="text-xs text-gray-400 mr-2 font-bold uppercase">Profile Duration (Days)</label>
+                             <input type="number" id="profile-days" class="w-20 bg-gray-700 border border-gray-600 text-white text-center text-sm p-1 rounded focus:border-orange-500 outline-none">
+                        </div>
+                    </div>
                 </div>
             </div>
 
-        </main>
-    </div>
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                <!-- Unified Action Button (Back) -->
+                <button type="button" id="review-back-btn" class="flex-1 bg-gray-700 text-gray-200 font-bold text-lg py-4 px-6 rounded-lg shadow-lg border-2 border-gray-600 hover:bg-gray-600 hover:text-white hover:border-gray-500 hover:shadow-gray-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center">
+                    Back
+                </button>
+                <!-- Unified Action Button (Continue) -->
+                <button type="button" id="review-continue-btn" class="flex-1 bg-orange-600 text-white font-bold text-lg py-4 px-6 rounded-lg shadow-lg border-2 border-orange-500 hover:bg-orange-500 hover:shadow-orange-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center">
+                    Finalize Note
+                </button>
+            </div>
+        </div>
 
-    <!-- Hidden Textarea for Copy-to-Clipboard -->
-    <textarea id="clipboard-helper" class="absolute -left-full"></textarea>
+        <!-- SECTION 4: REFINE & FINAL NOTE -->
+        <div id="section-final" class="hidden bg-gray-800 p-6 rounded-lg shadow-md border border-gray-700">
+            <h2 class="text-xl font-semibold mb-4 text-orange-500 border-b border-gray-700 pb-2">4. Final SOAP Note</h2>
+            
+            <!-- Refinement / Q&A Box -->
+            <div class="bg-gray-700 p-4 rounded-md mb-6 border border-gray-600">
+                <label class="block text-sm font-bold text-orange-300 mb-2">Ask AI for Clarification or Adjustments</label>
+                <div class="flex space-x-2">
+                    <input type="text" id="refine-input" class="flex-1 p-2 bg-gray-900 border border-gray-600 rounded text-white text-sm focus:border-orange-500 outline-none" placeholder="e.g., 'What is the dose for Motrin?' or 'Why did you suggest X-Ray?'">
+                    <button type="button" id="refine-btn" class="bg-orange-600 hover:bg-orange-500 text-white px-4 rounded font-medium text-sm transition-colors">Ask</button>
+                </div>
+                <div id="refine-response" class="hidden mt-3 p-3 bg-gray-800 rounded text-sm text-gray-300 border border-gray-600 italic"></div>
+            </div>
+
+            <!-- The Note -->
+            <div class="bg-white text-black p-6 rounded-md shadow-inner max-h-[500px] overflow-y-auto note-preview font-mono text-sm leading-tight border-2 border-gray-400 mb-4">
+                <pre id="final-note-content" class="whitespace-pre-wrap"></pre>
+            </div>
+            
+            <button type="button" id="copy-note-btn" class="w-full bg-gray-700 hover:bg-gray-600 text-white font-bold text-lg py-4 px-6 rounded-lg shadow-lg border-2 border-gray-500 hover:shadow-gray-500/40 transition-all transform hover:-translate-y-1 flex items-center justify-center mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" /><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" /></svg>
+                Copy Note to Clipboard
+            </button>
+            <p id="copy-success" class="hidden mt-2 text-center text-green-400 font-semibold text-sm">Copied successfully!</p>
+
+            <!-- REFERENCES SECTION (NEW) -->
+            <div id="references-container" class="bg-gray-900 p-4 rounded border border-gray-600 mb-8">
+                <h3 class="text-orange-400 font-bold mb-2 border-b border-gray-700 pb-1 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg>
+                    Clinical Evidence & References (Not included in Clipboard Copy)
+                </h3>
+                <p class="text-xs text-gray-500 mb-3">Links to guidelines and evidence supporting this plan.</p>
+                <ul id="references-list" class="list-disc ml-5 text-sm space-y-2"></ul>
+            </div>
+
+            <div class="mt-6 flex justify-center">
+                <button type="button" id="start-over-btn" class="text-gray-400 hover:text-white underline text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    Start Over (New Patient)
+                </button>
+            </div>
+        </div>
+
+    </div>
 
     <script>
-    /* ====== DISCLAIMER MODAL BEHAVIOR ====== */
-    (function() {
-      const MODAL_KEY = 'consultDisclaimerAck_v1';
-      const AUDIT_KEY = 'consultDisclaimerAudit_v1';
-      const modal = document.getElementById('disclaimerModal');
-      const dialog = document.getElementById('disclaimerDialog');
-      const ackCheckbox = document.getElementById('ackCheckbox');
-      const ackBtn = document.getElementById('ackBtn');
-      const dontShowAgain = document.getElementById('dontShowAgain');
-    
-      // Check persistence
-      try {
-        const prev = localStorage.getItem(MODAL_KEY);
-        if (prev) {
-          if (modal) modal.style.display = 'none';
-          return;
-        }
-      } catch (e) {
-        console.warn('localStorage not available for disclaimer persistence.');
-      }
-    
-      // Lock background scroll
-      document.body.style.overflow = 'hidden';
-      
-      // Focus management
-      if(dialog) dialog.focus();
-      if(ackCheckbox) ackCheckbox.focus();
-    
-      // Button state
-      ackCheckbox?.addEventListener('change', () => {
-        if (ackCheckbox.checked) {
-          ackBtn.disabled = false;
-          ackBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-        } else {
-          ackBtn.disabled = true;
-          ackBtn.classList.add('opacity-50', 'cursor-not-allowed');
-        }
-      });
-    
-      // Modal trap
-      modal?.addEventListener('click', (e) => {
-        if (e.target === modal) e.stopPropagation();
-      });
-    
-      // Focus Trap Logic
-      const FOCUSABLE_SELECTORS = 'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]:not([tabindex="-1"])';
-      function trapFocus(e) {
-        const focusable = Array.from(dialog.querySelectorAll(FOCUSABLE_SELECTORS)).filter(el => el.offsetParent !== null);
-        if (focusable.length === 0) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.key === 'Tab') {
-          if (e.shiftKey) { 
-            if (document.activeElement === first) {
-              e.preventDefault();
-              last.focus();
-            }
-          } else { 
-            if (document.activeElement === last) {
-              e.preventDefault();
-              first.focus();
-            }
-          }
-        }
-      }
-      window.addEventListener('keydown', trapFocus);
-    
-      // Prevent Escape
-      window.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') e.preventDefault();
-      });
-    
-      // Accept function
-      window.acceptDisclaimer = function() {
-        try {
-          const now = new Date().toISOString();
-          const auditRaw = localStorage.getItem(AUDIT_KEY);
-          const audits = auditRaw ? JSON.parse(auditRaw) : [];
-          audits.push({ ts: now });
-          localStorage.setItem(AUDIT_KEY, JSON.stringify(audits));
-    
-          if (dontShowAgain && dontShowAgain.checked) {
-            localStorage.setItem(MODAL_KEY, now);
-          }
-        } catch (err) {
-          console.warn('localStorage unavailable; audit/persistence may not be recorded.');
-        }
-    
-        if (modal) {
-            modal.style.opacity = '0';
-            setTimeout(() => {
-                modal.style.display = 'none';
-            }, 300);
-        }
-        document.body.style.overflow = '';
-        window.removeEventListener('keydown', trapFocus);
-      };
-    })();
-    </script>
-
-    <script type="module">
-        // --- Gemini API Configuration ---
-        const API_KEY = "AIzaSyAyAQ96QdTF4b2rRn_yMQ8O4poLOtzz72o";
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${API_KEY}`;
-        
         // --- State Management ---
-        const state = {
-            hpi: '',
-            pmh: '',
-            psh: '',
-            allergies: '',
-            medications: '',
-            ros_general: '',
-            unit_mos: '', 
-            opqrst: '',
-            exam: '',
-            point_of_care_tests: '',
-            labs: '',
-            imaging: ''
+        let intakeState = {
+            location: "",
+            chiefComplaint: "",
+            questions: [],
+            answers: [],
+            vitals: "",
+            physicalExam: "",
+            pmh: "",
+            allergies: "",
+            meds: "",
+            priorLabs: "",
+            generatedSoap: null
         };
-        let chatHistory = []; 
-        
-        // --- Speech Recognition State ---
-        let recognition;
-        let activeTextarea = null;
-        let lastTranscript = ''; 
-        let baseTranscript = ''; 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-        // --- UI Element References ---
-        const steps = {
-            1: document.getElementById('step-1-intake'),
-            2: document.getElementById('step-2-questions'),
-            3: document.getElementById('step-3-consult')
+        const apiKey = "AIzaSyCHA2oQWzDz9fEvyMWk9FdcLMWz-b2mXLk";
+
+        // --- DOM Elements ---
+        const sections = {
+            intake: document.getElementById('section-intake'),
+            questions: document.getElementById('section-questions'),
+            review: document.getElementById('section-review'),
+            final: document.getElementById('section-final')
         };
         
-        const loader = document.getElementById('loading-spinner');
-        const consultOutputContainer = document.getElementById('consult-output-container');
-        const consultOutput = document.getElementById('consult-output');
-        const copySuccessMessage = document.getElementById('copy-success');
-        const bottomButtons = document.getElementById('bottom-buttons');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorBoxes = {
+            intake: document.getElementById('error-message-intake'),
+            questions: document.getElementById('error-message-questions'),
+            review: document.getElementById('error-message-review')
+        };
 
-        // --- Step Navigation ---
-        function showStep(stepNumber) {
-            Object.values(steps).forEach(step => step.classList.add('hidden'));
-            if (steps[stepNumber]) {
-                steps[stepNumber].classList.remove('hidden');
+        // --- Navigation & UI Helpers ---
+        function showLoading(isLoading) {
+            loadingSpinner.classList.toggle('hidden', !isLoading);
+            if (isLoading) Object.values(sections).forEach(s => s.classList.add('hidden'));
+        }
+
+        function showSection(name) {
+            showLoading(false);
+            Object.keys(sections).forEach(key => {
+                sections[key].classList.toggle('hidden', key !== name);
+            });
+            window.scrollTo(0, 0);
+        }
+
+        function showError(section, msg) {
+            if(errorBoxes[section]) {
+                errorBoxes[section].textContent = msg;
+                errorBoxes[section].classList.remove('hidden');
+                errorBoxes[section].classList.add('active');
             }
-            // Hide bottom buttons unless on step 3
-            bottomButtons.classList.toggle('hidden', stepNumber !== 3);
-            window.scrollTo(0, 0); 
+        }
+        
+        function clearErrors() {
+            Object.values(errorBoxes).forEach(box => {
+                box.classList.add('hidden');
+                box.classList.remove('active');
+                box.textContent = '';
+            });
         }
 
-        // --- Data Collection ---
-        function saveStep1Data() {
-            state.hpi = document.getElementById('hpi').value;
-            state.pmh = document.getElementById('pmh').value;
-            state.psh = document.getElementById('psh').value;
-            state.allergies = document.getElementById('allergies').value;
-            state.medications = document.getElementById('medications').value;
-            state.ros_general = document.getElementById('ros_general').value;
-            state.unit_mos = document.getElementById('unit_mos').value;
-        }
-
-        function saveStep2Data() {
-            state.opqrst = document.getElementById('opqrst').value;
-            state.exam = document.getElementById('exam').value;
-            state.point_of_care_tests = document.getElementById('point_of_care_tests').value;
-            state.labs = document.getElementById('labs').value;
-            state.imaging = document.getElementById('imaging').value;
-        }
-
-        // --- AI Consult Logic ---
-        function buildConsultPrompt() {
-            const addSection = (title, data) => data ? `**${title}:**\n${data}\n\n` : '';
-
-            // --- UPDATED SYSTEM PROMPT FOR CONSULT NOTE FORMAT ---
-            const systemPrompt = `You are an AI decision support tool for a U.S. Army Medic (68W) at a Sick Call clinic.
-**PRIMARY GOAL:**
-Generate a professional, clinically accurate consult note using the standard Assessment and Plan format.
-
-**CRITICAL FORMATTING INSTRUCTIONS:**
-1. **Assessment (Paragraph):** You must generate a cohesive narrative paragraph. Synthesize the Soldier's Unit/MOS, Age/Sex, Chief Complaint, Key Exam Findings, and Diagnosis into one professional summary. Explicitly mention if Red Flags are present or absent in this paragraph.
-2. **Plan (Bullets):** You must generate a clear, bulleted list of actions, including medications (dose/freq), non-pharm interventions (ice, rest), patient education, and disposition (RTD vs Quarters).
-3. **Military Profile:** You must generate actionable bullet points for DA Form 3349.
-4. **Style:** Use plain English. No LaTeX. No Charts.
-
-**REQUIRED OUTPUT STRUCTURE:**
-Your response MUST follow this exact structure:
-
-## Assessment
-(Write a single narrative paragraph here. Example: "24-year-old male Infantryman (11B) presenting with acute right ankle pain following an inversion injury. Physical exam reveals edema and tenderness over the ATFL with a negative squeeze test, consistent with a Grade 1 lateral ankle sprain. No red flags for fracture or neurovascular compromise were identified.")
-
-## Plan
-(Bulleted list)
-* **Medications:** (e.g., Ibuprofen 800mg PO TID x 5 days)
-* **Treatment:** (e.g., RICE protocol, ace wrap)
-* **Education:** (e.g., Return to clinic if pain worsens or unable to bear weight)
-* **Disposition:** (e.g., Quarters for 24 hours, then RTD)
-
-<!-- This is the consult break string -->
-CONSULT_BREAK_COMMANDER
-## Commander Instructions (Profile Limits)
-(3-5 short bullets on functional limitations. e.g., No running, No rucking > 35lbs)
-
-<!-- This is the commander break string -->
-COMMANDER_BREAK_SOLDIER
-## Soldier Instructions (Education)
-(3-5 simple bullets for the patient. e.g., Keep ice on for 20 mins every 2 hours.)
-`;
-
-            const userPrompt = `
-**SICK CALL ENCOUNTER**
-${addSection('Soldier Unit & MOS', state.unit_mos)}
-${addSection('Chief Complaint & HPI', state.hpi)}
-${addSection('Symptom Details (OPQRST)', state.opqrst)}
-${addSection('Past Medical History', state.pmh)}
-${addSection('Past Surgical History', state.psh)}
-${addSection('Allergies', state.allergies)}
-${addSection('Medications', state.medications)}
-${addSection('General ROS', state.ros_general)}
-${addSection('Vital Signs & Physical Exam', state.exam)}
-${addSection('Point-of-Care Tests', state.point_of_care_tests)}
-${addSection('Other Labs', state.labs)}
-${addSection('Imaging Findings', state.imaging)}
-`;
-            return { systemPrompt, userPrompt };
-        }
-
-        async function fetchConsult() {
-            saveStep2Data(); 
-            showStep(3);
-            loader.classList.remove('hidden');
-            consultOutputContainer.classList.add('hidden');
-            document.getElementById('military-profile-section').classList.add('hidden');
-            document.getElementById('follow-up-section').classList.add('hidden');
-            document.getElementById('follow-up-addendum-area').classList.add('hidden');
-
-
-            const { systemPrompt, userPrompt } = buildConsultPrompt();
-            
-            chatHistory = [{ role: "user", parts: [{ text: userPrompt }] }];
-
+        // --- API Logic ---
+        async function callGeminiApi(systemPrompt, userQuery, retries = 3) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = {
-                contents: chatHistory,
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                },
-                tools: [{ "google_search": {} }],
-                generationConfig: {
-                    temperature: 0.2, 
-                    topK: 40,
-                }
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: { responseMimeType: "application/json" }
             };
 
             try {
-                const response = await fetchWithRetry(API_URL, {
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`API Error: ${response.statusText}`);
-                }
-                
-                const result = await response.json();
-                const candidate = result.candidates?.[0];
-                
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const rawText = candidate.content.parts[0].text;
-                    
-                    chatHistory.push({ role: "model", parts: [{ text: rawText }] });
 
-                    const parts = rawText.split(/CONSULT_BREAK_COMMANDER|COMMANDER_BREAK_SOLDIER/);
-                    const consultNoteText = parts[0] || "<p class='text-red-500'>Error: Failed to parse consult note.</p>";
-                    const commanderText = parts[1] || "<p class='text-red-500'>Error: Failed to parse commander instructions.</p>";
-                    const soldierText = parts[2] || "<p class='text-red-500'>Error: Failed to parse soldier instructions.</p>";
-
-                    // Render medical note
-                    let consultHtml = simpleMarkdownToHtml(consultNoteText);
-
-                    // Handle grounding metadata
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        const sources = groundingMetadata.groundingAttributions
-                            .map(attribution => ({
-                                uri: attribution.web?.uri,
-                                title: attribution.web?.title,
-                            }))
-                            .filter(source => source.uri && source.title);
-
-                        if (sources.length > 0) {
-                            consultHtml += `<div class="mt-4 pt-4 border-t border-slate-700/60"><h2 class="text-xs text-indigo-400 uppercase mb-2 font-bold tracking-wider">References</h2><ul class="text-xs text-slate-400 space-y-1">`;
-                            sources.forEach(source => {
-                                consultHtml += `<li><a href="${source.uri}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-300 underline transition-colors">${source.title}</a></li>`;
-                            });
-                            consultHtml += `</ul></div>`;
-                        }
-                    }
-                    
-                    consultOutput.innerHTML = consultHtml;
-                    document.getElementById('profile-commander-output').innerHTML = simpleMarkdownToHtml(commanderText);
-                    document.getElementById('profile-soldier-output').innerHTML = simpleMarkdownToHtml(soldierText);
-                } else {
-                    consultOutput.innerHTML = "<p class='text-red-400'>Error: Invalid API response.</p>";
-                }
-            } catch (error) {
-                console.error("Fetch Error:", error);
-                consultOutput.innerHTML = `<p class='text-red-400'><strong>Connection Error:</strong><br>${error.message}</p>`;
-            } finally {
-                loader.classList.add('hidden');
-                consultOutputContainer.classList.remove('hidden');
-                document.getElementById('military-profile-section').classList.remove('hidden');
-                document.getElementById('follow-up-section').classList.remove('hidden');
-            }
-        }
-        
-        // --- Exponential Backoff Retry ---
-        async function fetchWithRetry(url, options, retries = 3, delay = 1000) {
-            try {
-                const response = await fetch(url, options);
-                if (response.status === 429 || response.status >= 500) { 
-                    if (retries > 0) {
-                        await new Promise(resolve => setTimeout(resolve, delay));
-                        return fetchWithRetry(url, options, retries - 1, delay * 2);
-                    } else {
-                        throw new Error("API request failed after multiple retries.");
-                    }
-                }
-                return response;
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const data = await response.json();
+                return JSON.parse(data.candidates[0].content.parts[0].text);
             } catch (error) {
                 if (retries > 0) {
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                    return fetchWithRetry(url, options, retries - 1, delay * 2);
-                } else {
-                    throw error;
+                    await new Promise(r => setTimeout(r, 1000));
+                    return callGeminiApi(systemPrompt, userQuery, retries - 1);
                 }
+                throw error;
             }
         }
 
-        // --- Handle Follow-up Questions ---
-        async function handleFollowUp() {
-            const input = document.getElementById('follow-up-input');
-            const followUpText = input.value.trim();
-            if (!followUpText) return;
-
-            const loader = document.getElementById('follow-up-loader');
-            const button = document.getElementById('submit-follow-up-btn');
-
-            loader.classList.remove('hidden');
-            button.disabled = true;
-            input.disabled = true;
-
-            chatHistory.push({ role: "user", parts: [{ text: followUpText }] });
-            
-            // UPDATED FOLLOW-UP PROMPT TO MAINTAIN NEW FORMAT
-            const followUpSystemPrompt = `You are the same AI Senior Medic/PA.
-The user is asking for an update or clarification to the consult note.
-
-**CRITICAL INSTRUCTIONS:**
-1. If the user asks to change the plan or meds, **Rewrite the Plan section** in the bulleted format established previously.
-2. If the user asks to change the profile, update the Commander Instructions.
-3. Keep answers concise.
-
-**REQUIRED FORMAT:**
-## Update to Assessment/Plan
-(Your direct answer. If updating the plan, provide the full updated bulleted list here.)
-
-<!-- This is the consult break string -->
-CONSULT_BREAK_COMMANDER
-
-## Updated Commander Instructions
-(Provide updated bullets or state "No change to profile.")
-
-<!-- This is the commander break string -->
-COMMANDER_BREAK_SOLDIER
-
-## Updated Soldier Instructions
-(Provide updated bullets or state "No change to patient instructions.")
-`;
-            
-            const payload = {
-                contents: chatHistory,
-                systemInstruction: {
-                    parts: [{ text: followUpSystemPrompt }] 
-                },
-                tools: [{ "google_search": {} }],
-                generationConfig: {
-                    temperature: 0.2,
-                    topK: 40,
-                }
+        async function callGeminiText(systemPrompt, userQuery) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+             const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] }
             };
+            const response = await fetch(url, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+
+        // --- Step 1: Intake (CC + Data) ---
+        document.getElementById('example-complaint-btn').addEventListener('click', () => {
+            document.getElementById('initial-symptoms').value = "22M active duty soldier with right ankle pain. Twisted it during PT run this morning. Swollen, can bear weight but painful.";
+            document.getElementById('vitals-input').value = "BP 124/78, HR 82, RR 16, 98% RA";
+            document.getElementById('pe-input').value = "Swelling lateral malleolus. (+) Anterior Drawer. FROM. PMS Intact.";
+            document.getElementById('meds-input').value = "None";
+            document.getElementById('allergies-input').value = "NKDA";
+            document.getElementById('pmh-input').value = "None";
+        });
+
+        document.getElementById('intake-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const val = document.getElementById('initial-symptoms').value.trim();
+            if(val.length < 5) return showError('intake', 'Please enter a valid Chief Complaint.');
+            
+            // Capture all data
+            intakeState.location = document.getElementById('location-input').value;
+            intakeState.chiefComplaint = val;
+            intakeState.vitals = document.getElementById('vitals-input').value;
+            intakeState.physicalExam = document.getElementById('pe-input').value;
+            intakeState.pmh = document.getElementById('pmh-input').value;
+            intakeState.allergies = document.getElementById('allergies-input').value;
+            intakeState.meds = document.getElementById('meds-input').value;
+            intakeState.priorLabs = document.getElementById('prior-labs-input').value;
+
+            showLoading(true);
 
             try {
-                const response = await fetchWithRetry(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                // Prompt includes ALL context to make questions smarter
+                const prompt = `
+                    You are an expert combat medic assistant. 
+                    Based on the Chief Complaint, Vitals, and History provided, generate 5-7 concise, targeted follow-up questions to build a complete HPI and ROS.
+                    Do NOT ask for data already provided (e.g., if Vitals are present, don't ask for them).
+                    Return strictly JSON: { "questions": ["Question 1", "Question 2"...] }
+                `;
+                
+                const userContext = `
+                    Current Location: ${intakeState.location}
+                    Complaint: ${intakeState.chiefComplaint}
+                    Vitals: ${intakeState.vitals}
+                    Med Hx: ${intakeState.pmh}
+                    Current Meds: ${intakeState.meds}
+                    Allergies: ${intakeState.allergies}
+                `;
+
+                const result = await callGeminiApi(prompt, userContext);
+                
+                const container = document.getElementById('questions-container');
+                container.innerHTML = '';
+                result.questions.forEach((q, i) => {
+                    container.innerHTML += `
+                        <div>
+                            <label class="block text-sm text-orange-300 mb-1 font-medium">${q}</label>
+                            <input type="text" data-q="${q}" class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 outline-none" required>
+                        </div>`;
                 });
-
-                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-
-                const result = await response.json();
-                const candidate = result.candidates?.[0];
-
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    const rawText = candidate.content.parts[0].text;
-                    
-                    chatHistory.push({ role: "model", parts: [{ text: rawText }] });
-
-                    const parts = rawText.split(/CONSULT_BREAK_COMMANDER|COMMANDER_BREAK_SOLDIER/);
-                    const consultFollowUpText = parts[0] || "Error";
-                    const newCommanderText = parts[1] || "Error";
-                    const newSoldierText = parts[2] || "Error";
-
-                    let followUpHtml = simpleMarkdownToHtml(consultFollowUpText);
-                    
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        const sources = groundingMetadata.groundingAttributions
-                            .map(attribution => ({ uri: attribution.web?.uri, title: attribution.web?.title }))
-                            .filter(source => source.uri && source.title);
-                        if (sources.length > 0) {
-                            followUpHtml += `<div class="mt-2 text-xs text-slate-500">Sources: `;
-                            sources.forEach(source => {
-                                followUpHtml += `<a href="${source.uri}" target="_blank" class="underline mr-2 hover:text-slate-300 transition-colors">${source.title}</a>`;
-                            });
-                            followUpHtml += `</div>`;
-                        }
-                    }
-                    
-                    const addendumContainer = document.getElementById('follow-up-addendum-area');
-                    if (addendumContainer.classList.contains('hidden')) {
-                        addendumContainer.classList.remove('hidden');
-                        addendumContainer.innerHTML = `<h3 class="text-xl font-semibold text-slate-100 mb-3 border-b border-slate-600 pb-2">Consult Updates</h3>`;
-                    }
-
-                    const qaBlock = `
-                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-lg mb-4">
-                            <p class="text-indigo-400 text-sm font-bold uppercase mb-2 tracking-wide">Update Request: "${escapeHTML(followUpText)}"</p>
-                            <div class="mt-2 text-slate-300 prose prose-invert prose-sm max-w-none">${followUpHtml}</div>
-                        </div>
-                    `;
-                    
-                    addendumContainer.innerHTML += qaBlock;
-
-                    if (!newCommanderText.includes("No change")) {
-                        document.getElementById('profile-commander-output').innerHTML = simpleMarkdownToHtml(newCommanderText);
-                    }
-                    if (!newSoldierText.includes("No change")) {
-                        document.getElementById('profile-soldier-output').innerHTML = simpleMarkdownToHtml(newSoldierText);
-                    }
-                    
-                    input.value = '';
-                    consultOutputContainer.scrollTop = consultOutputContainer.scrollHeight;
-
-                } else {
-                     console.error("Invalid follow-up response");
-                }
-
-            } catch (error) {
-                console.error("Follow-up Fetch Error:", error);
-            } finally {
-                loader.classList.add('hidden');
-                button.disabled = false;
-                input.disabled = false;
-                input.focus();
-            }
-        }
-
-        // --- Speech Recognition ---
-        function initializeSpeechRecognition() {
-            if (!SpeechRecognition) {
-                console.warn("Speech Recognition API not supported in this browser.");
-                return;
-            }
-
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = true;
-            recognition.lang = 'en-US';
-
-            recognition.onresult = (event) => {
-                if (!activeTextarea) return;
-
-                let interimTranscript = '';
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript;
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
-                }
-
-                activeTextarea.value = baseTranscript + finalTranscript + interimTranscript;
-                
-                if (finalTranscript) {
-                    baseTranscript += finalTranscript + ' ';
-                }
-            };
-
-            recognition.onend = () => {
-                const currentActiveTextareaId = activeTextarea?.id;
-                activeTextarea = null;
-                lastTranscript = ''; 
-                baseTranscript = ''; 
-
-                if (currentActiveTextareaId) {
-                    const micBtn = document.querySelector(`.mic-btn[data-target-id="${currentActiveTextareaId}"]`);
-                    if (micBtn) {
-                        micBtn.classList.remove('is-listening');
-                        micBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>`;
-                    }
-                }
-            };
-
-            recognition.onerror = (event) => {
-                const errorDiv = document.getElementById('speech-error');
-                const errorMessage = document.getElementById('speech-error-message');
-                
-                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                    errorMessage.innerText = "Microphone access denied. Check browser settings.";
-                } else {
-                    errorMessage.innerText = `Error: ${event.error}`;
-                }
-                errorDiv.classList.remove('hidden');
-            };
-        }
-
-        function handleMicClick(event) {
-            const btn = event.currentTarget;
-            const targetId = btn.dataset.targetId;
-            const targetTextarea = document.getElementById(targetId);
-
-            if (!recognition || !targetTextarea) return;
-
-            if (activeTextarea) { 
-                recognition.stop();
-            } else { 
-                document.getElementById('speech-error').classList.add('hidden');
-                
-                lastTranscript = ''; 
-                baseTranscript = targetTextarea.value;
-                if (baseTranscript.length > 0 && !baseTranscript.endsWith(' ')) {
-                    baseTranscript += ' ';
-                }
-                
-                activeTextarea = targetTextarea;
-                recognition.start();
-                btn.classList.add('is-listening');
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>`; 
-            }
-        }
-
-        // --- Utility Functions ---
-        function simpleMarkdownToHtml(md) {
-            let html = md
-                .replace(/^## (.*$)/gim, '<h2>$1</h2>') 
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
-                .replace(/__(.*?)__/g, '<strong>$1</strong>'); 
-
-            html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-            html = html.replace(/((<li>.*<\/li\>[\n\r]?)+)/g, '<ul>$1</ul>');
-
-            let lines = html.split('\n');
-            for (let i = 0; i < lines.length; i++) {
-                if (!lines[i].startsWith('<h') && !lines[i].startsWith('<li') && !lines[i].startsWith('<ul') && !lines[i].endsWith('</ul>') && !lines[i].startsWith('<div') && lines[i].trim() !== '') {
-                    lines[i] = `<p>${lines[i]}</p>`;
-                }
-            }
-            return lines.join('\n').replace(/<p><\/p>/g, ''); 
-        }
-
-        function escapeHTML(str) {
-            return str.replace(/[&<>"']/g, function(match) {
-                return {
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                }[match];
-            });
-        }
-        
-        function copyToClipboard() {
-            let textToCopy = `--- AI SICK CALL CONSULT ---\n\n`;
-            textToCopy += consultOutput.innerText;
-
-            const addendumArea = document.getElementById('follow-up-addendum-area');
-            if (!addendumArea.classList.contains('hidden')) {
-                textToCopy += `\n\n--- UPDATES ---\n`;
-                const qaBlocks = addendumArea.querySelectorAll('.bg-slate-800');
-                qaBlocks.forEach(block => {
-                    textToCopy += block.innerText + "\n";
-                });
-            }
-
-            textToCopy += `\n\n--- PROFILE INSTRUCTIONS (DA 3349) ---\n`;
-            textToCopy += `COMMANDER: \n${document.getElementById('profile-commander-output').innerText}\n\n`;
-            textToCopy += `SOLDIER: \n${document.getElementById('profile-soldier-output').innerText}\n\n`;
-            textToCopy += `PROFILE DAYS: ${document.getElementById('profile-days').value || 'N/A'}\n`;
-            textToCopy += `\n(Generated by ADTMC AI)`;
-
-            const helper = document.getElementById('clipboard-helper');
-            helper.value = textToCopy;
-            helper.select();
-            helper.setSelectionRange(0, 99999); 
-            
-            try {
-                document.execCommand('copy');
-                copySuccessMessage.classList.remove('hidden');
-                setTimeout(() => {
-                    copySuccessMessage.classList.add('hidden');
-                }, 2000);
+                showSection('questions');
             } catch (err) {
-                console.error('Failed to copy text: ', err);
-            }
-        }
-
-        function startOver() {
-            if (recognition && activeTextarea) {
-                recognition.stop();
-            }
-            document.getElementById('intake-form-1').reset();
-            document.getElementById('intake-form-2').reset();
-            
-            const rosTextarea = document.getElementById('ros_general');
-            if (rosTextarea) {
-                rosTextarea.value = "Constitutional: \nHEENT: \nRespiratory: \nCardiovascular: \nGI: \nGU: \nMSK: \nNeuro: \nSkin: ";
-            }
-            consultOutput.innerHTML = '';
-            
-            chatHistory = [];
-            document.getElementById('follow-up-section').classList.add('hidden');
-            document.getElementById('follow-up-input').value = '';
-            document.getElementById('follow-up-addendum-area').innerHTML = '';
-            document.getElementById('follow-up-addendum-area').classList.add('hidden');
-
-            document.getElementById('military-profile-section').classList.add('hidden');
-            document.getElementById('profile-commander-output').innerHTML = '';
-            document.getElementById('profile-soldier-output').innerHTML = '';
-            document.getElementById('profile-days').value = '';
-
-            showStep(1);
-        }
-
-        // --- Component Template ---
-        function FormSection({ title, id, placeholder = '', rows = '3', value = '' }) {
-            return `
-                <div class="mb-6 group">
-                    <label for="${id}" class="block text-sm font-medium text-slate-400 mb-2 transition-colors group-focus-within:text-indigo-400">${title}</label>
-                    <div class="relative">
-                        <textarea 
-                            id="${id}" 
-                            name="${id}" 
-                            rows="${rows}" 
-                            class="block w-full bg-slate-900 border border-slate-700 text-slate-200 placeholder-slate-600 rounded-xl shadow-sm focus:ring-indigo-500 focus:border-indigo-500 p-3 pr-12 transition-all hover:border-slate-600" 
-                            placeholder="${placeholder}"
-                        >${value}</textarea>
-                        <button type="button" class="mic-btn absolute bottom-2 right-2" data-target-id="${id}" style="display: none;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                                <line x1="12" y1="19" x2="12" y2="22"></line>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        // --- Event Listeners ---
-        function registerEventListeners() {
-            document.getElementById('back-to-step-2-btn').addEventListener('click', () => showStep(2));
-            document.getElementById('copy-clipboard-btn').addEventListener('click', copyToClipboard);
-
-            document.getElementById('start-over-1').addEventListener('click', startOver);
-            document.getElementById('start-over-2').addEventListener('click', startOver);
-            document.getElementById('start-over-3').addEventListener('click', startOver);
-            
-            document.getElementById('submit-follow-up-btn').addEventListener('click', handleFollowUp);
-            document.getElementById('follow-up-input').addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault(); 
-                    handleFollowUp();
-                }
-            });
-
-            const form1 = document.getElementById('intake-form-1');
-            const form2 = document.getElementById('intake-form-2');
-            
-            form1.innerHTML = 
-                FormSection({ title: "Chief Complaint & HPI:", id: "hpi", placeholder: "e.g., 21-year-old male with 3 days of cough, congestion, and low-grade fever. OR 30-year-old female reports rolling right ankle during PT...", rows: 5 }) +
-                FormSection({ title: "Soldier's Unit & MOS:", id: "unit_mos", placeholder: "e.g., Infantry Unit / 11B OR Admin Unit / 42A", rows: 2 }) +
-                `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">` +
-                FormSection({ title: "Past Medical History (PMH):", id: "pmh", placeholder: "e.g., GERD, seasonal allergies.", rows: 4 }) +
-                FormSection({ title: "Past Surgical History (PSH):", id: "psh", placeholder: "e.g., R-ACL repair (2022).", rows: 4 }) +
-                `</div>` +
-                `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">` +
-                FormSection({ title: "Allergies:", id: "allergies", placeholder: "e.g., NKDA, Penicillin (rash)", rows: 3 }) +
-                FormSection({ title: "Medications:", id: "medications", placeholder: "e.g., Loratadine 10mg PRN. OR None.", rows: 3 }) +
-                `</div>` +
-                FormSection({ 
-                    title: "General ROS (pertinent):", 
-                    id: "ros_general", 
-                    placeholder: "Note pertinent positives/negatives", 
-                    rows: 5, 
-                    value: "Constitutional: \nHEENT: \nRespiratory: \nCardiovascular: \nGI: \nGU: \nMSK: \nNeuro: \nSkin: " 
-                }) +
-                `<div class="pt-6 flex justify-end">
-                    <button type="button" id="go-to-step-2-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-indigo-900/20 transition-all hover:scale-105 duration-200">
-                        Start Guided Exam &rarr;
-                    </button>
-                </div>`;
-            
-            form2.innerHTML = 
-                FormSection({ title: "Symptom Details (OPQRST):", id: "opqrst", placeholder: "Onset, Palliating/Provoking, Quality, Radiation, Severity, Timing", rows: 3 }) +
-                FormSection({ title: "Vital Signs & Physical Exam:", id: "exam", placeholder: "Vitals: T, P, R, BP, SpO2. Exam: (e.g., Lungs: CTA-B. Heart: RRR. Pharynx: Erythema, no exudate. OR e.g., MSK: R-ankle TTP over ATFL...)", rows: 5 }) +
-                FormSection({ title: "Point-of-Care Tests (if any):", id: "point_of_care_tests", placeholder: "e.g., Rapid Strep: Neg. UDS: Neg. Pregnancy: Neg. Glucose: 95.", rows: 3 }) +
-                FormSection({ title: "Other Labs:", id: "labs", placeholder: "e.g., CBC, BMP... (if drawn)", rows: 3 }) +
-                FormSection({ title: "Imaging Findings (if any):", id: "imaging", placeholder: "e.g., Ankle X-ray (3-view): No acute fracture.", rows: 3 }) +
-                `<div class="pt-6 flex justify-between items-center">
-                    <button type="button" id="back-to-step-1-btn" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg transition-all duration-200">
-                        &larr; Back
-                    </button>
-                    <button type="button" id="get-consult-btn" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 px-8 rounded-xl shadow-lg shadow-emerald-900/20 transition-all hover:scale-105 duration-200">
-                        Generate Assessment
-                    </button>
-                </div>`;
-                
-            document.getElementById('go-to-step-2-btn').addEventListener('click', () => {
-                saveStep1Data();
-                showStep(2);
-            });
-            document.getElementById('back-to-step-1-btn').addEventListener('click', () => showStep(1));
-            document.getElementById('get-consult-btn').addEventListener('click', fetchConsult);
-            
-            if (SpeechRecognition) {
-                document.querySelectorAll('.mic-btn').forEach(btn => {
-                    btn.style.display = 'inline-flex';
-                    btn.addEventListener('click', handleMicClick);
-                });
-            }
-        }
-
-        // --- App Initialization ---
-        document.addEventListener('DOMContentLoaded', () => {
-            try {
-                if (SpeechRecognition) {
-                    initializeSpeechRecognition();
-                }
-                registerEventListeners();
-                showStep(1); 
-            } catch (error) {
-                console.error("Initialization Error:", error);
+                console.error(err);
+                showError('intake', 'Failed to generate questions. Please try again.');
+                showSection('intake');
             }
         });
+
+        // --- Step 2: Questions -> Plan Generation ---
+        document.getElementById('questions-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            intakeState.answers = [];
+            document.querySelectorAll('#questions-container input').forEach(inp => {
+                intakeState.answers.push({ q: inp.dataset.q, a: inp.value });
+            });
+
+            showLoading(true);
+
+            // Construct Full Context
+            let context = `Location: ${intakeState.location}\nChief Complaint: ${intakeState.chiefComplaint}\n`;
+            intakeState.answers.forEach(item => context += `Q: ${item.q} A: ${item.a}\n`);
+            context += `\nVitals: ${intakeState.vitals}\nPhysical Exam: ${intakeState.physicalExam}\nPMH: ${intakeState.pmh}\nAllergies: ${intakeState.allergies}\nMeds: ${intakeState.meds}\nPrior Labs: ${intakeState.priorLabs}`;
+
+            const systemPrompt = `
+                You are an expert physician/PA assistant for the military. Generate a SOAP note structure.
+                
+                CRITICAL LOCATION-BASED TRIAGE LOGIC:
+                1. The user is currently at: ${intakeState.location}.
+                2. IF Location is 'CTMC', 'BAS', or 'PCSL' AND the patient requires emergency care (red flags, unstable, rule-out severe), the Disposition MUST recommended 'ER Transfer'.
+                3. IF Location is 'ER' AND the patient requires expedited workup or admission, the Disposition MUST recommend 'Admission'.
+                4. Otherwise, treat as standard outpatient or discharge with instructions.
+
+                ADDITIONAL INSTRUCTIONS:
+                - For each Differential Diagnosis (DDx), include a "likelihood" string using qualitative terms ONLY (e.g., "Very High", "High", "Medium", "Low", "Very Low"). Do NOT use percentages.
+                - For each DDx, provide the specific "icd10" code.
+                - PROFILE INSTRUCTION: Even if referring to ER/Specialist/Higher Care, ALWAYS provide the anticipated limitations/profile the patient will need upon discharge (e.g., "Quarters 24hrs", "Crutches", "No Running"). Do NOT state "N/A pending ER".
+                - TREATMENT INSTRUCTIONS: Be very prescriptive with medications (Name, Dosage, Route, Frequency). Include Immediate/Acute options, Ongoing/Maintenance options (if applicable), and Alternatives. Prefix strings with context if helpful (e.g., "Acute: Toradol 30mg IM", "Maintenance: Lisinopril 10mg Daily").
+                - WORKUP INSTRUCTIONS: Include Labs, Radiology, AND Consults/Referrals (e.g., "Consult Orthopedics", "Refer to Physical Therapy", "Refer to Cardiology").
+
+                OUTPUT JSON ONLY with this exact schema:
+                {
+                    "subjective": {
+                        "hpi_paragraph": "A complete paragraph narrative of the HPI.",
+                        "ros_bullets": ["ROS point 1", "ROS point 2"]
+                    },
+                    "assessment": {
+                        "synthesis_statement": "The most likely diagnosis and reasoning supported by evidence.",
+                        "ddx": [
+                            {"name": "Diagnosis Name", "icd10": "ICD-10 Code", "desc": "One sentence description of why.", "likelihood": "e.g. High, Medium, Low"}
+                        ]
+                    },
+                    "plan": {
+                        "disposition": "Triage recommendation (e.g., Maintain Outpatient, ER Transfer, Admission, etc)",
+                        "is_emergency": boolean,
+                        "emergency_reason": "string or null",
+                        "workup": ["Lab 1", "X-Ray View", "Consult Name"],
+                        "treatment": ["Medication Name & Dose", "Non-pharm intervention", "Education topic"],
+                        "profile": {
+                            "days": number,
+                            "commander_limitations": ["Limitation 1", "Limitation 2"],
+                            "soldier_instructions": ["Instruction 1"]
+                        }
+                    },
+                    "references": [
+                        {"title": "Title of the Guideline/Article", "url": "https://valid-url.com"}
+                    ]
+                }
+            `;
+
+            try {
+                const result = await callGeminiApi(systemPrompt, context);
+                intakeState.generatedSoap = result;
+                renderReview(result);
+                showSection('review');
+            } catch (err) {
+                console.error(err);
+                showError('questions', 'Failed to generate SOAP note. Please try again.');
+                showSection('questions');
+            }
+        });
+
+        document.getElementById('questions-back-btn').addEventListener('click', () => showSection('intake'));
+
+
+        // --- Step 3: Review & Select ---
+        function renderReview(soap) {
+            // Emergency Alert
+            const alert = document.getElementById('emergency-alert');
+            if(soap.plan.is_emergency) {
+                document.getElementById('emergency-reason').textContent = soap.plan.emergency_reason;
+                alert.classList.remove('hidden');
+            } else {
+                alert.classList.add('hidden');
+            }
+
+            // Assessment
+            document.getElementById('review-diagnosis').textContent = soap.assessment.synthesis_statement;
+            const ddxList = document.getElementById('review-ddx-list');
+            ddxList.innerHTML = soap.assessment.ddx.map(d => `
+                <li class="flex items-start p-1 border-b border-gray-800">
+                    <span class="text-orange-500 mr-2 font-bold">•</span>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <strong class="text-white">${d.name} <span class="text-gray-500 text-xs font-normal ml-1">[${d.icd10}]</span></strong>
+                            <span class="text-xs font-mono text-orange-300 bg-gray-800 px-2 rounded">${d.likelihood}</span>
+                        </div>
+                        <p class="text-gray-400 text-xs">${d.desc}</p>
+                    </div>
+                </li>
+            `).join('');
+
+            // Helper for checkboxes
+            const createCheckboxes = (containerId, items, category) => {
+                const cont = document.getElementById(containerId);
+                cont.innerHTML = '';
+                items.forEach((item, idx) => {
+                    cont.innerHTML += `
+                        <label class="flex items-start space-x-2 p-2 rounded hover:bg-gray-800 cursor-pointer border border-transparent hover:border-gray-700 transition-colors">
+                            <input type="checkbox" checked class="mt-1 text-orange-600 rounded focus:ring-orange-500 item-check" data-cat="${category}" data-val="${item}">
+                            <span class="text-sm text-gray-300 leading-tight">${item}</span>
+                        </label>
+                    `;
+                });
+            };
+
+            createCheckboxes('review-workup-container', soap.plan.workup, 'workup');
+            createCheckboxes('review-treatment-container', soap.plan.treatment, 'treatment');
+            createCheckboxes('review-profile-container', soap.plan.profile.commander_limitations, 'profile');
+            
+            document.getElementById('profile-days').value = soap.plan.profile.days;
+        }
+
+        document.getElementById('review-continue-btn').addEventListener('click', () => {
+            renderFinalNote();
+            showSection('final');
+        });
+
+        document.getElementById('review-back-btn').addEventListener('click', () => showSection('questions'));
+
+
+        // --- Step 4: Final Note Logic ---
+        function renderFinalNote() {
+            const soap = intakeState.generatedSoap;
+            
+            // Gather checked items
+            const getChecked = (cat) => {
+                return Array.from(document.querySelectorAll(`.item-check[data-cat="${cat}"]:checked`)).map(cb => cb.dataset.val);
+            };
+
+            const selectedWorkup = getChecked('workup');
+            const selectedTx = getChecked('treatment');
+            const selectedProf = getChecked('profile');
+            const profDays = document.getElementById('profile-days').value;
+
+            // Build String
+            let note = `SUBJECTIVE:\n`;
+            note += `${soap.subjective.hpi_paragraph}\n\n`;
+            note += `Review of Systems:\n`;
+            soap.subjective.ros_bullets.forEach(b => note += `- ${b}\n`);
+
+            note += `\nOBJECTIVE:\n`;
+            note += `Vitals: ${intakeState.vitals || "Not recorded"}\n`;
+            note += `Physical Exam: ${intakeState.physicalExam || "Not recorded"}\n`;
+            note += `PMH: ${intakeState.pmh || "None"}\n`;
+            note += `Allergies: ${intakeState.allergies || "NKDA"}\n`;
+            note += `Current Meds: ${intakeState.meds || "None"}\n`;
+            note += `Prior Labs/Img: ${intakeState.priorLabs || "None"}\n`;
+
+            note += `\nASSESSMENT:\n`;
+            note += `${soap.assessment.synthesis_statement}\n\n`;
+            note += `Differential Diagnosis:\n`;
+            soap.assessment.ddx.forEach(d => note += `- ${d.name} [${d.icd10}] (${d.likelihood}): ${d.desc}\n`);
+
+            note += `\nPLAN:\n`;
+            note += `Disposition: ${soap.plan.disposition}\n\n`;
+            
+            note += `Workup (Labs/Rads/Consults):\n`;
+            if(selectedWorkup.length) selectedWorkup.forEach(w => note += `- ${w}\n`);
+            else note += `- None\n`;
+
+            note += `\nTreatment / Education:\n`;
+            if(selectedTx.length) selectedTx.forEach(t => note += `- ${t}\n`);
+            else note += `- None\n`;
+
+            note += `\nProfile (Duration: ${profDays} days):\n`;
+            note += `Commander Limitations:\n`;
+            if(selectedProf.length) selectedProf.forEach(l => note += `- ${l}\n`);
+            else note += `- No specific limitations.\n`;
+            
+            note += `Soldier Instructions:\n`;
+            soap.plan.profile.soldier_instructions.forEach(i => note += `- ${i}\n`);
+
+            document.getElementById('final-note-content').textContent = note;
+
+            // References (Separate Section)
+            const refList = document.getElementById('references-list');
+            refList.innerHTML = '';
+            if (soap.references && soap.references.length > 0) {
+                soap.references.forEach(ref => {
+                    refList.innerHTML += `
+                        <li>
+                            <a href="${ref.url}" target="_blank" class="text-blue-400 hover:underline flex items-center">
+                                ${ref.title}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                            </a>
+                        </li>
+                    `;
+                });
+                document.getElementById('references-container').classList.remove('hidden');
+            } else {
+                document.getElementById('references-container').classList.add('hidden');
+            }
+        }
+
+        // --- Refinement Logic ---
+        document.getElementById('refine-btn').addEventListener('click', async () => {
+            const query = document.getElementById('refine-input').value;
+            const responseBox = document.getElementById('refine-response');
+            
+            if(!query) return;
+            
+            responseBox.textContent = "Asking AI...";
+            responseBox.classList.remove('hidden');
+
+            const sysPrompt = "You are a helpful medical assistant. The medic has a generated plan but has a follow-up question. Answer concisely in plain text.";
+            const context = `Current Context: Patient with ${intakeState.chiefComplaint}. The user asks: ${query}`;
+
+            try {
+                const answer = await callGeminiText(sysPrompt, context);
+                responseBox.textContent = `AI: ${answer}`;
+            } catch(e) {
+                responseBox.textContent = "Error getting response.";
+            }
+        });
+
+        // --- Utils ---
+        document.getElementById('copy-note-btn').addEventListener('click', () => {
+            const text = document.getElementById('final-note-content').textContent;
+            
+            // Fallback for iframe restrictions
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed"; // Avoid scrolling to bottom
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if(successful) {
+                    document.getElementById('copy-success').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('copy-success').classList.add('hidden'), 2000);
+                } else {
+                     console.error('Fallback: Copying text command was unsuccessful');
+                }
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+            
+            document.body.removeChild(textArea);
+        });
+
+        document.getElementById('start-over-btn').addEventListener('click', () => location.reload());
+        
+        // Initial Load
+        showSection('intake');
+
     </script>
 </body>
 </html>
