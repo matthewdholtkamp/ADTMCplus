@@ -47,6 +47,12 @@
             <p class="text-lg text-gray-300">Medic Decision Support & Documentation Tool</p>
         </header>
 
+        <div class="bg-gray-800 p-4 rounded-lg shadow-md border border-gray-700 mb-6">
+            <label for="api-key-input" class="block text-sm font-bold text-orange-400 mb-1 uppercase tracking-wide">Gemini API Key (Required)</label>
+            <input id="api-key-input" type="password" autocomplete="off" class="w-full p-2 border border-gray-500 rounded bg-gray-900 text-white focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Paste API key (stored only in your browser session)">
+            <p class="text-xs text-gray-400 mt-2">Security improvement: this app no longer stores a hardcoded key in source code.</p>
+        </div>
+
         <!-- HIPAA WARNING & CHECKLIST -->
         <details class="bg-red-900/50 border border-red-600 rounded-md mb-8">
             <summary class="font-semibold text-red-300 p-3 cursor-pointer text-lg flex justify-between items-center">
@@ -291,7 +297,18 @@
             generatedSoap: null
         };
 
-        const apiKey = "AIzaSyBXI-KfP0oIIXXn6NHjznWPw62vcJdcXOQ";
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getApiKey() {
+            return document.getElementById('api-key-input').value.trim();
+        }
 
         // --- DOM Elements ---
         const sections = {
@@ -340,6 +357,8 @@
 
         // --- API Logic ---
         async function callGeminiApi(systemPrompt, userQuery, retries = 3) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('Missing API key');
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -367,6 +386,8 @@
         }
 
         async function callGeminiText(systemPrompt, userQuery) {
+            const apiKey = getApiKey();
+            if (!apiKey) throw new Error('Missing API key');
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
              const payload = {
                 contents: [{ parts: [{ text: userQuery }] }],
@@ -394,6 +415,7 @@
 
             const val = document.getElementById('initial-symptoms').value.trim();
             if(val.length < 5) return showError('intake', 'Please enter a valid Chief Complaint.');
+            if(!getApiKey()) return showError('intake', 'Please enter your Gemini API key before starting.');
             
             // Capture all data
             intakeState.location = document.getElementById('location-input').value;
@@ -432,8 +454,8 @@
                 result.questions.forEach((q, i) => {
                     container.innerHTML += `
                         <div>
-                            <label class="block text-sm text-orange-300 mb-1 font-medium">${q}</label>
-                            <input type="text" data-q="${q}" class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 outline-none" required>
+                            <label class="block text-sm text-orange-300 mb-1 font-medium">${escapeHtml(q)}</label>
+                            <input type="text" data-q="${escapeHtml(q)}" class="w-full p-2 border border-gray-600 rounded bg-gray-700 text-white focus:border-orange-500 outline-none" required>
                         </div>`;
                 });
                 showSection('questions');
@@ -541,10 +563,10 @@
                     <span class="text-orange-500 mr-2 font-bold">•</span>
                     <div class="flex-1">
                         <div class="flex justify-between">
-                            <strong class="text-white">${d.name} <span class="text-gray-500 text-xs font-normal ml-1">[${d.icd10}]</span></strong>
-                            <span class="text-xs font-mono text-orange-300 bg-gray-800 px-2 rounded">${d.likelihood}</span>
+                            <strong class="text-white">${escapeHtml(d.name)} <span class="text-gray-500 text-xs font-normal ml-1">[${escapeHtml(d.icd10)}]</span></strong>
+                            <span class="text-xs font-mono text-orange-300 bg-gray-800 px-2 rounded">${escapeHtml(d.likelihood)}</span>
                         </div>
-                        <p class="text-gray-400 text-xs">${d.desc}</p>
+                        <p class="text-gray-400 text-xs">${escapeHtml(d.desc)}</p>
                     </div>
                 </li>
             `).join('');
@@ -556,8 +578,8 @@
                 items.forEach((item, idx) => {
                     cont.innerHTML += `
                         <label class="flex items-start space-x-2 p-2 rounded hover:bg-gray-800 cursor-pointer border border-transparent hover:border-gray-700 transition-colors">
-                            <input type="checkbox" checked class="mt-1 text-orange-600 rounded focus:ring-orange-500 item-check" data-cat="${category}" data-val="${item}">
-                            <span class="text-sm text-gray-300 leading-tight">${item}</span>
+                            <input type="checkbox" checked class="mt-1 text-orange-600 rounded focus:ring-orange-500 item-check" data-cat="${escapeHtml(category)}" data-val="${escapeHtml(item)}">
+                            <span class="text-sm text-gray-300 leading-tight">${escapeHtml(item)}</span>
                         </label>
                     `;
                 });
@@ -639,8 +661,8 @@
                 soap.references.forEach(ref => {
                     refList.innerHTML += `
                         <li>
-                            <a href="${ref.url}" target="_blank" class="text-blue-400 hover:underline flex items-center">
-                                ${ref.title}
+                            <a href="${escapeHtml(ref.url)}" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline flex items-center">
+                                ${escapeHtml(ref.title)}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ml-1 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                             </a>
                         </li>
