@@ -1,0 +1,17 @@
+{
+  "name": "ADTMC Plus",
+  "short_name": "ADTMC+",
+  "description": "Combined launcher for ADTMC and MSKTool.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#121416",
+  "theme_color": "#1b1f23",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
