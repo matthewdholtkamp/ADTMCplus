@@ -2,118 +2,207 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#1b1f23" />
   <title>ADTMC Plus Command Hub</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <style>
-    :root { --bg:#101214; --panel:#1b1f23; --line:#3b434c; --gold:#c6a15b; --txt:#ecf0f3; --muted:#b3bbc3; }
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:Arial,Helvetica,sans-serif}
-    header{background:#0f1215;border-bottom:2px solid var(--gold);padding:14px 16px;position:sticky;top:0;z-index:10}
-    h1{margin:0;font-size:1.2rem;letter-spacing:.04em;text-transform:uppercase}
-    .sub{margin-top:5px;color:var(--muted);font-size:.9rem}
-    main{max-width:1200px;margin:0 auto;padding:16px;display:grid;gap:12px}
-    .card{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:12px}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    button{cursor:pointer;border:1px solid var(--line);background:#252b33;color:#fff;padding:9px 12px;border-radius:8px;font-weight:700}
-    button.primary{background:var(--gold);color:#111}
-    #workspace{width:100%;height:72vh;border:1px solid var(--line);border-radius:8px;background:#fff}
-    #status{margin-top:8px;color:var(--muted);font-size:.9rem}
-    .hint{color:var(--muted);font-size:.9rem}
+    :root {
+      --bg: #121416;
+      --panel: #1b1f23;
+      --panel-2: #242a31;
+      --text: #e9ecef;
+      --muted: #b0b8c0;
+      --gold: #c6a15b;
+      --danger: #9f2d2d;
+      --line: #3b434c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Arial", "Helvetica Neue", sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #0f1113, #171b1f 36%, #111416);
+      min-height: 100vh;
+    }
+    header {
+      padding: 16px;
+      border-bottom: 2px solid var(--gold);
+      background: #111418;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; text-transform: uppercase; }
+    .subtitle { margin-top: 6px; color: var(--muted); font-size: .92rem; }
+    main { padding: 16px; display: grid; gap: 14px; max-width: 1280px; margin: 0 auto; }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--gold);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; }
+    button, .btn {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    button.primary { background: var(--gold); color: #111; border-color: #d8b26e; }
+    button.danger { background: var(--danger); border-color: #c34747; }
+    button:hover, .btn:hover { filter: brightness(1.08); }
+    .launcher { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .tool-panel { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #101418; }
+    .tool-panel h3 { margin: 0 0 8px 0; }
+    .muted { color: var(--muted); }
+    #appFrame {
+      width: 100%;
+      height: 72vh;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    #status { margin-top: 8px; color: var(--muted); font-size: .92rem; }
+    code { color: #f7d08a; }
   </style>
 </head>
 <body>
-<header>
-  <h1>ADTMC Plus Command Hub</h1>
-  <div class="sub">Unified launcher for ADTMC and MSKTool with export + mobile install options.</div>
-</header>
-<main>
-  <section class="card">
-    <div class="row">
-      <button class="primary" id="openAdtmc">Open ADTMC</button>
-      <button class="primary" id="openMsk">Open MSKTool</button>
-      <button id="openCombined">Open Combined Start Page</button>
-    </div>
-    <div id="status">Status: Ready.</div>
-  </section>
+  <header>
+    <h1>ADTMC Plus Command Hub</h1>
+    <div class="subtitle">Mission-ready access to ADTMC + MSKTool with desktop export and mobile install support.</div>
+  </header>
 
-  <section class="card">
-    <iframe id="workspace" title="ADTMC Plus Workspace" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe>
-  </section>
+  <main>
+    <section class="card launcher">
+      <article class="tool-panel">
+        <h3>ADTMC</h3>
+        <p class="muted">Load the ADTMC single-page tool directly inside this hub.</p>
+        <button data-tool="adtmc" class="primary">Open ADTMC</button>
+      </article>
+      <article class="tool-panel">
+        <h3>MSKTool</h3>
+        <p class="muted">Load the MSKTool single-page tool directly inside this hub.</p>
+        <button data-tool="msk">Open MSKTool</button>
+      </article>
+      <article class="tool-panel">
+        <h3>Combined Operations</h3>
+        <p class="muted">Switch between both tools from one unified start page and export a standalone bundle.</p>
+        <button id="openCombined">Open Combined View</button>
+      </article>
+    </section>
 
-  <section class="card">
-    <h3 style="margin-top:0">Download + Mobile</h3>
-    <div class="row">
-      <button class="primary" id="downloadStandalone">Download Combined Launcher HTML</button>
-      <button id="installBtn">Install App (PWA)</button>
-    </div>
-    <p class="hint">iPhone: Safari → Share → Add to Home Screen. Android: browser menu → Install App.</p>
-  </section>
-</main>
+    <section class="card">
+      <h3 style="margin-top:0">Active Workspace</h3>
+      <iframe id="appFrame" title="Tool Workspace" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe>
+      <div id="status">Status: Ready.</div>
+    </section>
 
-<script>
-  // Uses htmlpreview wrappers to execute each repo's index.html directly.
-  const URLS = {
-    adtmc: 'https://htmlpreview.github.io/?https://github.com/matthewdholtkamp/ADTMC/blob/main/index.html',
-    msk: 'https://htmlpreview.github.io/?https://github.com/matthewdholtkamp/MSKTool/blob/main/index.html'
-  };
+    <section class="card">
+      <h3 style="margin-top:0">Download + Install</h3>
+      <div class="row">
+        <button id="downloadStandalone" class="primary">Download Combined Standalone HTML</button>
+        <button id="installBtn">Install App (PWA)</button>
+      </div>
+      <p class="muted">iPhone: open in Safari, tap Share, then <strong>Add to Home Screen</strong>. Android: use the <strong>Install App</strong> button or browser install prompt.</p>
+      <p class="muted">If you need app-store binaries later, this repo is now PWA-ready and can be wrapped using Capacitor/Ionic for App Store and Play Store submission.</p>
+    </section>
+  </main>
 
-  const frame = document.getElementById('workspace');
-  const statusEl = document.getElementById('status');
-  let deferredPrompt = null;
+  <script>
+    const SOURCES = {
+      adtmc: 'https://cdn.jsdelivr.net/gh/matthewdholtkamp/ADTMC@main/index.html',
+      msk: 'https://cdn.jsdelivr.net/gh/matthewdholtkamp/MSKTool@main/index.html'
+    };
 
-  function status(msg){ statusEl.textContent = `Status: ${msg}`; }
+    const frame = document.getElementById('appFrame');
+    const statusEl = document.getElementById('status');
+    let deferredPrompt = null;
 
-  function openApp(key){
-    frame.src = URLS[key];
-    status(`${key.toUpperCase()} loaded from source repo index.html.`);
-  }
-
-  function combinedPage() {
-    return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-      <title>ADTMC Plus Combined</title>
-      <style>body{margin:0;font-family:Arial;background:#101214;color:#eef}header{padding:12px;background:#1b1f23;border-bottom:2px solid #c6a15b}button{margin-right:8px;padding:8px 12px;border-radius:7px;border:1px solid #3b434c;background:#252b33;color:#fff;cursor:pointer;font-weight:700}#host{height:calc(100vh - 70px)}iframe{width:100%;height:100%;border:0}</style></head>
-      <body><header><strong>ADTMC Plus Combined</strong><div style="margin-top:8px"><button id="a">ADTMC</button><button id="m">MSKTool</button></div></header><div id="host"><iframe id="f" sandbox="allow-scripts allow-forms allow-modals allow-popups allow-downloads"></iframe></div>
-      <script>const U={a:${JSON.stringify(URLS.adtmc)},m:${JSON.stringify(URLS.msk)}};const f=document.getElementById('f');document.getElementById('a').onclick=()=>f.src=U.a;document.getElementById('m').onclick=()=>f.src=U.m;f.src=U.a;<\/script></body></html>`;
-  }
-
-  function openCombined(){
-    frame.srcdoc = combinedPage();
-    status('Combined start page loaded.');
-  }
-
-  function downloadStandalone(){
-    const blob = new Blob([combinedPage()], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'ADTMCplus-combined-launcher.html';
-    a.click();
-    URL.revokeObjectURL(a.href);
-    status('Combined launcher downloaded.');
-  }
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-  });
-
-  async function installApp(){
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      await deferredPrompt.userChoice;
-      deferredPrompt = null;
-    } else {
-      alert('Install prompt unavailable.\nAndroid: browser menu > Install App\niPhone: Safari Share > Add to Home Screen');
+    async function fetchHtml(url) {
+      const res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('Unable to fetch ' + url + ' (' + res.status + ')');
+      return res.text();
     }
-  }
 
-  document.getElementById('openAdtmc').onclick = () => openApp('adtmc');
-  document.getElementById('openMsk').onclick = () => openApp('msk');
-  document.getElementById('openCombined').onclick = openCombined;
-  document.getElementById('downloadStandalone').onclick = downloadStandalone;
-  document.getElementById('installBtn').onclick = installApp;
+    function setStatus(msg) { statusEl.textContent = 'Status: ' + msg; }
 
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
-</script>
+    async function loadTool(tool) {
+      try {
+        setStatus('Loading ' + tool.toUpperCase() + '...');
+        const html = await fetchHtml(SOURCES[tool]);
+        frame.srcdoc = html;
+        setStatus(tool.toUpperCase() + ' loaded.');
+      } catch (err) {
+        frame.srcdoc = '<h2>Load error</h2><pre>' + String(err.message || err) + '</pre>';
+        setStatus('Load failed.');
+      }
+    }
+
+    async function loadCombined() {
+      try {
+        setStatus('Building combined in-browser view...');
+        const [adtmc, msk] = await Promise.all([fetchHtml(SOURCES.adtmc), fetchHtml(SOURCES.msk)]);
+        frame.srcdoc = buildCombinedHtml(adtmc, msk, false);
+        setStatus('Combined view loaded.');
+      } catch (err) {
+        frame.srcdoc = '<h2>Combined view failed</h2><pre>' + String(err.message || err) + '</pre>';
+        setStatus('Combined view failed.');
+      }
+    }
+
+    function buildCombinedHtml(adtmc, msk, standalone) {
+      const safe = s => s.replace(/<\\/script/gi, '<\\\\/script');
+      return `<!doctype html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>ADTMC Plus Combined</title>
+      <style>body{margin:0;font-family:Arial,sans-serif;background:#111;color:#eee}header{padding:12px;background:#1b1f23;border-bottom:2px solid #c6a15b}button{margin-right:8px;padding:8px 12px;border-radius:6px;border:1px solid #3b434c;background:#242a31;color:#fff;cursor:pointer}button.active{background:#c6a15b;color:#111}#host{height:calc(100vh - 72px)}iframe{width:100%;height:100%;border:0;background:#fff}</style>
+      </head><body><header><strong>ADTMC Plus Combined</strong><div style="margin-top:8px"><button id="b1" class="active">ADTMC</button><button id="b2">MSKTool</button></div></header><div id="host"><iframe id="f" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe></div>
+      <script>const A=${JSON.stringify(safe(adtmc))};const M=${JSON.stringify(safe(msk))};const f=document.getElementById('f');const b1=document.getElementById('b1');const b2=document.getElementById('b2');function s(k){f.srcdoc=k==='a'?A:M;b1.classList.toggle('active',k==='a');b2.classList.toggle('active',k==='m')}b1.onclick=()=>s('a');b2.onclick=()=>s('m');s('a');<\/script>
+      </body></html>`;
+    }
+
+    async function downloadStandalone() {
+      try {
+        setStatus('Preparing standalone combined HTML...');
+        const [adtmc, msk] = await Promise.all([fetchHtml(SOURCES.adtmc), fetchHtml(SOURCES.msk)]);
+        const combined = buildCombinedHtml(adtmc, msk, true);
+        const blob = new Blob([combined], { type: 'text/html' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'ADTMCplus-combined-standalone.html';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        setStatus('Standalone HTML downloaded.');
+      } catch (err) {
+        setStatus('Standalone download failed: ' + (err.message || err));
+      }
+    }
+
+    window.addEventListener('beforeinstallprompt', e => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    async function installApp() {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        return;
+      }
+      alert('Install prompt unavailable here.\n\nAndroid: open browser menu and choose Install App.\niPhone: Safari > Share > Add to Home Screen.');
+    }
+
+    document.querySelectorAll('[data-tool]').forEach(btn => btn.addEventListener('click', () => loadTool(btn.dataset.tool)));
+    document.getElementById('openCombined').addEventListener('click', loadCombined);
+    document.getElementById('downloadStandalone').addEventListener('click', downloadStandalone);
+    document.getElementById('installBtn').addEventListener('click', installApp);
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  </script>
 </body>
 </html>
