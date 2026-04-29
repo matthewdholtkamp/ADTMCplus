@@ -3,206 +3,799 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="theme-color" content="#1b1f23" />
-  <title>ADTMC Plus Command Hub</title>
+  <meta name="theme-color" content="#10120d" />
+  <title>ADTMC+ Screening Tools</title>
   <link rel="manifest" href="manifest.webmanifest" />
-  <style>
+  <style data-shell-style>
     :root {
-      --bg: #121416;
-      --panel: #1b1f23;
-      --panel-2: #242a31;
-      --text: #e9ecef;
-      --muted: #b0b8c0;
+      --black: #090a08;
+      --ink: #151713;
+      --olive: #4b5735;
+      --olive-dark: #303923;
       --gold: #c6a15b;
-      --danger: #9f2d2d;
-      --line: #3b434c;
+      --gold-2: #d9bd75;
+      --paper: #f3f1e8;
+      --paper-2: #e7e1d2;
+      --white: #ffffff;
+      --muted: #666b5d;
+      --line: #cfc6b3;
+      --danger: #8c2424;
+      --shadow: 0 24px 70px rgba(9, 10, 8, 0.22);
     }
+
     * { box-sizing: border-box; }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
     body {
       margin: 0;
-      font-family: "Arial", "Helvetica Neue", sans-serif;
-      color: var(--text);
-      background: linear-gradient(180deg, #0f1113, #171b1f 36%, #111416);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+      overflow-x: hidden;
+      background:
+        linear-gradient(90deg, rgba(9, 10, 8, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, #f8f6ef 0%, var(--paper) 45%, #e8e2d5 100%);
+      background-size: 48px 48px, auto;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .home-screen {
       min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: clamp(18px, 4vw, 48px);
     }
-    header {
-      padding: 16px;
-      border-bottom: 2px solid var(--gold);
-      background: #111418;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    h1 { margin: 0; font-size: 1.35rem; letter-spacing: 0.04em; text-transform: uppercase; }
-    .subtitle { margin-top: 6px; color: var(--muted); font-size: .92rem; }
-    main { padding: 16px; display: grid; gap: 14px; max-width: 1280px; margin: 0 auto; }
-    .card {
-      background: var(--panel);
+
+    .home-panel {
+      width: min(920px, 100%);
+      min-width: 0;
+      color: var(--ink);
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--line);
-      border-left: 4px solid var(--gold);
-      border-radius: 10px;
-      padding: 14px;
+      border-top: 8px solid var(--gold);
+      box-shadow: var(--shadow);
     }
-    .row { display: flex; flex-wrap: wrap; gap: 10px; }
-    button, .btn {
-      border: 1px solid var(--line);
-      background: var(--panel-2);
-      color: var(--text);
-      padding: 10px 14px;
-      border-radius: 8px;
-      cursor: pointer;
-      text-decoration: none;
-      font-weight: 600;
+
+    .home-header {
+      min-width: 0;
+      padding: clamp(22px, 4vw, 42px);
+      color: var(--white);
+      background:
+        linear-gradient(90deg, rgba(75, 87, 53, 0.76), rgba(9, 10, 8, 0.98)),
+        var(--black);
     }
-    button.primary { background: var(--gold); color: #111; border-color: #d8b26e; }
-    button.danger { background: var(--danger); border-color: #c34747; }
-    button:hover, .btn:hover { filter: brightness(1.08); }
-    .launcher { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-    .tool-panel { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: #101418; }
-    .tool-panel h3 { margin: 0 0 8px 0; }
-    .muted { color: var(--muted); }
-    #appFrame {
+
+    .eyebrow {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--gold-2);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .home-header h1 {
       width: 100%;
-      height: 72vh;
+      max-width: 790px;
+      margin: 0;
+      font-size: clamp(2rem, 5.3vw, 4.65rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      overflow-wrap: break-word;
+    }
+
+    .home-header p {
+      max-width: 680px;
+      margin: 14px 0 0;
+      color: #e2ded1;
+      font-size: clamp(0.95rem, 1.7vw, 1.08rem);
+      line-height: 1.45;
+      overflow-wrap: break-word;
+    }
+
+    .home-actions {
+      display: grid;
+      gap: 22px;
+      min-width: 0;
+      padding: clamp(18px, 3.5vw, 34px);
+    }
+
+    .primary-tools {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .tool-button {
+      min-width: 0;
+      min-height: 138px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 8px;
+      padding: clamp(18px, 3vw, 28px);
+      color: var(--ink);
+      background: var(--paper);
+      border: 1px solid #c7beaa;
+      border-left: 8px solid var(--olive);
+      border-radius: 0;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .tool-button:hover,
+    .tool-button:focus-visible,
+    .tool-button.active {
+      background: #fff;
+      border-color: var(--gold);
+      border-left-color: var(--gold);
+      outline: none;
+      transform: translateY(-1px);
+      box-shadow: 0 0 0 3px rgba(198, 161, 91, 0.24);
+    }
+
+    .tool-button strong {
+      font-size: clamp(1.35rem, 2.8vw, 2.4rem);
+      line-height: 0.95;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      overflow-wrap: break-word;
+    }
+
+    .tool-button span {
+      color: var(--muted);
+      font-size: 0.93rem;
+      line-height: 1.35;
+      overflow-wrap: break-word;
+    }
+
+    .download-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .download-button,
+    .top-button {
+      min-width: 0;
+      min-height: 44px;
+      padding: 11px 14px;
+      color: var(--white);
+      background: var(--olive);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 0;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .download-button:hover,
+    .download-button:focus-visible,
+    .top-button:hover,
+    .top-button:focus-visible,
+    .top-button.active {
+      color: #111;
+      background: var(--gold);
+      border-color: var(--gold-2);
+      outline: none;
+    }
+
+    .guidance-panel {
+      display: none;
+      padding: 14px 16px;
+      color: var(--ink);
+      background: #ede6d7;
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-left: 6px solid var(--gold);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .guidance-panel.visible {
+      display: block;
+    }
+
+    .guidance-panel strong {
+      display: block;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .status-line {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      padding: 8px 16px;
+      color: #504f47;
+      background: #e5dece;
+      border-top: 1px solid var(--line);
+      font-size: 0.8rem;
+      line-height: 1.35;
+    }
+
+    .tool-screen {
+      min-height: 100vh;
+      display: none;
+      grid-template-rows: auto minmax(0, 1fr) auto;
       background: #fff;
     }
-    #status { margin-top: 8px; color: var(--muted); font-size: .92rem; }
-    code { color: #f7d08a; }
+
+    .tool-topbar {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 14px;
+      color: var(--white);
+      background:
+        linear-gradient(90deg, var(--black), var(--olive-dark)),
+        var(--black);
+      border-bottom: 4px solid var(--gold);
+    }
+
+    .tool-title {
+      min-width: 0;
+    }
+
+    .tool-title span {
+      display: block;
+      color: var(--gold-2);
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .tool-title strong {
+      display: block;
+      margin-top: 4px;
+      overflow: hidden;
+      font-size: 1rem;
+      letter-spacing: 0.03em;
+      text-overflow: ellipsis;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .top-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .frame-wrap {
+      position: relative;
+      min-height: 0;
+      background: #fff;
+    }
+
+    #appFrame {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: block;
+      border: 0;
+      background: #fff;
+    }
+
+    #appFrame[hidden] {
+      display: none;
+    }
+
+    .empty-state {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      color: var(--ink);
+      background:
+        linear-gradient(135deg, rgba(198, 161, 91, 0.12), transparent 42%),
+        linear-gradient(180deg, #fff, #f2efe4);
+    }
+
+    .empty-state[hidden] {
+      display: none;
+    }
+
+    .empty-card {
+      width: min(460px, 100%);
+      border: 1px solid var(--line);
+      border-top: 6px solid var(--olive);
+      background: rgba(255, 255, 255, 0.95);
+      padding: 22px;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.12);
+    }
+
+    .empty-card .stamp {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 6px 9px;
+      color: #111;
+      background: var(--gold);
+      font-size: 0.68rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .empty-card h3 {
+      margin: 0;
+      font-size: 1.6rem;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .empty-card p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    body.tool-active .home-screen {
+      display: none;
+    }
+
+    body.tool-active .tool-screen {
+      display: grid;
+    }
+
+    @media (max-width: 720px) {
+      .home-screen {
+        align-items: start;
+        padding: 14px;
+      }
+
+      .home-panel {
+        width: 100%;
+        max-width: 100%;
+        margin-top: 18px;
+      }
+
+      .home-header {
+        padding: 22px 18px;
+      }
+
+      .home-header h1 {
+        font-size: clamp(1.6rem, 7vw, 2.05rem);
+        line-height: 1.03;
+      }
+
+      .home-actions {
+        padding: 14px 18px 18px;
+      }
+
+      .primary-tools,
+      .download-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .tool-button {
+        min-height: 104px;
+      }
+
+      .tool-button strong {
+        font-size: 1.55rem;
+      }
+
+      .tool-topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .top-actions {
+        justify-content: stretch;
+      }
+
+      .top-button {
+        flex: 1 1 auto;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .tool-button,
+      .download-button,
+      .top-button {
+        transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+      }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>ADTMC Plus Command Hub</h1>
-    <div class="subtitle">Mission-ready access to ADTMC + MSKTool with desktop export and mobile install support.</div>
-  </header>
+  <main class="app-shell">
+    <section class="home-screen" id="homeScreen" aria-label="ADTMC+ home">
+      <div class="home-panel">
+        <header class="home-header">
+          <span class="eyebrow">Unofficial Clinical Tool Hub</span>
+          <h1>Welcome to ADTMC and MSK Screening Tool</h1>
+          <p>Select a tool to run it full-screen. Use the download options below for desktop, iPhone, and Android access.</p>
+        </header>
 
-  <main>
-    <section class="card launcher">
-      <article class="tool-panel">
-        <h3>ADTMC</h3>
-        <p class="muted">Load the ADTMC single-page tool directly inside this hub.</p>
-        <button data-tool="adtmc" class="primary">Open ADTMC</button>
-      </article>
-      <article class="tool-panel">
-        <h3>MSKTool</h3>
-        <p class="muted">Load the MSKTool single-page tool directly inside this hub.</p>
-        <button data-tool="msk">Open MSKTool</button>
-      </article>
-      <article class="tool-panel">
-        <h3>Combined Operations</h3>
-        <p class="muted">Switch between both tools from one unified start page and export a standalone bundle.</p>
-        <button id="openCombined">Open Combined View</button>
-      </article>
-    </section>
+        <div class="home-actions">
+          <div class="primary-tools" aria-label="Tool selection">
+            <button class="tool-button" type="button" data-tool="adtmc">
+              <strong>ADTMC</strong>
+              <span>Run the ADTMC clinical workflow.</span>
+            </button>
+            <button class="tool-button" type="button" data-tool="msk">
+              <strong>MSK Screening Tool</strong>
+              <span>Run the musculoskeletal screening and referral tool.</span>
+            </button>
+          </div>
 
-    <section class="card">
-      <h3 style="margin-top:0">Active Workspace</h3>
-      <iframe id="appFrame" title="Tool Workspace" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe>
-      <div id="status">Status: Ready.</div>
-    </section>
+          <div class="download-actions" aria-label="Download options">
+            <button class="download-button" type="button" id="downloadDesktopHtml">Download App for Desktop</button>
+            <button class="download-button" type="button" id="installIphone">Download App for iPhone</button>
+            <button class="download-button" type="button" id="installAndroid">Download App for Android</button>
+          </div>
 
-    <section class="card">
-      <h3 style="margin-top:0">Download + Install</h3>
-      <div class="row">
-        <button id="downloadStandalone" class="primary">Download Combined Standalone HTML</button>
-        <button id="installBtn">Install App (PWA)</button>
+          <div class="guidance-panel" id="guidancePanel"></div>
+          <div class="status-line" id="homeStatus" role="status">Status: Ready.</div>
+        </div>
       </div>
-      <p class="muted">iPhone: open in Safari, tap Share, then <strong>Add to Home Screen</strong>. Android: use the <strong>Install App</strong> button or browser install prompt.</p>
-      <p class="muted">If you need app-store binaries later, this repo is now PWA-ready and can be wrapped using Capacitor/Ionic for App Store and Play Store submission.</p>
+    </section>
+
+    <section class="tool-screen" id="toolScreen" aria-label="Active tool workspace">
+      <div class="tool-topbar">
+        <div class="tool-title">
+          <span>Active Tool</span>
+          <strong id="activeToolTitle">Select a tool</strong>
+        </div>
+        <div class="top-actions" aria-label="Tool navigation">
+          <button class="top-button" type="button" id="backButton">Back to Home</button>
+          <button class="top-button" type="button" data-tool="adtmc">ADTMC</button>
+          <button class="top-button" type="button" data-tool="msk">MSK Screening Tool</button>
+        </div>
+      </div>
+
+      <div class="frame-wrap">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-card">
+            <span class="stamp">Standing By</span>
+            <h3>Awaiting Selection</h3>
+            <p>Choose ADTMC or MSK Screening Tool from the home screen.</p>
+          </div>
+        </div>
+        <iframe id="appFrame" title="ADTMC+ active tool" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups" hidden></iframe>
+      </div>
+
+      <div class="status-line" id="statusLine" role="status">Status: Ready.</div>
     </section>
   </main>
 
   <script>
-    const SOURCES = {
-      adtmc: 'https://cdn.jsdelivr.net/gh/matthewdholtkamp/ADTMC@main/index.html',
-      msk: 'https://cdn.jsdelivr.net/gh/matthewdholtkamp/MSKTool@main/index.html'
+    const TOOL_DEFS = {
+      adtmc: {
+        title: 'ADTMC',
+        shortTitle: 'ADTMC',
+        localPath: 'apps/adtmc/index.html',
+        remoteUrl: 'https://cdn.jsdelivr.net/gh/matthewdholtkamp/ADTMC@main/index.html'
+      },
+      msk: {
+        title: 'MSK Screening Tool',
+        shortTitle: 'MSK',
+        localPath: 'apps/msktool/index.html',
+        remoteUrl: 'https://cdn.jsdelivr.net/gh/matthewdholtkamp/MSKTool@main/index.html'
+      }
     };
 
     const frame = document.getElementById('appFrame');
-    const statusEl = document.getElementById('status');
+    const statusLine = document.getElementById('statusLine');
+    const homeStatus = document.getElementById('homeStatus');
+    const emptyState = document.getElementById('emptyState');
+    const activeToolTitle = document.getElementById('activeToolTitle');
+    const guidancePanel = document.getElementById('guidancePanel');
+    const toolHtmlCache = new Map();
+
     let deferredPrompt = null;
+    let activeTool = null;
+    let frameLoadId = 0;
 
-    async function fetchHtml(url) {
-      const res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error('Unable to fetch ' + url + ' (' + res.status + ')');
-      return res.text();
+    const params = new URLSearchParams(window.location.search);
+
+    function setStatus(message) {
+      const text = 'Status: ' + message;
+      statusLine.textContent = text;
+      homeStatus.textContent = text;
     }
 
-    function setStatus(msg) { statusEl.textContent = 'Status: ' + msg; }
+    function setGuidance(title, body) {
+      guidancePanel.classList.add('visible');
+      guidancePanel.innerHTML = '<strong>' + title + '</strong>' + body;
+    }
 
-    async function loadTool(tool) {
+    function clearGuidance() {
+      guidancePanel.classList.remove('visible');
+      guidancePanel.textContent = '';
+    }
+
+    async function readCachedTool(toolKey) {
+      if (!('caches' in window)) return null;
+      const cached = await caches.match(TOOL_DEFS[toolKey].remoteUrl);
+      if (!cached) return null;
+      return cached.text();
+    }
+
+    async function writeCachedTool(toolKey, html) {
+      if (!('caches' in window)) return;
+      const cache = await caches.open('adtmcplus-tool-html-v1');
+      await cache.put(TOOL_DEFS[toolKey].remoteUrl, new Response(html, {
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      }));
+    }
+
+    async function fetchToolHtml(toolKey) {
+      if (toolHtmlCache.has(toolKey)) return toolHtmlCache.get(toolKey);
+      const tool = TOOL_DEFS[toolKey];
+      const candidates = [];
+      if (window.location.protocol !== 'file:') {
+        candidates.push(new URL(tool.localPath, window.location.href).href);
+      }
+      candidates.push(tool.remoteUrl);
+
+      let lastError = null;
+
+      for (const url of candidates) {
+        try {
+          const response = await fetch(url, { cache: 'no-store' });
+          if (!response.ok) throw new Error(response.status + ' ' + response.statusText);
+          const html = await response.text();
+          toolHtmlCache.set(toolKey, html);
+          if (url === tool.remoteUrl) writeCachedTool(toolKey, html).catch(() => {});
+          return html;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      const cached = await readCachedTool(toolKey);
+      if (cached) {
+        toolHtmlCache.set(toolKey, cached);
+        return cached;
+      }
+      throw lastError || new Error('Unable to fetch tool HTML.');
+    }
+
+    function setActiveButtons(toolKey) {
+      document.querySelectorAll('[data-tool]').forEach(button => {
+        button.classList.toggle('active', button.dataset.tool === toolKey);
+      });
+    }
+
+    function updateUrlTool(toolKey) {
+      const next = new URL(window.location.href);
+      next.searchParams.set('tool', toolKey);
+      if (params.get('mode') === 'app') next.searchParams.set('mode', 'app');
+      window.history.replaceState(null, '', next);
+    }
+
+    function showEmptyState(title, body, stamp = 'Standing By') {
+      frame.hidden = true;
+      frame.removeAttribute('srcdoc');
+      frame.removeAttribute('src');
+      emptyState.hidden = false;
+      emptyState.innerHTML = '<div class="empty-card"><span class="stamp">' + stamp + '</span><h3>' + title + '</h3><p>' + body + '</p></div>';
+    }
+
+    async function loadTool(toolKey) {
+      const tool = TOOL_DEFS[toolKey];
+      if (!tool) return;
+
+      clearGuidance();
+      activeTool = toolKey;
+      setActiveButtons(toolKey);
+      activeToolTitle.textContent = tool.title;
+      document.body.classList.add('tool-active');
+      updateUrlTool(toolKey);
+      showEmptyState('Loading ' + tool.shortTitle, 'Preparing the full-screen workspace.', 'Loading');
+      setStatus('Loading ' + tool.title + '...');
+
+      const currentLoad = ++frameLoadId;
+      frame.onload = () => {
+        if (currentLoad !== frameLoadId) return;
+        frame.hidden = false;
+        emptyState.hidden = true;
+        setStatus(tool.title + ' loaded.');
+      };
+      frame.onerror = () => {
+        if (currentLoad !== frameLoadId) return;
+        showEmptyState('Load Error', 'Unable to load ' + tool.title + ' from the local app folder.', 'Action Required');
+        setStatus(tool.title + ' load failed.');
+      };
+
       try {
-        setStatus('Loading ' + tool.toUpperCase() + '...');
-        const html = await fetchHtml(SOURCES[tool]);
-        frame.srcdoc = html;
-        setStatus(tool.toUpperCase() + ' loaded.');
-      } catch (err) {
-        frame.srcdoc = '<h2>Load error</h2><pre>' + String(err.message || err) + '</pre>';
-        setStatus('Load failed.');
+        frame.removeAttribute('srcdoc');
+        frame.src = tool.localPath;
+      } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        showEmptyState('Load Error', 'Unable to load ' + tool.title + '. ' + message, 'Action Required');
+        setStatus(tool.title + ' load failed.');
       }
     }
 
-    async function loadCombined() {
+    function returnHome() {
+      document.body.classList.remove('tool-active');
+      activeToolTitle.textContent = activeTool ? TOOL_DEFS[activeTool].title : 'Select a tool';
+      setStatus('Home ready.');
+    }
+
+    async function collectEmbeddedTools() {
+      const entries = await Promise.all(Object.keys(TOOL_DEFS).map(async key => {
+        const html = await fetchToolHtml(key);
+        return [key, html];
+      }));
+      return Object.fromEntries(entries);
+    }
+
+    function encodeBase64Utf8(value) {
+      const bytes = new TextEncoder().encode(value);
+      let binary = '';
+      const chunkSize = 0x8000;
+      for (let index = 0; index < bytes.length; index += chunkSize) {
+        const chunk = bytes.subarray(index, index + chunkSize);
+        binary += String.fromCharCode.apply(null, chunk);
+      }
+      return btoa(binary);
+    }
+
+    function downloadBlob(filename, contents, type) {
+      const blob = new Blob([contents], { type });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(link.href), 500);
+    }
+
+    function getStandaloneScript(encodedTools) {
+      return `
+        const TOOL_DEFS = ${JSON.stringify(TOOL_DEFS)};
+        const ENCODED_TOOLS = ${JSON.stringify(encodedTools)};
+        const frame = document.getElementById('appFrame');
+        const statusLine = document.getElementById('statusLine');
+        const homeStatus = document.getElementById('homeStatus');
+        const emptyState = document.getElementById('emptyState');
+        const activeToolTitle = document.getElementById('activeToolTitle');
+        let activeTool = null;
+
+        function decodeBase64Utf8(value) {
+          const binary = atob(value);
+          const bytes = new Uint8Array(binary.length);
+          for (let index = 0; index < binary.length; index += 1) {
+            bytes[index] = binary.charCodeAt(index);
+          }
+          return new TextDecoder().decode(bytes);
+        }
+
+        function setStatus(message) {
+          const text = 'Status: ' + message;
+          statusLine.textContent = text;
+          homeStatus.textContent = text;
+        }
+
+        function setActiveButtons(toolKey) {
+          document.querySelectorAll('[data-tool]').forEach(button => {
+            button.classList.toggle('active', button.dataset.tool === toolKey);
+          });
+        }
+
+        function loadTool(toolKey) {
+          const tool = TOOL_DEFS[toolKey];
+          if (!tool || !ENCODED_TOOLS[toolKey]) return;
+          activeTool = toolKey;
+          setActiveButtons(toolKey);
+          activeToolTitle.textContent = tool.title;
+          document.body.classList.add('tool-active');
+          setStatus(tool.title + ' loaded from standalone file.');
+          frame.srcdoc = decodeBase64Utf8(ENCODED_TOOLS[toolKey]);
+          frame.hidden = false;
+          emptyState.hidden = true;
+        }
+
+        function returnHome() {
+          document.body.classList.remove('tool-active');
+          setStatus('Home ready.');
+        }
+
+        document.querySelectorAll('[data-tool]').forEach(button => {
+          button.addEventListener('click', () => loadTool(button.dataset.tool));
+        });
+        document.getElementById('backButton').addEventListener('click', returnHome);
+      `;
+    }
+
+    function buildStandaloneHtml(embeddedTools) {
+      const encodedTools = {};
+      Object.keys(embeddedTools).forEach(key => {
+        encodedTools[key] = encodeBase64Utf8(embeddedTools[key]);
+      });
+
+      const css = document.querySelector('[data-shell-style]').textContent;
+      const markup = document.querySelector('.app-shell').outerHTML;
+      const script = getStandaloneScript(encodedTools).replace(/<\/script/gi, '<\\/script');
+
+      return '<!doctype html><html lang="en"><head><meta charset="UTF-8" />' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1" />' +
+        '<meta name="theme-color" content="#10120d" />' +
+        '<title>ADTMC+ Standalone</title><style data-shell-style>' + css + '</style></head>' +
+        '<body>' + markup + '<script>' + script + '<\/script></body></html>';
+    }
+
+    async function downloadDesktopHtml() {
+      clearGuidance();
+      setStatus('Preparing desktop app download...');
       try {
-        setStatus('Building combined in-browser view...');
-        const [adtmc, msk] = await Promise.all([fetchHtml(SOURCES.adtmc), fetchHtml(SOURCES.msk)]);
-        frame.srcdoc = buildCombinedHtml(adtmc, msk, false);
-        setStatus('Combined view loaded.');
-      } catch (err) {
-        frame.srcdoc = '<h2>Combined view failed</h2><pre>' + String(err.message || err) + '</pre>';
-        setStatus('Combined view failed.');
+        const embeddedTools = await collectEmbeddedTools();
+        const html = buildStandaloneHtml(embeddedTools);
+        downloadBlob('ADTMCplus-standalone.html', html, 'text/html;charset=utf-8');
+        setStatus('Desktop app downloaded.');
+      } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        setGuidance('Download Failed', 'Could not build the desktop app file: ' + message);
+        setStatus('Desktop app download failed.');
       }
     }
 
-    function buildCombinedHtml(adtmc, msk, standalone) {
-      const safe = s => s.replace(/<\\/script/gi, '<\\\\/script');
-      return `<!doctype html><html><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>ADTMC Plus Combined</title>
-      <style>body{margin:0;font-family:Arial,sans-serif;background:#111;color:#eee}header{padding:12px;background:#1b1f23;border-bottom:2px solid #c6a15b}button{margin-right:8px;padding:8px 12px;border-radius:6px;border:1px solid #3b434c;background:#242a31;color:#fff;cursor:pointer}button.active{background:#c6a15b;color:#111}#host{height:calc(100vh - 72px)}iframe{width:100%;height:100%;border:0;background:#fff}</style>
-      </head><body><header><strong>ADTMC Plus Combined</strong><div style="margin-top:8px"><button id="b1" class="active">ADTMC</button><button id="b2">MSKTool</button></div></header><div id="host"><iframe id="f" sandbox="allow-scripts allow-forms allow-modals allow-downloads allow-popups"></iframe></div>
-      <script>const A=${JSON.stringify(safe(adtmc))};const M=${JSON.stringify(safe(msk))};const f=document.getElementById('f');const b1=document.getElementById('b1');const b2=document.getElementById('b2');function s(k){f.srcdoc=k==='a'?A:M;b1.classList.toggle('active',k==='a');b2.classList.toggle('active',k==='m')}b1.onclick=()=>s('a');b2.onclick=()=>s('m');s('a');<\/script>
-      </body></html>`;
-    }
-
-    async function downloadStandalone() {
-      try {
-        setStatus('Preparing standalone combined HTML...');
-        const [adtmc, msk] = await Promise.all([fetchHtml(SOURCES.adtmc), fetchHtml(SOURCES.msk)]);
-        const combined = buildCombinedHtml(adtmc, msk, true);
-        const blob = new Blob([combined], { type: 'text/html' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'ADTMCplus-combined-standalone.html';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        setStatus('Standalone HTML downloaded.');
-      } catch (err) {
-        setStatus('Standalone download failed: ' + (err.message || err));
-      }
-    }
-
-    window.addEventListener('beforeinstallprompt', e => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
-
-    async function installApp() {
-      if (deferredPrompt) {
+    async function runInstall(target) {
+      clearGuidance();
+      if (target !== 'iPhone' && deferredPrompt) {
         deferredPrompt.prompt();
         await deferredPrompt.userChoice;
         deferredPrompt = null;
+        setStatus(target + ' install prompt completed.');
         return;
       }
-      alert('Install prompt unavailable here.\n\nAndroid: open browser menu and choose Install App.\niPhone: Safari > Share > Add to Home Screen.');
+
+      if (target === 'iPhone') {
+        setGuidance('iPhone App', 'Open this page in Safari, tap Share, then choose Add to Home Screen. The installed ADTMC+ icon opens to this same centered home screen.');
+      } else {
+        setGuidance('Android App', 'Open this page in Chrome or Edge and choose Install App from the browser menu. If the install prompt appears, accept the ADTMC+ install.');
+      }
+      setStatus(target + ' install guidance shown.');
     }
 
-    document.querySelectorAll('[data-tool]').forEach(btn => btn.addEventListener('click', () => loadTool(btn.dataset.tool)));
-    document.getElementById('openCombined').addEventListener('click', loadCombined);
-    document.getElementById('downloadStandalone').addEventListener('click', downloadStandalone);
-    document.getElementById('installBtn').addEventListener('click', installApp);
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      deferredPrompt = event;
+    });
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    document.querySelectorAll('[data-tool]').forEach(button => {
+      button.addEventListener('click', () => loadTool(button.dataset.tool));
+    });
+
+    document.getElementById('backButton').addEventListener('click', returnHome);
+    document.getElementById('downloadDesktopHtml').addEventListener('click', downloadDesktopHtml);
+    document.getElementById('installIphone').addEventListener('click', () => runInstall('iPhone'));
+    document.getElementById('installAndroid').addEventListener('click', () => runInstall('Android'));
+
+    const initialTool = params.get('tool');
+    if (TOOL_DEFS[initialTool]) {
+      loadTool(initialTool);
+    } else {
+      showEmptyState('Awaiting Selection', 'Choose ADTMC or MSK Screening Tool from the home screen.', 'Standing By');
+      setStatus('Ready.');
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>

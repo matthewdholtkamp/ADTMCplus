@@ -1,1 +1,1446 @@
-<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=https://htmlpreview.github.io/?https://github.com/matthewdholtkamp/ADTMC/blob/main/index.html"><title>ADTMC Redirect</title></head><body>Redirecting to ADTMC source index...</body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADTMC Triage Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .protocol-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .protocol-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        #toast-notification {
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .med-detail { margin-bottom: 0.75rem; }
+        .med-detail strong { color: #374151; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div id="app" class="max-w-4xl mx-auto p-4 md:p-6">
+
+        <!-- Header -->
+        <header class="bg-white shadow-md rounded-lg p-4 mb-6 flex items-center justify-between">
+            <div class="flex items-center">
+                <svg class="h-10 w-10 text-blue-600 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">ADTMC Triage Assistant</h1>
+                    <p class="text-sm text-gray-500">Algorithm-Directed Troop Medical Care</p>
+                </div>
+            </div>
+            <button id="home-button" class="hidden bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors">Home</button>
+        </header>
+
+        <!-- App Content Area -->
+        <main id="content-area">
+            <!-- Home Screen (will be populated by JS) -->
+            <div id="home-screen">
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <input type="text" id="search-bar" class="w-full p-3 border border-gray-300 rounded-lg mb-6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Search by Chief Complaint (e.g., 'Headache')">
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-4 mb-6">
+                        <button id="view-all-red-flags-btn" class="w-full bg-yellow-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center">
+                            <svg class="h-6 w-6 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                            </svg>
+                            View Master Red Flags List
+                        </button>
+                    </div>
+                    <div id="protocol-list" class="space-y-4">
+                        <!-- Protocol categories will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protocol Screen (hidden by default) -->
+            <div id="protocol-screen" class="hidden">
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h2 id="protocol-title" class="text-xl font-bold mb-4 border-b pb-2"></h2>
+
+                    <!-- Red Flags Section -->
+                    <div id="red-flags-container" class="mb-6">
+                        <div class="bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg" role="alert">
+                            <div class="flex">
+                                <div class="py-1"><svg class="fill-current h-6 w-6 text-red-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9 9a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zM10 3a1 1 0 011 1v4a1 1 0 11-2 0V4a1 1 0 011-1z"/></svg></div>
+                                <div>
+                                    <p class="font-bold">RED FLAGS CHECK</p>
+                                    <p class="text-sm">If the patient has ANY of the following, immediately disposition as 'Provider Now'.</p>
+                                    <ul id="red-flags-list" class="list-disc list-inside mt-2 text-sm"></ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex flex-col sm:flex-row gap-2">
+                             <button id="red-flag-present-btn" class="w-full bg-red-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors">Red Flag Present (-> Provider Now)</button>
+                             <button id="no-red-flags-btn" class="w-full bg-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors">No Red Flags - Continue</button>
+                        </div>
+                    </div>
+
+                    <!-- Decision Point Section -->
+                    <div id="decision-point-container" class="hidden">
+                        <div id="question-text" class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-4 rounded-r-lg mb-6"></div>
+                        <div id="action-container" class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-4 rounded-r-lg mb-6"></div>
+                        <div id="checklist-container" class="mb-6 space-y-2"></div>
+                        <div id="decision-buttons" class="flex flex-col sm:flex-row gap-4">
+                            <!-- Yes/No/Continue buttons will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disposition Screen (hidden by default) -->
+            <div id="disposition-screen" class="hidden">
+                 <div class="bg-white shadow-md rounded-lg p-6">
+                    <h3 class="text-lg font-semibold text-gray-600">Final Disposition</h3>
+                    <p id="disposition-result" class="text-3xl font-bold mb-4"></p>
+
+                    <div id="mcp-container" class="hidden bg-gray-50 p-4 rounded-lg mb-6">
+                        <h4 class="font-bold mb-2">Treatment Protocol:</h4>
+                        <div id="mcp-details" class="text-sm space-y-2"></div>
+                    </div>
+
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold mb-2">Encounter Summary for EHR</h4>
+                        <p class="text-xs text-gray-500 mb-2">Copy this summary and paste into the patient's electronic health record.</p>
+                        <pre id="summary-text" class="bg-white p-3 rounded border border-gray-200 text-xs whitespace-pre-wrap w-full overflow-auto"></pre>
+                        <button id="copy-summary-btn" class="mt-4 w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                            <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                            Copy Summary to Clipboard
+                        </button>
+                    </div>
+                 </div>
+            </div>
+
+            <!-- Red Flags List Screen (hidden by default) -->
+            <div id="red-flags-list-screen" class="hidden">
+                <div class="bg-white shadow-md rounded-lg p-6">
+                    <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-red-700">Master Red Flags List</h2>
+                    <p class="text-sm text-gray-600 mb-6">This is a consolidated list of all critical 'Red Flags' from every protocol. These symptoms require immediate escalation to a provider.</p>
+                    <div id="all-red-flags-content" class="space-y-6">
+                        <!-- Content will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-notification" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg opacity-0 transform translate-y-2">
+        Summary copied!
+    </div>
+
+    <!-- Service Worker for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- App Logic -->
+    <script>
+    // --- DATABASE of ADTMC Protocols ---
+    // This JSON structure contains the logic for all protocols.
+    const adtmcProtocols = {
+        "A": {
+            "category": "Ear, Nose, and Throat Complaints",
+            "protocols": {
+                "A-1": {
+                    "title": "Sore Throat/Hoarseness",
+                    "red_flags": ["Shortness of Breath", "Stridor", "Deviated Uvula", "Drooling/Trouble Swallowing", "Stiff Neck"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Symptoms >10 days", "Immunosuppression", "Inhaled steroid"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP sore throat:</strong> For pain: lozenges (e.g., Benzocaine/Menthol, 1 lozenge q 2-4 hrs PRN) first line, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) second line. For elevated temperature: acetaminophen (500-1000 mg PO q 4-6 hrs PRN). Salt water gargles and drink warm fluids for inflammation.", "<strong>MCP hoarseness:</strong> Rest vocal cords and avoid irritants (cigarette smoking, yelling, heartburn).", "<strong>Follow-up:</strong> Return if not improving in 3 days or immediately if worsening symptoms or Red Flags develop."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check all symptoms that apply (Centor Score):", "checklist": ["Fever", "No cough", "Tonsillar Exudate", "Swollen anterior cervical nodes"], "logic": "count", "options": { "0-2": "step3", "3+": "step4" } },
+                        "step3": { "type": "link", "text": "Screen for Cold Symptoms or Ear Pain if present.", "target": ["A-3", "A-2"], "default_disposition": { "disposition": "MCP", "details": ["<strong>MCP sore throat:</strong> For pain: lozenges (e.g., Benzocaine/Menthol, 1 lozenge q 2-4 hrs PRN) first line, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) second line. For elevated temperature: acetaminophen (500-1000 mg PO q 4-6 hrs PRN). Salt water gargles and drink warm fluids for inflammation.", "<strong>MCP hoarseness:</strong> Rest vocal cords and avoid irritants (cigarette smoking, yelling, heartburn).", "<strong>Follow-up:</strong> Return if not improving in 3 days or immediately if worsening symptoms or Red Flags develop."] } },
+                        "step4": { "type": "action", "text": "Perform Rapid Strep + Culture Test.", "next_step": "step5" },
+                        "step5": { "type": "decision", "question": "What was the result of the Rapid Strep Test?", "options": { "Positive": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP sore throat:</strong> For pain: lozenges (e.g., Benzocaine/Menthol, 1 lozenge q 2-4 hrs PRN) first line, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) second line. For elevated temperature: acetaminophen (500-1000 mg PO q 4-6 hrs PRN). Salt water gargles and drink warm fluids for inflammation.", "<strong>MCP hoarseness:</strong> Rest vocal cords and avoid irritants (cigarette smoking, yelling, heartburn).", "<strong>Follow-up:</strong> Return if not improving in 3 days or immediately if worsening symptoms or Red Flags develop."] }, "Negative": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP sore throat:</strong> For pain: lozenges (e.g., Benzocaine/Menthol, 1 lozenge q 2-4 hrs PRN) first line, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) second line. For elevated temperature: acetaminophen (500-1000 mg PO q 4-6 hrs PRN). Salt water gargles and drink warm fluids for inflammation.", "<strong>MCP hoarseness:</strong> Rest vocal cords and avoid irritants (cigarette smoking, yelling, heartburn).", "<strong>Follow-up:</strong> Return if not improving in 3 days or immediately if worsening symptoms or Red Flags develop."] } } }
+                    }
+                },
+                "A-2": {
+                    "title": "Ear Pain/Drainage/Trauma",
+                    "red_flags": ["Stiff Neck AND Fever", "Posterior Ear Pain", "Mastoid Erythema"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Otoscope Exam. Assess for: TM redness, opacification, bulging, immobility, rupture; Ear Canal (EC) redness, swelling, tenderness.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Based on the otoscope exam, check for signs of Otitis Media or Moderate-Severe Otitis Externa:", "checklist": ["TM redness, opacification, bulging, etc.", "Mod-Severe EC redness, swollen, tender"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Mild Otitis Externa:</strong> Soak wick of a cotton ball with ear drops. Place in the ear for 24 hours while using the drops. Remove the cotton wick and continue drops for 1 week (3 days after the symptoms have resolved). Keep the ear canal dry.", "<strong>MCP for TMJ:</strong> Refer to dental if history of teeth grinding, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for pain, instruct on avoidance of triggers and home jaw exercises.", "<strong>Follow-up:</strong> Return if not improving in 3 days, or if worsening symptoms develop (dizziness, loss of hearing, stiff neck)."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check if the patient reports any of the following:", "checklist": ["Vertigo", "Symptoms >7 days", "Decreased hearing", "Foreign body in ear", "Visual trauma to ear"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Mild Otitis Externa:</strong> Soak wick of a cotton ball with ear drops. Place in the ear for 24 hours while using the drops. Remove the cotton wick and continue drops for 1 week (3 days after the symptoms have resolved). Keep the ear canal dry.", "<strong>MCP for TMJ:</strong> Refer to dental if history of teeth grinding, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for pain, instruct on avoidance of triggers and home jaw exercises.", "<strong>Follow-up:</strong> Return if not improving in 3 days, or if worsening symptoms develop (dizziness, loss of hearing, stiff neck)."] }, "no": "step4" },
+                        "step4": { "type": "link", "text": "Are Cold Symptoms or Sore Throat present?", "target": ["A-3", "A-1"], "default_disposition": { "disposition": "MCP", "details": ["<strong>MCP for Mild Otitis Externa:</strong> Soak wick of a cotton ball with ear drops. Place in the ear for 24 hours while using the drops. Remove the cotton wick and continue drops for 1 week (3 days after the symptoms have resolved). Keep the ear canal dry.", "<strong>MCP for TMJ:</strong> Refer to dental if history of teeth grinding, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for pain, instruct on avoidance of triggers and home jaw exercises.", "<strong>Follow-up:</strong> Return if not improving in 3 days, or if worsening symptoms develop (dizziness, loss of hearing, stiff neck)."] } }
+                    }
+                },
+                "A-3": {
+                    "title": "Cold Symptoms/Allergies/Cough",
+                    "red_flags": ["Abnormal Vital Signs", "Shortness of Breath", "Stiff Neck", "Altered Mental Status", "Coughing up blood clots or frank blood"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Productive cough > 7 days", "Severe sinus pain, dental pain"], "action_on_yes": "Place Mask", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Cold:</strong> Counsel the Soldier to drink plenty of fluids, get plenty of rest, and to cover their mouth when coughing and wash their hands to prevent spread. Stop or limit smoking.", "<strong>Medications:</strong> Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) for pain, acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for elevated temperature, decongestant (e.g., Oxymetazoline 0.05%, 2-3 sprays/nostril q 12 hrs PRN, max 3 days) for nasal congestion, guaifenesin (200-400 mg PO q 4 hrs PRN) for mucous, or antihistamine (e.g., Diphenhydramine 25-50 mg PO q 4-6 hrs PRN) for allergies.", "<strong>Follow-up:</strong> Return if it does not improve in 7 days, worsening symptoms, or they develop sinus pain, lightheaded, neck pain, or fever."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Symptoms > 7 days", "Rebound Symptoms (got better, then worse)", "Purulent discharge"], "action_on_yes": "Place Mask", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Cold:</strong> Counsel the Soldier to drink plenty of fluids, get plenty of rest, and to cover their mouth when coughing and wash their hands to prevent spread. Stop or limit smoking.", "<strong>Medications:</strong> Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) for pain, acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for elevated temperature, decongestant (e.g., Oxymetazoline 0.05%, 2-3 sprays/nostril q 12 hrs PRN, max 3 days) for nasal congestion, guaifenesin (200-400 mg PO q 4 hrs PRN) for mucous, or antihistamine (e.g., Diphenhydramine 25-50 mg PO q 4-6 hrs PRN) for allergies.", "<strong>Follow-up:</strong> Return if it does not improve in 7 days, worsening symptoms, or they develop sinus pain, lightheaded, neck pain, or fever."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Cold:</strong> Counsel the Soldier to drink plenty of fluids, get plenty of rest, and to cover their mouth when coughing and wash their hands to prevent spread. Stop or limit smoking.", "<strong>Medications:</strong> Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) for pain, acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for elevated temperature, decongestant (e.g., Oxymetazoline 0.05%, 2-3 sprays/nostril q 12 hrs PRN, max 3 days) for nasal congestion, guaifenesin (200-400 mg PO q 4 hrs PRN) for mucous, or antihistamine (e.g., Diphenhydramine 25-50 mg PO q 4-6 hrs PRN) for allergies.", "<strong>Follow-up:</strong> Return if it does not improve in 7 days, worsening symptoms, or they develop sinus pain, lightheaded, neck pain, or fever."] } }
+                    }
+                },
+                "A-4": {
+                    "title": "Ringing in the Ears/Hearing Problem",
+                    "red_flags": ["Altered Mental Status", "Focal Neurological Symptom or Sign", "Dizziness"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Ringing > 24 hours", "Ringing without MOI", "Dizziness", "Visual trauma", "Decreased hearing"], "yes": { "disposition": "Provider Now", "mcp_context": ["Ringing sound after exposure to excessive noise exposure should resolve within 24 hours.", "Return to clinic if the ringing does not resolve after 24 hours.", "Return if associated with dizziness (spinning sensation) or worsening symptoms."] }, "no": "step2" },
+                        "step2": { "type": "action", "text": "Perform Otoscope Exam. Check for TM Opacification, immobility, rupture, Ear Canal foreign body, wax buildup.", "next_step": "step3" },
+                        "step3": { "type": "link", "text": "Are Ear Pain or Cold Symptoms present?", "target": ["A-2", "A-3"], "default_disposition": { "disposition": "MCP", "details": ["Ringing sound after exposure to excessive noise exposure should resolve within 24 hours.", "Return to clinic if the ringing does not resolve after 24 hours.", "Return if associated with dizziness (spinning sensation) or worsening symptoms."] } }
+                    }
+                },
+                "A-5": {
+                    "title": "Nosebleed/Nose Trauma",
+                    "red_flags": ["Airway Compromise", "Orthostatic Hypotension", "Bleeding from Gums", "Inability to Move Eye"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Attempt to stop the bleeding: 1. Tilt head forward. 2. Blow nose gently. 3. Two sprays of Oxymetazoline. 4. Pinch nose for five minutes.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Did the bleeding stop?", "yes": "step3", "no": { "disposition": "Provider Now", "mcp_context": ["Do not blow the nose vigorously or wipe the middle of the nose, as it can cause a nosebleed.", "<strong>Medications:</strong> Nasal saline for prevention if the air is dry, oxymetazoline (0.05% nasal spray, 2 sprays per nostril) if recurrent with nasal sx.", "A humidifier can also be used if the air is dry.", "<strong>Follow-up:</strong> Return if unable to get a recurrent nosebleed to stop, notice bleeding from other sites, feeling lightheaded or tired, losing a significant amount of blood, or recurrent without common cold sx."] } },
+                        "step3": { "type": "decision", "question": "Check if the patient has any of the following conditions:", "checklist": ["Cut, deformity", "On anticoagulation", "Using intra-nasal meds", "High blood pressure", "Purulent discharge", "Recurrent nosebleeds w/o cold"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Do not blow the nose vigorously or wipe the middle of the nose, as it can cause a nosebleed.", "<strong>Medications:</strong> Nasal saline for prevention if the air is dry, oxymetazoline (0.05% nasal spray, 2 sprays per nostril) if recurrent with nasal sx.", "A humidifier can also be used if the air is dry.", "<strong>Follow-up:</strong> Return if unable to get a recurrent nosebleed to stop, notice bleeding from other sites, feeling lightheaded or tired, losing a significant amount of blood, or recurrent without common cold sx."] }, "no": "step4" },
+                        "step4": { "type": "link", "text": "Are there current cold, runny nose, or allergy symptoms?", "target": ["A-3"], "default_disposition": { "disposition": "MCP", "details": ["Do not blow the nose vigorously or wipe the middle of the nose, as it can cause a nosebleed.", "<strong>Medications:</strong> Nasal saline for prevention if the air is dry, oxymetazoline (0.05% nasal spray, 2 sprays per nostril) if recurrent with nasal sx.", "A humidifier can also be used if the air is dry.", "<strong>Follow-up:</strong> Return if unable to get a recurrent nosebleed to stop, notice bleeding from other sites, feeling lightheaded or tired, losing a significant amount of blood, or recurrent without common cold sx."] } }
+                    }
+                }
+            }
+        },
+        "B": {
+            "category": "Musculoskeletal Complaints",
+            "protocols": {
+                "B-1": {
+                    "title": "Back Pain",
+                    "red_flags": ["Fever", "Saddle Anesthesia", "Urinary Retention/Incontinence", "Fecal Incontinence", "Motor Deficits", "Trauma with Vertebral Tenderness or Neuropathy", "Dysuria/Frequency", "Chest/Abdominal Pain", "No significant MOI"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has radicular symptoms (pain, numbness, tingling) extending below the knee.", "checklist": ["Radicular symptoms below the knee"], "action_on_yes": "Consider PT referral if available.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program, activity modification as appropriate.", "Intermittent ice or heat IAW local protocol for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or radicular symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program, activity modification as appropriate.", "Intermittent ice or heat IAW local protocol for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or radicular symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] } }
+                    }
+                },
+                "B-2": {
+                    "title": "Neck Pain",
+                    "red_flags": ["Bony step off/midline tenderness to palpation", "Inability to flex neck", "Fever", "Recent HEENT or dental infection", "Significant MOI"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient reports radiating pain, numbness, tingling, or weakness into the arms.", "checklist": ["Radiating pain, numbness, tingling, weakness"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat as needed for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or radiating symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat as needed for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or radiating symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] } }
+                    }
+                },
+                "B-3": {
+                    "title": "Shoulder Pain",
+                    "red_flags": ["Distal Pulses Abnormal", "Distal Sensation Abnormal", "Deformity", "Cardiac Symptoms (sweating, SOB, chest/jaw pain)", "Red/Warm joint", "Abdominal Symptoms"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Symptoms > 3 weeks", "Neurologic Symptoms (numbness, weakness)", "Limited motion", "Laceration"], "action_on_yes": "Sling the injured extremity for comfort before transport or referral.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or neurologic/motion limiting symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or neurologic/motion limiting symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] } }
+                    }
+                },
+                "B-4": {
+                    "title": "Elbow Pain",
+                    "red_flags": ["Distal Pulses Abnormal", "Distal Sensation Abnormal", "Deformity", "Red/Warm joint", "Diffuse Pain"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Limited Range of Motion (ROM)", "Neck or Shoulder Symptoms", "Symptoms > 2 weeks", "Ulnar Hand Symptoms (pinky/ring finger)", "Swelling"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or concerning symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or concerning symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] } }
+                    }
+                },
+                "B-5": {
+                    "title": "Wrist Pain",
+                    "red_flags": ["Distal Pulses Abnormal", "Distal Sensation Abnormal", "Deformity", "Open Fracture", "Red/Warm joint", "Trauma / Fall On Outstretched Hand (FOOSH)", "No Mechanism of Injury (MOI)"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Index/thumb symptoms (carpal tunnel sx)", "Clicking/popping with pain", "Mobile mass over tendon (ganglion)", "Laceration", "Inability to perform job"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or concerning symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or concerning symptoms. Routine follow-up is recommended for any symptoms that do not improve or worsen."] } }
+                    }
+                },
+                "B-6": {
+                    "title": "Hand Pain",
+                    "red_flags": ["Abnormal Capillary Refill", "Abnormal Distal Sensation", "Deformity", "Significant Burn", "Crush injury", "History of punching something"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Finger catching/locking (trigger finger)", "Laceration", "Ulcers", "Abscess"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>For Paronychia:</strong> 10-15min warm soaks 3 times per day and topical antibiotic cream (e.g., Bacitracin, small amount TID) after each soak. Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) (2nd line) as needed for pain. Ketorolac (10 mg PO once) (3rd line) can be used once on presentation for moderate pain. Return if worsening, spreading redness, abscess formation, not improving in 2 days.", "<strong>For Sprained finger:</strong> Activity modification as appropriate, Intermittent ice for swelling, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) (2nd line) as needed for pain. Splint to adjacent finger. Return if worsening or not improving."] }, "no": { "disposition": "MCP", "details": ["<strong>For Paronychia:</strong> 10-15min warm soaks 3 times per day and topical antibiotic cream (e.g., Bacitracin, small amount TID) after each soak. Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) (2nd line) as needed for pain. Ketorolac (10 mg PO once) (3rd line) can be used once on presentation for moderate pain. Return if worsening, spreading redness, abscess formation, not improving in 2 days.", "<strong>For Sprained finger:</strong> Activity modification as appropriate, Intermittent ice for swelling, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) (2nd line) as needed for pain. Splint to adjacent finger. Return if worsening or not improving."] } }
+                    }
+                },
+                 "B-7": {
+                    "title": "Hip Pain",
+                    "red_flags": ["Abnormal PMS (Pulse, Motor, Sensory)", "Deformity", "High Energy Trauma", "Suspect Stress Fracture (increased w/ weight bearing, endurance training, change in routine)", "Severe Pain"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Paresthesia (numbness/tingling)", "Pain not worse with direct pressure or hip flexion", "Limited ROM"], "action_on_yes": "For suspected stress injury: provide crutches (toe touch).", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Return if pain with weight bearing develops, or if symptoms worsen or do not improve in 3 days."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Return if pain with weight bearing develops, or if symptoms worsen or do not improve in 3 days."] } }
+                    }
+                },
+                "B-8": {
+                    "title": "Knee Pain",
+                    "red_flags": ["Abnormal PMS (Pulse, Motor, Sensory)", "Deformity", "High Energy Trauma", "Red/warm joint", "Immediate swelling after trauma", "No MOI"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Swelling", "Decreased ROM", "Previous knee injury"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Return if pain becomes severe, knee catches/locks up or gives out, or symptoms last longer than one week."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice or heat for inflammation.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Return if pain becomes severe, knee catches/locks up or gives out, or symptoms last longer than one week."] } }
+                    }
+                },
+                "B-9": {
+                    "title": "Ankle Pain",
+                    "red_flags": ["Abnormal Distal Pulse", "Abnormal Sensation", "Deformity", "Positive calf squeeze test (possible Achilles rupture)", "Pain unrelated to overuse or injury"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of potential fracture (Ottawa Rules) or syndesmotic sprain:", "checklist": ["Positive Ottawa ankle rules", "Positive Squeeze test", "Medial injury"], "action_on_yes": "Plan for X-ray, provide crutches and PT education.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program, wrap the ankle, and activity modification as appropriate.", "Intermittent ice for inflammation. Elevate for swelling.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or fracture signs. Return to clinic if worsening or not improving within 1 week."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program, wrap the ankle, and activity modification as appropriate.", "Intermittent ice for inflammation. Elevate for swelling.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Immediate follow-up for Red Flag or fracture signs. Return to clinic if worsening or not improving within 1 week."] } }
+                    }
+                },
+                "B-10": {
+                    "title": "Foot Pain",
+                    "red_flags": ["Abnormal Distal Pulse", "Abnormal Sensation", "Deformity", "Suspect Stress Fracture (increased w/ weight bearing, change in exercise, etc.)", "Constant pain", "Pain unrelated to overuse or injury"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Numbness", "Red and warm", "Abscess"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>Ingrown Toenail:</strong> Soak in soap and water for 20min three times per day. Place cotton under the toenail. Consult provider if toenail removal required (protocol J-18).", "<strong>Subungual Hematoma:</strong> Discuss with supervisor. Treat. Soak in soap and water twice a day for 3 days.", "<strong>Plantar Fasciitis:</strong> Home exercise/stretching program, intermittent ice for inflammation, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for pain. Consider activity modification and arch support. Refer to PT if direct access is available.", "<strong>Blisters, Callus (See J-15):</strong> Use moleskin. Consider activity modification.", "<strong>Plantar Wart (See J-16):</strong> Discuss with supervising provider.", "<strong>Follow-up:</strong> Return to clinic if worsens, new symptoms develop, or not improving within 1 week or interferes with performance of normal duties/activities."] }, "no": { "disposition": "MCP", "details": ["<strong>Ingrown Toenail:</strong> Soak in soap and water for 20min three times per day. Place cotton under the toenail. Consult provider if toenail removal required (protocol J-18).", "<strong>Subungual Hematoma:</strong> Discuss with supervisor. Treat. Soak in soap and water twice a day for 3 days.", "<strong>Plantar Fasciitis:</strong> Home exercise/stretching program, intermittent ice for inflammation, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for pain. Consider activity modification and arch support. Refer to PT if direct access is available.", "<strong>Blisters, Callus (See J-15):</strong> Use moleskin. Consider activity modification.", "<strong>Plantar Wart (See J-16):</strong> Discuss with supervising provider.", "<strong>Follow-up:</strong> Return to clinic if worsens, new symptoms develop, or not improving within 1 week or interferes with performance of normal duties/activities."] } }
+                    }
+                },
+                "B-11": {
+                    "title": "Extremity, Non-joint Pain",
+                    "red_flags": ["Abnormal Distal Pulse", "Abnormal Sensation", "Deformity", "Cola Colored Urine", "Inability to Urinate", "Severe pain", "Suspect Stress Fracture", "Swelling, erythema (redness)"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Abnormal joint function, limited ROM, or loss of strength", "Laceration", "Pain > 1 week"], "action_on_yes": "Provide crutch if needed.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice for inflammation as needed.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Return to clinic if worsening or not improving within 1 week."] }, "no": { "disposition": "MCP", "details": ["Provide home exercise program. Activity modification as appropriate.", "Intermittent ice for inflammation as needed.", "<strong>Medication:</strong> Analgesic balm for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) (1st line) and ketorolac (10 mg PO PRN, max 5 days) (2nd line) for moderate pain as needed.", "Refer to PT if direct access is available.", "<strong>Follow-up:</strong> Return to clinic if worsening or not improving within 1 week."] } }
+                    }
+                }
+            }
+        },
+        "C": {
+            "category": "Gastrointestinal (GI) Complaints",
+            "protocols": {
+                "C-1": {
+                    "title": "Nausea/Vomiting",
+                    "red_flags": ["Vomiting Blood or Coffee Grinds, Melena", "Neurologic Symptoms", "Chest Pain", "Abdominal Pain followed by Nausea", "Abdominal Distension"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Chemotherapy", "BMI <18", "Diabetes", "Recent head trauma w/in 72 hrs"], "yes": { "disposition": "Provider Now", "mcp_context": ["Hand washing protocol. Special food handler precautions.", "Notify supervising NCO if DFAC food is suspected or multiple cases identified.", "Initiate a clear liquid diet with broth, sports drinks, clear non-caffeine soft drinks, fruit juice, ice chips to maintain calories and hydration. When vomiting is controlled, start BRAT diet of simple carbohydrates.", "<strong>Medication:</strong> Bismuth Subsalicylate (525 mg PO q 30-60 mins PRN) for upset stomach.", "<strong>Follow-up:</strong> Return to clinic if not improved in 48 hours or any of the red flags or other symptoms develop."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if the patient has any signs of fluid depletion or prolonged symptoms:", "checklist": ["Symptoms > 72 hrs", "Signs of fluid depletion, Orthostatic Hypotension", "Unable to maintain oral intake"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Hand washing protocol. Special food handler precautions.", "Notify supervising NCO if DFAC food is suspected or multiple cases identified.", "Initiate a clear liquid diet with broth, sports drinks, clear non-caffeine soft drinks, fruit juice, ice chips to maintain calories and hydration. When vomiting is controlled, start BRAT diet of simple carbohydrates.", "<strong>Medication:</strong> Bismuth Subsalicylate (525 mg PO q 30-60 mins PRN) for upset stomach.", "<strong>Follow-up:</strong> Return to clinic if not improved in 48 hours or any of the red flags or other symptoms develop."] }, "no": "step3" },
+                        "step3": { "type": "action", "text": "Perform Pregnancy Screen/Test.", "next_step": "step4" },
+                        "step4": { "type": "link", "text": "Are any other symptoms like headache, heartburn, or dizziness present?", "target": ["F-2", "C-7", "F-1", "I-2"], "default_disposition": { "disposition": "MCP", "details": ["Hand washing protocol. Special food handler precautions.", "Notify supervising NCO if DFAC food is suspected or multiple cases identified.", "Initiate a clear liquid diet with broth, sports drinks, clear non-caffeine soft drinks, fruit juice, ice chips to maintain calories and hydration. When vomiting is controlled, start BRAT diet of simple carbohydrates.", "<strong>Medication:</strong> Bismuth Subsalicylate (525 mg PO q 30-60 mins PRN) for upset stomach.", "<strong>Follow-up:</strong> Return to clinic if not improved in 48 hours or any of the red flags or other symptoms develop."] } }
+                    }
+                },
+                "C-2": {
+                    "title": "Diarrhea",
+                    "red_flags": ["Vomiting Blood or Coffee Grinds, Melena", "Severe abdominal pain", "Significant weight loss"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Recent hospital stay", "Recent antibiotics", "Bloody diarrhea", "H/O inflammatory bowel disease", "Severe abdominal pain"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>Medication:</strong> Bismuth subsalicylate (525 mg PO q 30-60 mins PRN) as 1st line. Discuss with provider before giving Loperamide (Imodium) as 2nd line (common dose: 4mg initially, then 2mg after each loose stool).", "Initiate a clear liquid diet with broth, sports drinks, clear non-caffeine soft drinks, fruit juice, ice chips. When diarrhea controlled, start BRAT diet.", "<strong>Follow-up:</strong> Return to clinic if not improved in 1 week or any red flags or other symptoms develop."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if the patient has severe or persistent symptoms:", "checklist": [">6 unformed stools in 24 hours", "Hypovolemia", "Symptoms > 3 days"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>Medication:</strong> Bismuth subsalicylate (525 mg PO q 30-60 mins PRN) as 1st line. Discuss with provider before giving Loperamide (Imodium) as 2nd line (common dose: 4mg initially, then 2mg after each loose stool).", "Initiate a clear liquid diet with broth, sports drinks, clear non-caffeine soft drinks, fruit juice, ice chips. When diarrhea controlled, start BRAT diet.", "<strong>Follow-up:</strong> Return to clinic if not improved in 1 week or any red flags or other symptoms develop."] }, "no": { "disposition": "MCP", "details": ["<strong>Medication:</strong> Bismuth subsalicylate (525 mg PO q 30-60 mins PRN) as 1st line. Discuss with provider before giving Loperamide (Imodium) as 2nd line (common dose: 4mg initially, then 2mg after each loose stool).", "Initiate a clear liquid diet with broth, sports drinks, clear non-caffeine soft drinks, fruit juice, ice chips. When diarrhea controlled, start BRAT diet.", "<strong>Follow-up:</strong> Return to clinic if not improved in 1 week or any red flags or other symptoms develop."] } }
+                    }
+                },
+                "C-3": {
+                    "title": "Abdominal and Flank Pain",
+                    "red_flags": ["Abnormal Vitals", "Abdominal rigidity/rebound (bump chair)", "Severe pain", "Fever with jaundice and RUQ pain", "Confirmed Pregnancy", "Alcoholism", "Immunocompromised"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Pregnancy Screen/Test.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if patient has any of the following concerning signs:", "checklist": ["Melena", "Coffee grind emesis", "Periumbilical pain that moves to RLQ", "Abdominal trauma w/in 72 hours", "40+ years old", "Chest pain and nausea"], "yes": { "disposition": "Provider Now", "mcp_context": ["Initiate hydration with 8 glasses of water per day and a well-balanced, high fiber diet.", "Maintain a food diary to see if the symptoms are related to a particular food.", "<strong>Follow-up:</strong> Follow-up in 3 days if the symptoms have not resolved or earlier if symptoms worsen, new symptoms develop, or red flags become present."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check if any of these additional symptoms are present:", "checklist": ["Loss of appetite", "Nausea follows pain", "Present for 1+ weeks", "Testicular Symptoms"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Initiate hydration with 8 glasses of water per day and a well-balanced, high fiber diet.", "Maintain a food diary to see if the symptoms are related to a particular food.", "<strong>Follow-up:</strong> Follow-up in 3 days if the symptoms have not resolved or earlier if symptoms worsen, new symptoms develop, or red flags become present."] }, "no": "step4" },
+                        "step4": { "type": "link", "text": "Are other GI, pelvic, or urinary symptoms present?", "target": ["C-1", "C-2", "I-4", "C-5", "E-1"], "default_disposition": { "disposition": "MCP", "details": ["Initiate hydration with 8 glasses of water per day and a well-balanced, high fiber diet.", "Maintain a food diary to see if the symptoms are related to a particular food.", "<strong>Follow-up:</strong> Follow-up in 3 days if the symptoms have not resolved or earlier if symptoms worsen, new symptoms develop, or red flags become present."] } }
+                    }
+                },
+                "C-4": {
+                    "title": "Rectal Pain/Itching/Bleeding",
+                    "red_flags": ["Toilet FULL of Blood", "Vomiting Blood or Coffee Grinds", "Melena", "Lightheaded"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Hemoccult test if stool sample is available.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if Hemoccult is positive OR patient has any of the following:", "checklist": ["Positive Hemoccult / Unable to obtain sample", "Weight loss", "Night sweats", "Family H/O early GI cancer", "Change in stool", "Mucous with stool"], "yes": { "disposition": "Provider Now", "mcp_context": ["Sit in warm water for 30min a day. Wash the area with warm water and blot dry.", "Drink 8 glasses of liquid a day and eat foods high in fiber.", "<strong>Medication:</strong> Polyethylene glycol (17g powder in 8oz liquid PO daily) (1st line) or docusate sodium (100 mg PO BID) (2nd line) to soften stool; hydrocortisone 1% cream (apply thin layer 2-4x daily) for inflammation/pain.", "<strong>Follow-up:</strong> Return to clinic if not improved in 1 week, symptoms worsen, or new symptoms develop."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["H/O anal sex", "Low back problems"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Sit in warm water for 30min a day. Wash the area with warm water and blot dry.", "Drink 8 glasses of liquid a day and eat foods high in fiber.", "<strong>Medication:</strong> Polyethylene glycol (17g powder in 8oz liquid PO daily) (1st line) or docusate sodium (100 mg PO BID) (2nd line) to soften stool; hydrocortisone 1% cream (apply thin layer 2-4x daily) for inflammation/pain.", "<strong>Follow-up:</strong> Return to clinic if not improved in 1 week, symptoms worsen, or new symptoms develop."] }, "no": { "disposition": "MCP", "details": ["Sit in warm water for 30min a day. Wash the area with warm water and blot dry.", "Drink 8 glasses of liquid a day and eat foods high in fiber.", "<strong>Medication:</strong> Polyethylene glycol (17g powder in 8oz liquid PO daily) (1st line) or docusate sodium (100 mg PO BID) (2nd line) to soften stool; hydrocortisone 1% cream (apply thin layer 2-4x daily) for inflammation/pain.", "<strong>Follow-up:</strong> Return to clinic if not improved in 1 week, symptoms worsen, or new symptoms develop."] } }
+                    }
+                },
+                "C-5": {
+                    "title": "Constipation",
+                    "red_flags": ["Diarrhea at night", "Iron deficiency anemia", "Vomiting"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of Red Flags OR other systemic symptoms are present:", "checklist": ["Weight change", "Fatigue", "Temperature sensitivity", "Depression"], "yes": { "disposition": "Provider Now", "mcp_context": ["Counsel the Soldier to drink 8 glasses of water per day and eat foods that are high in fiber.", "<strong>Medication:</strong> Bisacodyl (5-15 mg PO daily) for acute constipation, followed by polyethylene glycol (17g in 8oz liquid PO daily) for 2 weeks (1st line) or docusate sodium (100 mg PO BID) for 1 week (2nd line).", "<strong>Follow-up:</strong> Return for blood in stool, abdominal pain, or not having a BM for 3 days."] }, "no": "step2" },
+                        "step2": { "type": "link", "text": "Is rectal bleeding present?", "target": ["C-4"], "default_disposition": { "disposition": "MCP", "details": ["Counsel the Soldier to drink 8 glasses of water per day and eat foods that are high in fiber.", "<strong>Medication:</strong> Bisacodyl (5-15 mg PO daily) for acute constipation, followed by polyethylene glycol (17g in 8oz liquid PO daily) for 2 weeks (1st line) or docusate sodium (100 mg PO BID) for 1 week (2nd line).", "<strong>Follow-up:</strong> Return for blood in stool, abdominal pain, or not having a BM for 3 days."] } }
+                    }
+                },
+                "C-6": {
+                    "title": "Difficulty When Swallowing",
+                    "red_flags": ["Airway compromise", "Coughing, choking when swallowing"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if patient has signs of food bolus obstruction:", "checklist": ["Sudden onset during eating", "Inability to swallow (drooling)"], "action_on_yes": "NOTE FOR PROVIDER: Consider Glucagon if unable to transport within 24 hours of onset.", "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Did the difficulty swallowing start BEFORE a sore throat?", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": "step3" },
+                        "step3": { "type": "link", "text": "Did a sore throat start first?", "target": ["A-1"], "default_disposition": { "disposition": "Advanced Enlisted Medic (AEM) Now" } }
+                    }
+                },
+                "C-7": {
+                    "title": "Heartburn",
+                    "red_flags": ["Vomiting Blood or Coffee Grinds", "Melena", "Angina, SOB", "Radiation to Back"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of a cardiac event:", "checklist": ["Tachycardia", "Sweating", "Shoulder, jaw pain"], "action_on_yes": "Action: Oxygen, EKG, chewable aspirin", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>Medication:</strong> Famotidine (20 mg PO BID) as needed.", "<strong>Lifestyle modification:</strong> Weight loss, smoking cessation, elevation of head of bed, avoidance of trigger foods (chocolate, caffeine, spicy foods, alcohol).", "<strong>Follow-up:</strong> Return if red flags or other symptoms develop, not improved with MCP, or taking medication more than once per week on average."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for signs of a more chronic or severe condition:", "checklist": [">2 weeks", "History of ulcer", "Unexplained weight loss", "Anorexia, vomiting", "Dysphagia", "Odynophagia (painful swallowing)"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>Medication:</strong> Famotidine (20 mg PO BID) as needed.", "<strong>Lifestyle modification:</strong> Weight loss, smoking cessation, elevation of head of bed, avoidance of trigger foods (chocolate, caffeine, spicy foods, alcohol).", "<strong>Follow-up:</strong> Return if red flags or other symptoms develop, not improved with MCP, or taking medication more than once per week on average."] }, "no": "step3" },
+                        "step3": { "type": "link", "text": "Are there symptoms other than classic heartburn?", "target": [], "default_disposition": { "disposition": "MCP", "details": ["<strong>Medication:</strong> Famotidine (20 mg PO BID) as needed.", "<strong>Lifestyle modification:</strong> Weight loss, smoking cessation, elevation of head of bed, avoidance of trigger foods (chocolate, caffeine, spicy foods, alcohol).", "<strong>Follow-up:</strong> Return if red flags or other symptoms develop, not improved with MCP, or taking medication more than once per week on average."] } }
+                    }
+                }
+            }
+        },
+        "D": {
+            "category": "Cardiorespiratory Complaints",
+            "protocols": {
+                "D-1": {
+                    "title": "Shortness of Breath",
+                    "red_flags": ["Cyanosis", "Ancillary muscles", "SpO2<90%", "SIRS Criteria", "Airway Swelling", "Hives", "Altered Mental Status (AMS)"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has signs of cardiac issues:", "checklist": ["Irregular pulse", "Sweating", "Chest, shoulder, jaw pain or pressure", "H/O or FH of heart problems"], "action_on_yes": "Provide Oxygen, EKG, IV, Aspirin 325 mg", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>Cold or allergy symptoms:</strong> Use A-3 Minor Care Protocol.", "<strong>Panic attack symptoms:</strong> Check EKG. Monitor pulse oximeter. Supervised deep breathing exercises. Referral to provider now if oxygenation decreases or symptoms do not resolve. Refer to behavioral health after dyspnea symptoms have resolved."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if the patient has signs of infection or asthma:", "checklist": ["Elevated temperature", "Productive cough", "Symptoms > 10 days", "H/O asthma wheeze"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>Cold or allergy symptoms:</strong> Use A-3 Minor Care Protocol.", "<strong>Panic attack symptoms:</strong> Check EKG. Monitor pulse oximeter. Supervised deep breathing exercises. Referral to provider now if oxygenation decreases or symptoms do not resolve. Refer to behavioral health after dyspnea symptoms have resolved."] }, "no": "step3" },
+                        "step3": { "type": "link", "text": "Are cold-like symptoms, allergy symptoms, or history of panic attacks present?", "target": ["A-3"], "default_disposition": { "disposition": "MCP", "details": ["<strong>Cold or allergy symptoms:</strong> Use A-3 Minor Care Protocol.", "<strong>Panic attack symptoms:</strong> Check EKG. Monitor pulse oximeter. Supervised deep breathing exercises. Referral to provider now if oxygenation decreases or symptoms do not resolve. Refer to behavioral health after dyspnea symptoms have resolved."] } }
+                    }
+                },
+                "D-2": {
+                    "title": "Chest Pain",
+                    "red_flags": ["Irregular Pulse", "History of or Family History of Heart Problems", "Shoulder, jaw pain or pressure", "Sweating", "Abnormal vitals", "Abnormal EKG", "40+ years old"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of infection:", "checklist": ["Productive cough >7 days", "Elevated temperature", "Symptoms > 10 days"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply to the chest pain:", "checklist": ["Cold like symptoms are present", "Pain is reproducible with palpation", "Heartburn is present", "History of panic attacks"], "yes": { "disposition": "MCP", "details": [ "<strong>Cold like symptoms:</strong> Use Protocol A-3.", "<strong>Heartburn:</strong> Use Protocol C-7.", "<strong>Panic attack symptoms:</strong> Check EKG. Monitor pulse oximeter. Supervised deep breathing exercises. Referral to provider now if oxygenation decreases or symptoms do not resolve. Refer to behavioral health after dyspnea symptoms have resolved.", "<strong>Musculoskeletal:</strong> Medications: ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for pain, analgesic balm (e.g., Menthyl Salicylate, apply thin layer TID-QID PRN) for muscle/tendons. Temporary profile x 3 days if needed. Return to the clinic if pain increases, not improved in four days, shortness of breath/dizziness/or new symptoms develop." ] }, "no": { "disposition": "Advanced Enlisted Medic (AEM) Now" } }
+                    }
+                }
+            }
+        },
+        "E": {
+            "category": "Genitourinary Complaints",
+            "protocols": {
+                "E-1": {
+                    "title": "Painful/Frequent Urination",
+                    "red_flags": ["Systemic Inflammatory Response Syndrome", "Flank Pain", "Severe Abdominal Pain", "Gross Hematuria or Passing Blood Clots"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Select patient's gender:", "options": { "Female": "performPregnancyTest", "Male": "step2" }},
+                        "performPregnancyTest": { "type": "action", "text": "Perform Pregnancy Test.", "next_step": "step2"},
+                        "step2": { "type": "decision", "question": "Check if the patient has any of the following:", "checklist": ["Fever T > 100.4", "H/O diabetes", "Nausea and vomiting", "Vaginal symptoms", "Vulvar ulcer", "Pain with intercourse", "Cola colored urine"], "action_on_yes": "Obtain UA, Urine culture if available", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>UTI:</strong> Drink 8+ glasses of water/day. Phenazopyridine as needed. Counsel on it changing urine orange and potential to dye contacts.", "<strong>First line agent:</strong> trimethoprim/sulfamethoxazole. If MTF antibiotic resistance is >20% or patient has sulfa allergy, use second line agent.", "<strong>Second line agent:</strong> nitrofurantoin. If patient reports allergy to nitrofurantoin, refer to AEM.", "<strong>Follow-up:</strong> Return to clinic if symptoms not improving within 24 hours, development of new symptoms, or worsening symptoms."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check if the patient meets any of these criteria:", "checklist": ["Male", "H/O kidney stones", "Pregnant", "3+ UTIs in 12 months", "Recent urinary catheter", "Red urine, not menstrual cycle related"], "action_on_yes": "Obtain UA, Urine culture", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>UTI:</strong> Drink 8+ glasses of water/day. Phenazopyridine as needed. Counsel on it changing urine orange and potential to dye contacts.", "<strong>First line agent:</strong> trimethoprim/sulfamethoxazole. If MTF antibiotic resistance is >20% or patient has sulfa allergy, use second line agent.", "<strong>Second line agent:</strong> nitrofurantoin. If patient reports allergy to nitrofurantoin, refer to AEM.", "<strong>Follow-up:</strong> Return to clinic if symptoms not improving within 24 hours, development of new symptoms, or worsening symptoms."] }, "no": { "disposition": "MCP", "details": ["<strong>UTI:</strong> Drink 8+ glasses of water/day. Phenazopyridine as needed. Counsel on it changing urine orange and potential to dye contacts.", "<strong>First line agent:</strong> trimethoprim/sulfamethoxazole. If MTF antibiotic resistance is >20% or patient has sulfa allergy, use second line agent.", "<strong>Second line agent:</strong> nitrofurantoin. If patient reports allergy to nitrofurantoin, refer to AEM.", "<strong>Follow-up:</strong> Return to clinic if symptoms not improving within 24 hours, development of new symptoms, or worsening symptoms."] } }
+                    }
+                },
+                "E-2": {
+                    "title": "Groin/Testicular Pain or Urethral Discharge",
+                    "red_flags": ["Pain with testes supported", "Suspect Stress Fracture (increased with weight bearing or during exercise, endurance training, change in exercise routine)", "Severe Pain"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if Red Flags are present OR patient has nausea and vomiting:", "checklist": ["Nausea and vomiting"], "action_on_yes": "For suspected stress fracture: provide crutches with toe touching weight bearing.", "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "action", "text": "Request an order for a urinalysis and gonorrhea/chlamydia urine screen.", "next_step": "step3"},
+                        "step3": { "type": "decision", "question": "Check if hematuria (blood in urine) is present:", "checklist": ["Hematuria"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": "step4" },
+                        "step4": { "type": "decision", "question": "Select the most likely diagnosis based on history and exam:", "options": {
+                                "Urethral Discharge": { "disposition": "MCP", "details": ["<strong>MCP for Urethral Discharge:</strong> If urethral discharge is present, 2+ white blood cells (WBCs) on urinalysis, leukocyte esterase positive on urinalysis, or recent known STI exposure, treat for potential gonorrhea/chlamydia infection with ceftriaxone and azithromycin.", "Instruct the Soldier that the condition is contagious and to abstain from intercourse for 1 week after treatment.", "Notify the supervising privileged provider. Refer to community health.", "<strong>Follow-up:</strong> Return to clinic if symptoms are not improving within 48 hours, development of new symptoms, or worsening symptoms."] },
+                                "Epididymitis (Pain improved with support)": { "disposition": "MCP", "details": ["<strong>MCP for Epididymitis:</strong> Pain is often improved with testicular support. Instruct the Soldier on the importance of wearing supportive underwear (briefs, jock strap), application of ice to decrease the swelling.", "<strong>Medication:</strong> Ibuprofen, acetaminophen, topical muscle balm, ice and heat as needed for pain, inflammation, and swelling or ketorolac for moderate pain. Activity modification.", "<strong>Follow-up:</strong> Return if worsening pain, new symptoms arise, or not improved within 1 week."] },
+                                "MSK Strain (Pain worse with activity)": { "disposition": "MCP", "details": ["<strong>MCP for Muscle/Tendon Strain:</strong> Pain is often worse with activity. Instruct the Soldier on the home exercise program in accordance with local protocol.", "<strong>Medication:</strong> Ibuprofen, acetaminophen, topical muscle balm, ice and heat as needed for pain, inflammation, and swelling or ketorolac for moderate pain. Activity modification.", "<strong>Follow-up:</strong> Return if worsening pain, new symptoms arise, or not improved within 1 week."] }
+                            }
+                        }
+                    }
+                },
+                "E-3": {
+                    "title": "Sexually Transmitted Infection (STI)",
+                    "red_flags": ["Female Pelvic Pain with Intercourse", "Pregnant", "Orthostatic, Fever"],
+                     "steps": {
+                        "start": { "type": "action", "text": "Perform Pregnancy Test, STD Screen (RPR, G/C, HIV), and UA.", "next_step": "step2"},
+                        "step2": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Worsening despite treatment", "Signs of severe illness", "Vaginal symptoms (discharge, etc.)"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check if a skin lesion or rash is present:", "checklist": ["Skin lesion", "Rash"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Urethral Discharge:</strong> If urethral discharge is present, 2+ WBC on urinalysis, leukocyte esterase positive on urinalysis, or recent known STI exposure, treat for potential gonorrhea/chlamydia infection with ceftriaxone and azithromycin. Instruct the Soldier to abstain from intercourse for one week after treatment. Counsel on safe sex practices. Notify supervising provider and refer to community health.", "<strong>Follow-up:</strong> Return if symptoms are not improving within 48 hours, new symptoms develop, or worsening symptoms."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Urethral Discharge / STI Exposure:</strong> If urethral discharge is present, 2+ WBC on urinalysis, leukocyte esterase positive on urinalysis, or recent known STI exposure, treat for potential gonorrhea/chlamydia infection with ceftriaxone and azithromycin. Instruct the Soldier to abstain from intercourse for one week after treatment. Counsel on safe sex practices and risks of high risk sexual behavior. Notify the supervising privileged provider. Refer to community health.", "<strong>Follow-up:</strong> Return to clinic if symptoms are not improving within 48 hours, development of new symptoms, or worsening symptoms."] } }
+                    }
+                },
+                 "E-4": {
+                    "title": "Problems with Voiding",
+                    "red_flags": ["Inability to void x 12 hours", "Fever", "Cola Colored Urine", "Blood or Clots in Urine"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Urinalysis and Pregnancy test.", "next_step": "dp1" },
+                        "dp1": { "type": "decision", "question": "Check if vaginal symptoms are present:", "checklist": ["Vaginal Symptoms"], "yes": { "disposition": "Provider Now" }, "no": "dp2" },
+                        "dp2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Pregnant", "Male > 40 yrs old", "Post-void dribbling", "Weak stream", "Difficulty starting to urinate"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": "dp3" },
+                        "dp3": { "type": "decision", "question": "Select the most likely diagnosis based on symptoms and UA results:", "options": {
+                                "Urethral Discharge": { "disposition": "link", "target": ["E-3"] },
+                                "UTI Symptoms / Positive UA": { "disposition": "link", "target": ["E-1"] },
+                                "Stress Incontinence (leaking with cough/sneeze)": { "disposition": "MCP", "details": ["<strong>MCP for urinary incontinence:</strong> If leaking urine during episodes of increased intra-abdominal pressure (sneezing, coughing, laughing, jumping), it is stress incontinence.", "Instruct the Soldier on performing Kegel exercises at home.", "<strong>Follow-up:</strong> Contact the clinic if not improving and would like a referral. Return for worsening or development of new symptoms."] }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "F": {
+            "category": "Neuropsychiatric Complaints",
+            "protocols": {
+                "F-1": {
+                    "title": "Dizziness/Faintness/Blackout",
+                    "red_flags": ["Abnormal Vital Signs", "Irregular Pulse", "Witnessed or H/O Seizure", "Severe Headache", "Heat Injury", "Suspect drugs/alcohol", "Altered mental status", "Unstable gait", "Diabetic"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Vertigo (room spinning)", "Appears anxious", "Symptoms prevent normal duties"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Syncope:</strong> For common reflex syncope (prolonged standing, seeing blood), have the Soldier lay down in a comfortable position and elevate the legs. Continue to monitor for 30 minutes after symptoms resolve. Reassure the Soldier it is a common and benign condition. Instruct on increasing water/salt intake and watching for prodromal signs (lightheaded, flushing, sweating, tunnel vision, nausea). Instruct on counter-maneuvers (lying down, clenching fists, crossing/flexing legs)."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Syncope:</strong> For common reflex syncope (prolonged standing, seeing blood), have the Soldier lay down in a comfortable position and elevate the legs. Continue to monitor for 30 minutes after symptoms resolve. Reassure the Soldier it is a common and benign condition. Instruct on increasing water/salt intake and watching for prodromal signs (lightheaded, flushing, sweating, tunnel vision, nausea). Instruct on counter-maneuvers (lying down, clenching fists, crossing/flexing legs).", "<strong>Follow-up:</strong> Return to clinic if worsening symptoms, new symptoms arise, or recurrence of incident."] } }
+                    }
+                },
+                "F-2": {
+                    "title": "Headache",
+                    "red_flags": ["Sudden Onset, 'Worst Headache of Life'", "Focal Neurologic Signs", "Blown pupil", "Severe Hypertension", "Fever", "Vision Change/Loss", "Recent trauma", "Vomiting without nausea"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following complicating factors are present:", "checklist": ["Nausea", "Blood Pressure > 150/90", "Failed initial treatment", "Change from usual headache pattern", "Pregnant"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for headache:</strong> Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food), naproxen (220-550 mg PO q 12 hrs PRN with food), or ketorolac (10 mg PO PRN, max 5 days) as needed for pain. May provide physical activity modification for one day, if necessary.", "<strong>Follow-up:</strong> Return to clinic if confusion, vision problems, nausea, or fever develop, if the pain is so severe that performance of normal duties is impossible, or the headache lasts over 24 hours."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for headache:</strong> Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food), naproxen (220-550 mg PO q 12 hrs PRN with food), or ketorolac (10 mg PO PRN, max 5 days) as needed for pain. May provide physical activity modification for one day, if necessary.", "<strong>Follow-up:</strong> Return to clinic if confusion, vision problems, nausea, or fever develop, if the pain is so severe that performance of normal duties is impossible, or the headache lasts over 24 hours."] } }
+                    }
+                },
+                "F-3": {
+                    "title": "Numbness/Tingling/Paralysis/Weakness",
+                    "red_flags": ["Localized to a Region or 1 sided", "Recent Trauma", "Loss of Consciousness", "Bowel/Bladder Incontinence"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Finger Stick Glucose and Pregnancy Test.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following high-risk conditions are present:", "checklist": ["Back pain", "Severe headache", "Blood glucose < 70", "Known diabetic on insulin", "Tick exposure"], "action_on_yes": "If Glucose < 70, provide sugar/food if available.", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Hyperventilation:</strong> If RR > 14, provide reassurance. Have Soldier practice relaxed breathing. If symptoms do not resolve within 10 minutes, refer to AEM. If resolved, refer to behavioral health.", "<strong>MCP for Viral Syndrome:</strong> Treat with ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for fatigue/body aches. Drink plenty of water. Get plenty of sleep.", "<strong>MCP for Sleep Issues:</strong> Provide education on sleep hygiene. Consider diphenhydramine (25-50 mg PO at bedtime) or melatonin nightly for three nights. Consider activity modification, discuss stress management, and offer a routine referral to behavioral health."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Fever", "Prevents normal activities", "First occurrence of symptoms", "Pregnant", "Depressed", "35+ years old"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Hyperventilation:</strong> If RR > 14, provide reassurance. Have Soldier practice relaxed breathing. If symptoms do not resolve within 10 minutes, refer to AEM. If resolved, refer to behavioral health.", "<strong>MCP for Viral Syndrome:</strong> Treat with ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for fatigue/body aches. Drink plenty of water. Get plenty of sleep.", "<strong>MCP for Sleep Issues:</strong> Provide education on sleep hygiene. Consider diphenhydramine (25-50 mg PO at bedtime) or melatonin nightly for three nights. Consider activity modification, discuss stress management, and offer a routine referral to behavioral health."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Hyperventilation (if applicable):</strong> If RR > 14, provide reassurance. Have the Soldier practice relaxed breathing. If symptoms do not resolve within 10 minutes, refer to AEM. If symptoms resolve, refer to behavioral health if available.", "<strong>MCP for Viral Syndrome (if applicable):</strong> Viral syndrome can present as fatigue described as weakness. It is a global feeling often associated with other symptoms and muscle aches. Treat with ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for fatigue/body aches.", "<strong>MCP for Sleep Issues/Fatigue/Stress (if applicable):</strong> Provide sleep hygiene education, consider diphenhydramine (25-50 mg PO at bedtime) for sleep, recommend self-reflection to find a way to relieve stress, and offer a routine referral to a behavioral health asset, if available.", "<strong>Follow-up:</strong> Return to clinic if not improving, new symptoms arise, or symptoms are worsening."] } }
+                    }
+                },
+                "F-4": {
+                    "title": "Drowsiness/Confusion",
+                    "red_flags": ["Abnormal Vital Signs", "Altered Mental Status", "Focal Neurological Deficit", "Recent Trauma"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Finger Stick Glucose. Consider blood alcohol and UDS.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following critical history items:", "checklist": ["Unable to touch chin to chest", "Hypoglycemia (BG < 70)", "H/O alcoholism", "H/O narcotics", "H/O seizures"], "action_on_yes": "If Glucose < 70, provide glucose. If SpO2 <90%, start oxygen. If H/O alcohol, consider thiamine. If H/O narcotics, consider naloxone.", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Viral Syndrome:</strong> Can present as fatigue/drowsiness. Treat with ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for aches. Treat other symptoms per corresponding MCP.", "<strong>MCP for Sleep Problems:</strong> Provide education on sleep hygiene, consider diphenhydramine (25-50 mg PO at bedtime) or melatonin for three nights, discuss stress management, and offer referral to behavioral health."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for other potential causes:", "checklist": ["Sudden onset", "Heat exposure", "Positive UDS", "Positive blood alcohol", "Recent medication changes"], "action_on_yes": "Check rectal temp if heat exposure is a concern.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Viral Syndrome:</strong> Can present as fatigue/drowsiness. Treat with ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for aches. Treat other symptoms per corresponding MCP.", "<strong>MCP for Sleep Problems:</strong> Provide education on sleep hygiene, consider diphenhydramine (25-50 mg PO at bedtime) or melatonin for three nights, discuss stress management, and offer referral to behavioral health."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Viral Syndrome:</strong> Viral syndrome can present as fatigue described as drowsiness. Treat with ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for fatigue/body aches. Drink plenty of water. Get plenty of sleep. Screen other symptoms as needed.", "<strong>MCP for Insomnia/Fatigue/Stress:</strong> Provide sleep hygiene education, consider providing melatonin or diphenhydramine (25-50 mg PO at bedtime) for sleep, provide activity modification, recommend self-reflection to find a way to relieve stress, and offer a routine referral to a behavioral health asset, if available.", "<strong>Follow-up:</strong> Return to clinic if not improving, new symptoms arise, or symptoms are worsening."] } }
+                    }
+                },
+                "F-5": {
+                    "title": "Depression/Nervousness/Anxiety/Tension",
+                    "red_flags": ["Homicidal Intent or Attempt", "Suicide Intent or Attempt", "Self-Injury", "Altered Mental Status"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for any of the following high-risk indicators:", "checklist": ["Positive suicide screen", "Abnormal vital signs", "Severe emotional distress"], "action_on_yes": "Inform leadership. Do not leave Soldier alone. Remove means of self-harm.", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for decreased mood:</strong> Offer assistance through available resources: Behavioral Health, Chaplain, Army Community Services, Military and Family Life Consultants, Military OneSource, and Army Wellness Center. Offer to walk the Soldier to the resource they prefer. Do not allow the Soldier to leave the screening area until they have been cleared by the supervising medic."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Positive depression screen", "Difficulty adjusting to injury or pain", "Escorted due to safety concerns", "Other indications of depression/anxiety"], "action_on_yes": "Obtain list of all medications and amount taken. Ask if currently receiving BH services.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for decreased mood:</strong> Offer assistance through available resources: Behavioral Health, Chaplain, Army Community Services, Military and Family Life Consultants, Military OneSource, and Army Wellness Center. Offer to walk the Soldier to the resource they prefer. Do not allow the Soldier to leave the screening area until they have been cleared by the supervising medic."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for decreased mood:</strong> Soldiers with mild symptoms not associated with other impairment should be offered assistance. Remain calm, express concern, and do not be judgmental. Educate the Soldier on available resources: Behavioral Health, Chaplain, Army Community Services, Military and Family Life Consultants, Military OneSource, and Army Wellness Center. Offer to walk the Soldier to the resource they prefer. Do not allow the Soldier to leave the screening area until they have been cleared by the supervising medic."] } }
+                    }
+                },
+                "F-6": {
+                    "title": "Minor Traumatic Brain Injury",
+                    "red_flags": ["Deteriorating Level of Consciousness", "Double Vision", "Increased Restlessness, combative or agitated behavior", "Repeat vomiting", "Seizure", "Weakness or tingling in arms or legs", "Severe or worsening headache", "Positive result from structural brain injury detection device (if available)", "Abnormal Neuro Exam", "Battle sign, Raccoon eyes", "Suspected skull fracture", "Anticoagulant use"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Military Acute Concussion Evaluation, version 2 (MACE 2) exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following high-risk factors are present:", "checklist": ["Amnesia for 30+ min before event", "Neurological deficit", "High impact head injury"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>Negative MACE 2:</strong> 24 hour rest period, review Acute Concussion Educational Brochure with patient, and counsel Soldier to return after 24 hour rest for re-evaluation. If no symptoms, perform exertional testing.", "<strong>Follow-up:</strong> Return to Clinic if worsening symptoms or new symptoms develop."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check MACE 2 results for any of the following:", "checklist": ["MACE cognitive score < 26", "Nausea, dizziness", "Headache", "Memory, concentration problem", "Balance or visual problem", "Ringing in the ears", "Altered or loss of consciousness", "History of TBIs"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>Negative MACE 2:</strong> 24 hour rest period, review Acute Concussion Educational Brochure with patient, and counsel Soldier to return after 24 hour rest for re-evaluation. If no symptoms, perform exertional testing.", "<strong>Follow-up:</strong> Return to Clinic if worsening symptoms or new symptoms develop."] }, "no": { "disposition": "MCP", "details": ["<strong>Negative MACE 2:</strong> The screening did not identify a concussion. Provide a mandatory 24 hour rest period. Review the Acute Concussion Educational Brochure with the patient.", "<strong>Follow-up:</strong> Counsel Soldier to return after the 24 hour rest period for re-evaluation. If the Soldier is still asymptomatic at follow-up, perform exertional testing. Return to Clinic immediately if symptoms worsen or new symptoms develop during the rest period. More information is available at https://dvbic.dcoe.mil."] } }
+                    }
+                }
+            }
+        },
+         "G": {
+            "category": "Constitutional Complaints",
+            "protocols": {
+                "G-1": {
+                    "title": "Fatigue",
+                    "red_flags": ["Suicide Ideation", "Homicide Ideation", "Shortness of Breath", "Stiff Neck", "Melena"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Depression", "Loss of libido", "Weight change", "Menorrhagia, anemia", "Symptoms > 3 weeks", "Snoring", "USPSTF/PHA out of date"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>Medication:</strong> Consider diphenhydramine (25-50 mg PO at bedtime) to assist with sleep if needed.", "<strong>Referral:</strong> Wellness Center for relaxation exercises, ACS for anger management, Behavioral Health or Chaplain for stress/support.", "<strong>Follow-up:</strong> Return if not improving in 1 week or immediately if Red Flags, new symptoms, or inability to perform daily activities."] }, "no": "step2" },
+                        "step2": { "type": "link", "text": "Are there other associated symptoms (e.g., cold, sore throat, rectal bleeding)?", "target": ["A-3", "A-1", "C-4"], "default_disposition": { "disposition": "MCP", "details": ["<strong>Medication:</strong> Consider diphenhydramine (25-50 mg PO at bedtime) to assist with sleep if needed.", "<strong>Referral:</strong> Wellness Center for relaxation exercises, ACS for anger management, Behavioral Health or Chaplain for stress/support.", "<strong>Follow-up:</strong> Return if not improving in 1 week or immediately if Red Flags, new symptoms, or inability to perform daily activities."] } }
+                    }
+                },
+                "G-2": {
+                    "title": "Fever/Chills",
+                    "red_flags": ["Heat Injury", "Stiff Neck", "Light sensitivity", "Pregnant", "Seizure", "Lightheaded"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following risk factors are present:", "checklist": ["Abnormal Vitals", "HIV positive", "Immunosuppression", "Overseas travel within 6 months", "Tick, mosquito bite", "Malaria area", "Animal exposure", "IV drug use"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>Medication:</strong> Acetaminophen (500-1000 mg PO q 4-6 hrs PRN) as needed for elevated temperature (No other medications with acetaminophen. No alcohol). Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for malaise.", "Stay hydrated by drinking fluids to keep your urine mostly clear. Get plenty of rest.", "<strong>Follow-up:</strong> Return if red flags, new symptoms, lasts longer than 48 hours, or if fever is not controlled with acetaminophen."] }, "no": "step2" },
+                        "step2": { "type": "link", "text": "Are there any associated symptoms (e.g., cold, sore throat, ear pain, diarrhea, painful urination)?", "target": ["A-3", "A-1", "A-2", "C-2", "E-1"], "default_disposition": { "disposition": "MCP", "details": ["<strong>Medication:</strong> Acetaminophen (500-1000 mg PO q 4-6 hrs PRN) as needed for elevated temperature (No other medications with acetaminophen. No alcohol). Ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) as needed for malaise.", "Stay hydrated by drinking fluids to keep your urine mostly clear. Get plenty of rest.", "<strong>Follow-up:</strong> Return if red flags, new symptoms, lasts longer than 48 hours, or if fever is not controlled with acetaminophen."] } }
+                    }
+                }
+            }
+        },
+        "H": {
+            "category": "Eye Complaints",
+            "protocols": {
+                "H-1": {
+                    "title": "Eye Pain/Redness/Discharge/Itching/Injury",
+                    "red_flags": ["Fixed, Abnormal Pupil", "Visual Acuity Change", "Observed Foreign Body", "Penetration, Rupture", "Chemical Exposure", "Fluid Level over Iris, Pupil"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Eye exam with visual acuity. Perform Fluorescein exam unless open globe is suspected.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following high-risk factors are present:", "checklist": ["Contact lens wearer", "Fluorescein uptake", "Recent eye surgery", "Associated head trauma", "Double vision"], "action_on_yes": "Chemical exposure -> Irrigate. Foreign body -> Fox shield. Head trauma -> Stabilize neck. Other -> Cover eye.", "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Blepharitis:</strong> Wash eyelashes daily with warm water and baby shampoo, warm compresses, lid massage. Avoid makeup.", "<strong>MCP for Dry Eyes:</strong> Artificial tears as needed.", "<strong>MCP for Viral/Allergic Conjunctivitis:</strong> Warm or cool compresses, topical antihistamine/decongestant drops, contagion precautions.", "<strong>MCP for Subconjunctival Hemorrhage:</strong> Reassurance. Resolves in 1-2 weeks."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for signs of significant infection or injury:", "checklist": ["Thick, yellow or green discharge", "Painful", "Light sensitivity", "Inability to keep eye open", "Trauma", "History of foreign body that is now 'getting better'"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Blepharitis:</strong> Wash eyelashes daily with warm water and baby shampoo, warm compresses, lid massage. Avoid makeup.", "<strong>MCP for Dry Eyes:</strong> Artificial tears as needed.", "<strong>MCP for Viral/Allergic Conjunctivitis:</strong> Warm or cool compresses, topical antihistamine/decongestant drops, contagion precautions.", "<strong>MCP for Subconjunctival Hemorrhage:</strong> Reassurance. Resolves in 1-2 weeks."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Blepharitis (crusting, red/swollen eyelids):</strong> Wash eyelashes daily with warm water and non-tearing baby shampoo, warm compresses, lid massage. Avoid lotions, creams, make-up. RTC if not improving in 1 week.", "<strong>MCP for Dry Eyes (tearing, gritty sensation):</strong> Artificial tears as needed (prn).", "<strong>MCP for Viral/Allergic Conjunctivitis (watery discharge, burning/itching):</strong> Highly contagious. Use warm or cool compresses and topical antihistamine/decongestant drops.", "<strong>MCP for Subconjunctival Hemorrhage (blood spot on white of eye):</strong> Benign. Further evaluation needed if associated with trauma, recurrent, or patient is on anticoagulants."] } }
+                    }
+                },
+                "H-2": {
+                    "title": "Eyelid Problem",
+                    "red_flags": ["Open Globe", "High Risk Laceration", "Decreased Visual Acuity", "Double Vision", "Fixed pupil", "Moderate-severe pain"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform eye exam with visual acuity.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for signs of significant infection or rash:", "checklist": ["Significant redness and swelling", "Rash > 1 week"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Stye/Chalazion:</strong> Warm compress for 15 min, 4x/day, followed by massage. RTC if becomes significantly painful, spreads, or not improving in 1 week.", "<strong>MCP for Blepharitis:</strong> Wash eyelashes daily with warm water and baby shampoo, warm compresses, lid massage.", "<strong>MCP for Contact Dermatitis:</strong> Avoid suspected irritant (e.g., makeup). Use hydrocortisone 1% cream (apply thin layer 2-4x daily) with caution to avoid getting in eye."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Stye (red, tender swelling):</strong> Warm compress for 15 min, 4x/day, followed by massage. RTC if becomes significantly painful, spreads, or not improving in 1 week.", "<strong>MCP for Chalazion (painless swelling):</strong> Treat same as stye, usually resolves in a couple weeks.", "<strong>MCP for Blepharitis (crusting, red/swollen eyelids):</strong> Wash eyelashes daily with warm water and non-tearing baby shampoo, warm compresses, lid massage. Avoid lotions, creams, make-up. RTC if not improving in 1 week.", "<strong>MCP for Contact Dermatitis:</strong> Avoid suspected irritant (e.g., makeup, new soaps). Use hydrocortisone 1% cream (apply thin layer 2-4x daily) with caution to avoid getting it in the eye."] } }
+                    }
+                },
+                "H-3": {
+                    "title": "Decreased Vision, Seeing Spots, Request for Glasses",
+                    "red_flags": ["Trauma", "Recent Surgery", "Chemical Exposure", "Fluid Level over Iris, Pupil", "Neurologic Deficits", "Observed foreign body", "Partial visual field affected"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform eye exam with visual acuity.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following:", "checklist": ["Contact wearer", "Onset within 7 days", "Painful", "Red"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Decreased Vision:</strong> If visual acuity is worse than 20/40 and onset is gradual, refer to optometry for evaluation for glasses.", "<strong>MCP for Floaters:</strong> Common and benign. Provide reassurance."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Decreased Vision:</strong> If visual acuity is worse than 20/40 and onset is gradual, refer to optometry for evaluation for glasses. Protective mask inserts are not usually provided for vision of 20/40 or better.", "<strong>MCP for Floaters:</strong> Clumps of material in the eye gel. They are common, benign and move around. They are not fixed to a particular location.", "<strong>Follow-up:</strong> Return to clinic if the condition is worsening or new symptoms develop."] } }
+                    }
+                },
+                "H-4": {
+                    "title": "Seeing Double (Diplopia)",
+                    "red_flags": ["Trauma", "Neurologic Deficits", "Red eye", "Associated pain"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Visual Acuity test.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if the patient appears intoxicated OR if double vision persists with one eye shut.", "checklist": ["Appears intoxicated", "Double vision persists with one eye shut"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["A long-standing history of double vision or double vision caused by new eyeglasses may indicate a need for evaluation of the eyeglass prescription. Soldier should be given an appointment at the optometry clinic. Soldier should not drive a vehicle, fire a weapon, or perform other duties requiring depth perception."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for seeing double:</strong> A long-standing history of double vision or double vision caused by new eyeglasses may indicate a need for evaluation of the eyeglass prescription. The Soldier should be given an appointment at the optometry clinic. Soldier should not drive a vehicle, fire a weapon, or perform other duties requiring depth perception.", "<strong>Follow-up:</strong> Return to clinic if symptoms worsen or new symptoms develop."] } }
+                    }
+                }
+            }
+        },
+        "I": {
+            "category": "Gynecological Complaints",
+            "protocols": {
+                "I-1": {
+                    "title": "Breast Problems",
+                    "red_flags": ["Skin Changes", "Mass", "Bloody Nipple Discharge"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of infection or high-risk history:", "checklist": ["Fever T>100.4", "Positive breast pain to H/O symptoms", "Family H/O early breast cancer"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for large breasts:</strong> Educate on supportive undergarments, ice/heat for inflammation, acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for mild pain, and ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days) for moderate pain.", "<strong>MCP for musculoskeletal chest pain:</strong> Ice/heat, analgesic balm (e.g., Menthyl Salicylate, apply thin layer TID-QID PRN), or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days) for moderate pain. Consider activity modifications.", "<strong>MCP for diffuse breast pain:</strong> Provide reassurance. If concerned, refer for imaging consideration. Treat discomfort with ice/heat, acetaminophen (500-1000 mg PO q 4-6 hrs PRN), or ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days)."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for other specific conditions:", "checklist": ["Male w/ MO", "Female breastfeeding", "Nipple symptoms"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for large breasts:</strong> Educate on supportive undergarments, ice/heat for inflammation, acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for mild pain, and ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days) for moderate pain.", "<strong>MCP for musculoskeletal chest pain:</strong> Ice/heat, analgesic balm (e.g., Menthyl Salicylate, apply thin layer TID-QID PRN), or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days) for moderate pain. Consider activity modifications.", "<strong>MCP for diffuse breast pain:</strong> Provide reassurance. If concerned, refer for imaging consideration. Treat discomfort with ice/heat, acetaminophen (500-1000 mg PO q 4-6 hrs PRN), or ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days)."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for large breasts:</strong> Educate on supportive undergarments, ice/heat for inflammation, acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for mild pain, and ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days) for moderate pain.", "<strong>MCP for musculoskeletal chest pain:</strong> Ice/heat, analgesic balm (e.g., Menthyl Salicylate, apply thin layer TID-QID PRN), or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) for mild pain, ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days) for moderate pain. Consider activity modifications.", "<strong>MCP for diffuse breast pain:</strong> Provide reassurance. If concerned, refer for imaging consideration. Treat discomfort with ice/heat, acetaminophen (500-1000 mg PO q 4-6 hrs PRN), or ibuprofen (400-800 mg PO q 6-8 hrs PRN with food)/ketorolac (10 mg PO PRN, max 5 days)."] } }
+                    }
+                },
+                "I-2": {
+                    "title": "Suspects Pregnancy",
+                    "red_flags": ["Positive hCG AND Pelvic Pain", "Positive hCG AND H/O Ectopic Pregnancy", "Positive hCG AND Vaginal Bleeding"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check urine hCG.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Is the hCG positive (without other Red Flag symptoms)?", "checklist": ["Positive hCG"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Counsel the Soldier to avoid alcohol and NSAID medications (e.g., ibuprofen, naproxen).", "<strong>Follow-up:</strong> Return to the clinic in one week if she still has not had a cycle."] }, "no": { "disposition": "MCP", "details": ["Counsel the Soldier to avoid alcohol and NSAID medications (e.g., ibuprofen, naproxen).", "<strong>Follow-up:</strong> Return to the clinic in one week if she still has not had a cycle."] } }
+                    }
+                },
+                "I-3": {
+                    "title": "Menstrual Problems, Vaginal Bleeding",
+                    "red_flags": ["Sexual Assault", "Trauma", "Severe Pain", "Pregnant"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check hCG.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following:", "checklist": ["Non-midline pelvic pain", "Pain with intercourse", "Post menopause", "Bleeding > 10 days not on birth control"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Painful Menstrual Cycles:</strong> Menstrual cramping may be relieved by naproxen (220-550 mg PO q 12 hrs PRN with food) or ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) for 5-7 days. Ketorolac (10 mg PO once) can be used on presentation for moderate pain. A warm compress may also be placed over the abdomen.", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or the MCP is not controlling symptoms."] }, "no": "step3" },
+                        "step3": { "type": "action", "text": "Take Menses History: Length, Severity (clots, # pads), Medications.", "next_step": "step4" },
+                        "step4": { "type": "decision", "question": "Check for signs of abnormal bleeding or pain:", "checklist": ["New problem", "Failed previous self-care", "Menstrual pain onset after 25 y/o", "Progression of symptoms", "Menses <21 or >35 days", "Spotting > 1 pad/2 hrs", "Prevents normal duties"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Painful Menstrual Cycles:</strong> Menstrual cramping may be relieved by naproxen (220-550 mg PO q 12 hrs PRN with food) or ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) for 5-7 days. Ketorolac (10 mg PO once) can be used on presentation for moderate pain. A warm compress may also be placed over the abdomen.", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or the MCP is not controlling symptoms."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Painful Menstrual Cycles:</strong> Menstrual cramping may be relieved by naproxen (220-550 mg PO q 12 hrs PRN with food) or ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) for 5-7 days. Ketorolac (10 mg PO once) can be used on presentation for moderate pain. A warm compress may also be placed over the abdomen.", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or the MCP is not controlling symptoms."] } }
+                    }
+                },
+                "I-4": {
+                    "title": "Vaginal Discharge, Itching, Irritation, or Pain",
+                    "red_flags": ["Fever", "Pregnant", "Non-midline Pelvic Pain", "Pain with Intercourse"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check hCG.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for high-risk factors:", "checklist": ["Recurrent vaginitis", "Presence of IUD", "Vaginal discharge", "Genital lesion, ulcer", "Vaginal lump, mass", "Pelvic pain during exercise"], "yes": { "disposition": "Provider Now", "mcp_context": ["<strong>MCP for Yeast Infection (if suspected):</strong> Presents with thick, white, cottage cheese-like discharge, odorless, itching/soreness. Treat with Fluconazole (150 mg PO single dose).", "<strong>MCP for Bacterial Vaginosis (if suspected):</strong> Presents with thin, grayish discharge, fishy smell. Treat with Metronidazole (500 mg PO BID for 7 days).", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or MCP does not resolve the symptoms."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for atypical presentation:", "checklist": ["Moderate vaginal pain", "Presentation different from the treatment protocol descriptions"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>MCP for Yeast Infection (if suspected):</strong> Presents with thick, white, cottage cheese-like discharge, odorless, itching/soreness. Treat with Fluconazole (150 mg PO single dose).", "<strong>MCP for Bacterial Vaginosis (if suspected):</strong> Presents with thin, grayish discharge, fishy smell. Treat with Metronidazole (500 mg PO BID for 7 days).", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or MCP does not resolve the symptoms."] }, "no": { "disposition": "MCP", "details": ["<strong>MCP for Yeast Infection (if suspected):</strong> Presents with thick, white, cottage cheese-like discharge, odorless, itching/soreness. Treat with Fluconazole (150 mg PO single dose).", "<strong>MCP for Bacterial Vaginosis (if suspected):</strong> Presents with thin, grayish discharge, fishy smell. Treat with Metronidazole (500 mg PO BID for 7 days).", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or MCP does not resolve the symptoms."] } }
+                    }
+                },
+                "I-5": {
+                    "title": "Request for PAP or Routine Pelvic Examination",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check hCG.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for contraindications or prior issues:", "checklist": ["Pregnant", "Abnormal previous pap", "Total hysterectomy"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Determine appropriate screening based on USPSTF guidelines and Soldier's history.", "checklist": ["1st pap over 21 y/o", "21-29 y/o: Pap/3 yrs", "30+ y/o: Pap/3 yrs or pap and HPV/5 yrs if tests are negative", "Needs additional screening (e.g., G/C, HPV vaccine info)"], "yes": { "disposition": "Specialty Referral", "details": ["Schedule appointment for Pap/Pelvic Exam per local policy.", "Provide counseling on required screenings (G/C, HPV vaccine)."] }, "no": { "disposition": "No action needed", "details": ["Patient is up to date with screening. No appointment needed at this time."] } }
+                    }
+                },
+                "I-6": {
+                    "title": "Request for Information on Contraception",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Screening: Check hCG.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any immediate concerns:", "checklist": ["Pregnant", "Medication side-effects", "H/O of recent unprotected sex"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Provide counseling on contraception options. Does the patient wish to proceed?", "checklist": ["Discuss effectiveness of each type", "Discuss contraceptive preferences", "Discuss additional benefits"], "yes": { "disposition": "Specialty Referral", "details": ["Schedule routine or procedural appointment/referral for contraception based on Soldier's choice and local policy."] }, "no": { "disposition": "No action needed", "details": ["Patient received counseling and will follow up if they decide to proceed."] } }
+                    }
+                }
+            }
+        },
+        "J": {
+            "category": "Dermatological Complaints",
+            "protocols": {
+                "J-1": {
+                    "title": "Unknown Cause of Skin Disorder/Complaint",
+                    "red_flags": ["Airway Compromise/Swelling"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["New medication", "Fever", "Painful (not sunburn)", "Failed previous treatment or worsening"], "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Change in color", "Oozing blood or fluid", "Present >4 weeks"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["If the Soldier is already on a treatment, has not finished the course, and the issue is not worsening, instruct them to continue treatment. Confirm with supervising NCO/Provider.", "If you recognize the skin lesion, use the appropriate protocol.", "If you do not recognize the skin lesion, refer to AEM for further evaluation."] } }
+                    }
+                },
+                "J-2": {
+                    "title": "Acne",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check hCG if applicable.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Requesting birth control", "Positive hCG", "Signs of hyperandrogenism", "Draining lesion", "Acute onset", "Requiring limitations in protective equipment"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for moderate to severe acne or complications:", "checklist": ["Acne interferes with wearing equipment", "Moderate to severe inflammatory acne", "Scarring or Hyperpigmentation", "Failed initial treatment", "Appears very self-conscious"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["All Soldiers should wash the affected area with mild soap and water twice a day; pat dry. Avoid creams and lotions.", "<strong>Non-inflammatory (white/blackheads):</strong> Use topical retinoid (e.g., Tretinoin 0.025% cream, apply pea-sized amount nightly). Do not use if pregnant or fish allergy. Apply to dry face. Treat whole area. If irritation occurs, use every other night.", "<strong>Mild-moderate inflammatory (papules):</strong> Add topical benzoyl peroxide (2.5-10% gel) with an antibiotic (e.g., Clindamycin 1% gel) in the morning.", "<strong>Follow-up:</strong> Return to clinic if not improving within two weeks, worsening, or medication side effects occur."] } }
+                    }
+                },
+                "J-3": {
+                    "title": "Shaving Problem-Pseudofolliculitis Barbae",
+                    "red_flags": ["Facial Cellulitis"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of severe inflammation or scarring:", "checklist": ["Abscess", "Weeping drainage", "Signs of scarring", "Resulting limitations in structure/function"], "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if patient has failed initial therapy or is requesting a profile:", "checklist": ["Failed initial therapy", "Requesting profile"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>Shaving Routine Modifications:</strong> Wash face in circular motion with soap and warm water daily. Use warm compress before shaving. Apply shaving cream for 5 mins before shaving. Use a single blade razor, shave in direction of hair growth, and avoid stretching skin.", "<strong>Medication:</strong> Can be used with shaving modifications. A topical retinoid (e.g., Tretinoin 0.025% cream, apply pea-sized amount nightly), with or without a low potency topical steroid (e.g., hydrocortisone 1% cream, apply thin layer BID).", "<strong>Follow-up:</strong> Bumps can remain for a few months. Return if symptoms are worsening, new symptoms develop, or no improvement after a few weeks."] } }
+                    }
+                },
+                "J-4": {
+                    "title": "Dandruff (Scaling of the Scalp)",
+                    "red_flags": ["Scaling with Visible Inflammation", "Abnormal Sensation", "Painful Erosions"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["This is the 2nd complaint for this issue", "Medicated shampoo is not working or has stopped working", "Developed new or worsening symptoms"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>OTC Medication:</strong> Use antifungal shampoo (e.g., Ketoconazole 1-2% or Selenium Sulfide 1-2.5%) daily (or minimum 2-3 times/week) for several weeks until remission is achieved.", "Manage stress levels. Spend a few minutes outdoors in the sun (do not sunbathe).", "<strong>Follow-up:</strong> Return to clinic if mild dandruff is still present after 3-4 weeks of use, symptoms worsen, or new symptoms begin."] } }
+                    }
+                },
+                "J-5": {
+                    "title": "Hair Loss",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for potential underlying causes:", "checklist": ["New medication", "Lack of hair follicles on exam", "Smooth, circular, discrete hair loss"], "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for signs of fungal infection or inflammation:", "checklist": ["Suspected tinea capitis (itching, scaling)", "Papules, pustules", "Erythema"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>Traction Hair Loss:</strong> Counsel Soldier to avoid tight hair styles, chemical straighteners, and heat until resolved. Refer to AEM if signs of inflammation are present.", "<strong>Male/Female Pattern Hair Loss:</strong> Discuss the suspected diagnosis with the AEM and then provide counseling to the patient.", "<strong>Follow-up:</strong> Return to clinic if symptoms worsen or new symptoms begin."] } }
+                    }
+                },
+                "J-6": {
+                    "title": "Athlete's Foot (Tinea Pedis)",
+                    "red_flags": ["Diabetic Soldiers", "Significant erosions/ulcerations or malodor in affected area", "Soldiers with weakened immune systems"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for complications or non-response:", "checklist": ["Rash with no improvement or response to medication", "Blisters and ulcers"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>OTC Medication:</strong> Apply antifungal cream (e.g., Clotrimazole 1% or Terbinafine 1%) twice a day for 4-8 weeks.", "<strong>Prevention:</strong> Keep feet clean and dry, change socks regularly, wear well-ventilated shoes, and use foot protection in public places. Use antifungal powder daily, alternate shoes, and do not share shoes.", "<strong>Follow-up:</strong> Return if the infection does not respond to medications, symptoms worsen, or new symptoms develop."] } }
+                    }
+                },
+                "J-7": {
+                    "title": "Jock Itch (Tinea Cruris)",
+                    "red_flags": ["Diabetes", "Immunodeficiency"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform potassium hydroxide (KOH) examination if available.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Itchy, red rash in the groin area with no improvement in 2 weeks", "Reoccurring infection"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>OTC Medication:</strong> Apply topical antifungal cream (e.g., Clotrimazole 1% or Terbinafine 1%) twice a day for 2 weeks.", "<strong>Preventive:</strong> Instruct patient to keep groin area clean and dry.", "<strong>Follow-up:</strong> Return to clinic if symptoms worsen, new symptoms develop, not improving within 2 weeks, or if the infection returns within a few weeks after using medications."] } }
+                    }
+                },
+                "J-8": {
+                    "title": "Scaling, Depigmented Spots (Tinea Versicolor)",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform potassium hydroxide (KOH) examination if available.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for treatment failure or widespread rash:", "checklist": ["Failed previous treatment", "Widespread"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for atypical presentation:", "checklist": ["Recurrent", "Unidentified lesion", "Atypical presentation"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>Treatment:</strong> Apply topical antifungal medications (e.g., Selenium Sulfide 2.5% lotion, apply and rinse after 10 mins, daily for 1 week). Instruct patient that the hypo/hyper pigmented areas can remain for months after effective treatment.", "If the presentation is atypical, refer to the AEM for further evaluation and treatment.", "<strong>Follow-up:</strong> Return for worsening symptoms, new symptoms, or presence of scale in the lesions after treatment."] } }
+                    }
+                },
+                "J-9": {
+                    "title": "Boils",
+                    "red_flags": ["Location over Tailbone", "SIRS Criteria", "Worsening on Antibiotics", "Palm of Hand", "Over Joint", "Black Eschar"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of severe infection:", "checklist": ["Fever", "Rapid progression", "Cellulitis", "Indwelling medical device"], "action_on_yes": "Prepare informed consent, timeout, I&D set-up if provider requests.", "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for signs of abscess requiring drainage:", "checklist": ["Fluctuant mass", "Multiple abscesses", "Drained abscess >5cm diameter"], "action_on_yes": "Prepare informed consent, timeout, I&D set-up if provider requests.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Apply a warm, moist compress over the abscess for 20 minutes every four hours.", "<strong>Follow-up:</strong> Return to clinic for worsening symptoms (fever/chills, re-accumulation of pus, increased pain/redness, red streaks, or increased swelling), new symptoms, or if not improving within 3 days."] } }
+                    }
+                },
+                "J-10": {
+                    "title": "Fever Blisters (Cold Sores)",
+                    "red_flags": ["Eye Pain", "Burns", "Eczema", "Painful", "Severe pain"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of secondary infection or other viral illness:", "checklist": ["Sore throat", "Hand sore", "Pustule, yellow crusting"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>Counseling:</strong> Instruct Soldier on contagious nature of HSV-1. Avoid sharing drinks or kissing until resolved.", "<strong>Medication:</strong> Provide docosanol 10% cream (Abreva) applied topically 5x/day OR (Rx) two doses of valacyclovir (2g PO), 12 hours apart.", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or it is not improved within 10 days."] } }
+                    }
+                },
+                "J-11": {
+                    "title": "Skin Abrasion/Laceration",
+                    "red_flags": ["SIRS Criteria", "Animal Bite, Scratch"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of infection or high-risk wound:", "checklist": ["Fever", "Red streaks", "Oozing fluid", "High tetanus risk", "High risk wound (puncture, crush, contaminated, face/hand/foot/joint)"], "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for signs of early infection or need for closure:", "checklist": ["Erythema >1 inch", "Increased warmth", "Increased tenderness", "Laceration requiring evaluation for closure"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Wash the area with soap and water. Irrigate thoroughly to remove all foreign material.", "<strong>Abrasion:</strong> Cover with antibacterial ointment (e.g., Bacitracin) and a sterile, non-stick dressing. Change daily.", "<strong>Minor Laceration:</strong> If edges approximate easily, bleeding is controlled, and no infection signs, apply Steri-strips. Keep clean and dry.", "<strong>Follow-up:</strong> RTC for increasing redness, bad smell, thick discharge, increasing tenderness, or wound separation."] } }
+                    }
+                },
+                 "J-12": {
+                    "title": "Suture Removal",
+                    "red_flags": ["Fever", "Pus/redness/swelling"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Is there incomplete closure of the wound?", "checklist": ["Incomplete closure"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": "step2" },
+                        "step2": { "type": "action", "text": "Remove sutures. Ensure the same number of sutures are removed that were placed.", "next_step": "mcp" },
+                        "mcp": { "disposition": "MCP", "details": ["Apply bacitracin ointment to the scar.", "Counsel the patient to protect the scar from the sun and wear sunscreen for three months to prevent discoloration."] }
+                    }
+                },
+                "J-13": {
+                    "title": "Drug Rash/Contact Dermatitis",
+                    "red_flags": ["Airway Swelling", "Wheezing", "Anaphylaxis"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of severe drug reaction:", "checklist": ["Blistering", "Oral involvement", "Petechiae", "Fever"], "action_on_yes": "Provide emergency stabilization (oxygen, IVF, epinephrine) prior to transport if necessary.", "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if rash is likely not a new drug reaction:", "checklist": ["No new medication within 2 weeks", "Itchy rash with other symptoms"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["<strong>Hives (Urticaria):</strong> Common. Counsel to avoid offending agent. Discuss with AEM and notify prescribing provider. Provide Diphenhydramine (Benadryl) (25-50 mg PO q 4-6 hrs PRN) for 3 days.", "<strong>Irritant Contact Dermatitis:</strong> Treat with avoidance and skin moisturizing lotion (e.g., Cetaphil). Add hydrocortisone 1% ointment (apply thin layer 3x/day) if needed for 1-2 weeks.", "<strong>Allergic Contact Dermatitis:</strong> Treat with avoidance, hydrocortisone 1% ointment (apply thin layer 3x/day) as needed for 1-2 weeks, and Aluminum acetate (Burrow's solution) compresses every 4 hours for 30 minutes as needed.", "<strong>Follow-up:</strong> RTC for worsening symptoms, development of new symptoms, or other concerns."] } }
+                    }
+                },
+                "J-14": {
+                    "title": "Burns/Sunburn",
+                    "red_flags": ["Trouble Breathing", "Altered Mental Status, Drowsy", "High Risk Location (head, neck, hand, feet, genitalia, major joints)", "Circumferential Burn"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for severity of burn:", "checklist": ["Deep 2nd and 3rd degree", ">10% of body", "Associated Trauma", "Severe pain"], "action_on_yes": "Provide emergency resuscitation before transport.", "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for other complications:", "checklist": ["Second degree burn", "Secondary infection", "Sunburn >25% of body", "Exhaustion", "Unable to perform duties"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Apply cool compresses. Provide ibuprofen (400-800 mg PO q 6-8 hrs PRN with food) or acetaminophen (500-1000 mg PO q 4-6 hrs PRN) as needed for pain. Keep the area clean and uncovered.", "May recommend OTC aloe vera for additional pain relief.", "<strong>Follow-up:</strong> RTC for worsening symptoms, new symptoms, or if not improving within 3 days."] } }
+                    }
+                },
+                "J-15": {
+                    "title": "Friction Blisters on Feet",
+                    "red_flags": ["Fever/malaise", "Epidermal sloughing"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of a systemic reaction:", "checklist": ["Flu-like symptoms", "Painful erythematous macules", "Exposure to new medications"], "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for complications:", "checklist": ["Large open blister", "Erythema or other signs of infection"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Wash area with betadine and apply an antibacterial ointment (e.g., Bacitracin) to the blister only.", "Cover a large area of surrounding undamaged skin and the treated blister with a protective dressing of moleskin between treatments. An adhesive solution such as tincture of benzoin may be applied to the skin around the blister to improve the adhesion of the moleskin.", "Wear two pairs of socks when wearing combat boots (a thin pair of nonabsorbent, non-cotton socks under the boot socks) and to check for proper fit of boots.", "The patient should be reevaluated every 24 hours.", "<strong>Follow-up:</strong> Return for further evaluation if the protective dressing comes off, blisters make wearing boots impossible, disabled by pain, or signs of infection develop."] } }
+                    }
+                },
+                "J-16": {
+                    "title": "Corns on Feet",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Foot Exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for high-risk conditions:", "checklist": ["Diabetes Mellitus", "Decreased peripheral sensation to light touch", "Lesion freely bleeds with paring"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for other foot deformities:", "checklist": ["Plantar wart", "Interferes with normal duty", "Bunion", "Mallet or hammer toe", "Decreased toe motion"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Soak the foot in warm water for 20 minutes.", "If trained and certified, pare down the callous or corn with a scalpel blade. Do not remove skin to the point of bleeding.", "Instruct on weekly self-debridement with a pumice stone. Refer to AEM if a special insole is needed.", "<strong>Follow-up:</strong> Return if symptoms are worsening, new symptoms develop, or are not controlled with the MCP."] } }
+                    }
+                },
+                "J-17": {
+                    "title": "Cutaneous Warts",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Skin Exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for high-risk warts or complicating factors:", "checklist": ["Bleeding", "Sensitive area (face, breast, perineum, anus, genitals)", ">10 warts", "Upcoming mission limiting treatment", "Signs of infection or inflammation", "Treatment >12 wks"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for factors requiring AEM evaluation:", "checklist": [">3 warts", "Treatment >4 weeks", "Medic not trained in procedure", "Complication from treatment"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Obtain approval for treatment from AEM. Counsel the Soldier on options, risks, and course of treatment.", "Consent and Final Timeout. Clean area and pare down built-up skin.", "<strong>Treatment Options:</strong> Cryotherapy (2 freeze-thaw cycles) and/or Salicylic acid (17-40% liquid or pads, reapplied daily/every 2 days).", "<strong>Follow-up:</strong> RTC if new symptoms develop or in 2 weeks for next treatment. Treatment may take up to 12 weeks."] } }
+                    }
+                },
+                "J-18": {
+                    "title": "Ingrown Toenail",
+                    "red_flags": ["Red Streaks up Foot", "Gangrene", "Black Eschar"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Foot Exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for severe infection or high-risk conditions:", "checklist": ["Cellulitis", "Immunocompromised", "Diabetic", "Severe infection", "Recurrent ingrown nail", "Severe pain, limping"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for moderate infection or duty limitations:", "checklist": ["Moderate Infection (erythema and pus)", "Limitations to duty"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Educate on proper trimming of toenail (allow to grow past lateral fold) and proper fitting shoes.", "Soak affected foot in warm, soapy water for 15 minutes 3x/day. While soaking, push nail fold away from nail.", "After soaking, place a piece of cotton or dental floss under the lateral edge of the nail to separate it from the nail fold.", "Apply hydrocortisone cream 1% to inflamed area after soaks.", "Consider duty limitations for up to 3 days as needed.", "<strong>Follow-up:</strong> RTC in one week if still symptomatic, or sooner if symptoms worsen (spreading redness, pus, increasing discomfort)."] } }
+                    }
+                }
+            }
+        },
+        "K": {
+            "category": "Environmental Injury Complaints",
+            "protocols": {
+                 "K-1": {
+                    "title": "Exertional Heat Illness (Heat Injury)/Hyperthermia",
+                    "red_flags": ["Altered mental status", "Abnormal vital signs", "Confused, delirious, or unresponsive", "Skin is dry", "Temperature > 103 F"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the patient has any of the following symptoms:", "checklist": ["Sweating profusely", "Complains of headache, weakness, dizziness, and/or nausea", "Painful cramps of the extremities and/or abdominal muscles", "Body temperature is normal"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>COOL:</strong> Place the Soldier in a cool or shaded place.", "<strong>HYDRATE:</strong> Give at least one liter of cool water to drink in the first 30 minutes and at least one liter per hour for the next 2 hours. Advise to decrease activity for the next 24 hours.", "<strong>REASSESS:</strong> If symptoms do not resolve within 30 minutes, worsen, or temperature exceeds 101F, refer to provider."] }, "no": { "disposition": "MCP", "details": ["<strong>COOL:</strong> Place the Soldier in a cool or shaded place.", "<strong>HYDRATE:</strong> Give the Soldier at least one liter of cool water to drink in the first 30 minutes and then at least one liter of water per hour the next 2 hours. Advise the Soldier to decrease his activity for the next 24 hours.", "<strong>REASSESS:</strong> If the Soldier’s symptoms do not begin to resolve themselves within 30 minutes, if they get worse, or if the Soldier’s temperature exceeds 101F, refer the Soldier to the privileged provider."] } }
+                    }
+                },
+                "K-2": {
+                    "title": "Hypothermia",
+                    "red_flags": ["T<96 degrees F", "Altered Mental Status", "Abnormal Vital Signs", "Frostbite", "Trauma"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check Rectal Temp.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["History of psych meds or narcotics", "History of alcohol abuse", "Severe Pain"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Move Soldier to warm area, remove wet clothes, and rewarm through body heat and space/hypothermia blanket. Monitor closely and elevate care if not improving within 30 minutes."] }, "no": "step3" },
+                        "step3": { "type": "link", "text": "Are there signs of Immersion Foot?", "target": ["K-3"], "default_disposition": { "disposition": "MCP", "details": ["Move Soldier to warm area, remove wet clothes, and rewarm through body heat and space/hypothermia blanket. Monitor closely and elevate care if not improving within 30 minutes."] } }
+                    }
+                },
+                "K-3": {
+                    "title": "Immersion Foot",
+                    "red_flags": ["Gangrene/Necrosis", "Hemorrhagic Blisters", "Hypothermia", "Frostbite", "Trauma", "Severe pain", "Signs of infection"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Extremity Exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following:", "checklist": ["Unable to perform duties", "Symptoms > 1 week", "Pain not controlled"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Rewarm the extremity gradually with bed rest, elevation of the extremity, and air drying at room temperature. Rapid warming can increase pain and swelling.", "Limit activities with affected extremity and keep elevated for three days.", "Rehydrate with warm IV fluids and provide tetanus prophylaxis if required (AEM approval required).", "Ibuprofen for minor pain. Toradol for moderate pain. Amitriptyline at night as needed for pain (provider prescription required). A fan can help cool the extremity and relieve pain.", "<strong>Follow-up:</strong> RTC if symptoms are worsening, signs of infection, new symptoms develop, or not improving after 1 week."] } }
+                    }
+                },
+                "K-4": {
+                    "title": "Chapped Skin/Windburn",
+                    "red_flags": ["Numbness"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Diffuse symptoms", "Not exposed to dry wind", "Signs of infection"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Cover affected skin area. Apply moisturizing lotion. Apply petroleum jelly or lip balm to the lips, if needed.", "<strong>Follow-up:</strong> RTC if symptoms are worsening, signs of infection, or new symptoms develop."] }, "no": { "disposition": "MCP", "details": ["Cover affected skin area. Apply moisturizing lotion to affected area. Apply petroleum jelly or lip balm to the lips, if needed.", "<strong>Follow-up:</strong> RTC if symptoms are worsening, signs of infection, or new symptoms develop."] } }
+                    }
+                },
+                "K-5": {
+                    "title": "Frostbite",
+                    "red_flags": ["White or greyish-yellow color", "Hard or waxy to touch", "Blisters, cyanosis after rewarming", "Hypothermia"],
+                    "steps": {
+                        "start": { "type": "link", "text": "If no signs of frostbite are present, screen for Immersion Foot (K-3). If signs ARE present, it is a Provider Now disposition.", "target": ["K-3"], "default_disposition": { "disposition": "Provider Now", "details": ["Pad or splint affected area. Move Soldier to a warm area. Remove wet clothing. Rewarm using body heat and space/hypothermia blanket. Do NOT rub area, place area near fire/heating element, or rewarm area if chance of refreezing. Administer tetanus prophylaxis."] } }
+                    }
+                },
+                "K-6": {
+                    "title": "Crabs/Lice (Pediculosis)",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following are present:", "checklist": ["Secondary infection", "No nits or lice seen"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Launder clothes and bed linens in hot water.", "<strong>Body lice:</strong> Apply permethrin 5% cream to body.", "<strong>Head lice:</strong> Wash hair without conditioner and towel dry. Apply permethrin 1% cream. Leave on for 10 minutes. Rinse with warm water. Remove nits and dead lice with thin toothed comb.", "<strong>Pubic lice:</strong> Screen for other STDs. Treat sexual partners at same time. Apply permethrin 1% cream to cool, dry areas (groin, buttock, upper thighs, trunk, axillae) for 10 minutes. Rinse with warm water. Follow-up in 10 days for repeat evaluation."] }, "no": { "disposition": "MCP", "details": ["Launder clothes and bed linens in hot water.", "<strong>Body lice:</strong> Apply permethrin 5% cream to body.", "<strong>Head lice:</strong> Wash hair without conditioner and towel dry. Apply permethrin 1% cream. Leave on for 10 minutes. Rinse with warm water. Remove nits and dead lice with thin toothed comb.", "<strong>Pubic lice:</strong> Screen for other STDs. Treat sexual partners at same time. Apply permethrin 1% cream to cool, dry areas (groin, buttock, upper thighs, trunk, axillae) for 10 minutes. Rinse with warm water. Follow-up in 10 days for repeat evaluation."] } }
+                    }
+                },
+                "K-7": {
+                    "title": "Insect Bites (Not Crabs/Lice)",
+                    "red_flags": ["Swelling of Lips or Tongue", "Trouble Breathing", "Abnormal Vital Signs"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of severe allergic reaction or poisonous bite:", "checklist": ["Wheezing, SOB", "Hives", "H/O allergy", "Poisonous insect"], "action_on_yes": "Epi pen if indicated.", "yes": { "disposition": "Provider Now", "mcp_context": ["Remove any stinger, head of tick, or other biting apparatus. Clean site with betadine solution.", "Apply calamine lotion or hydrocortisone 1% cream every 6 hours as needed for itching. Apply an ice pack as needed for swelling.", "<strong>Follow-up:</strong> RTC if symptoms worsen, new symptoms develop, or symptoms are not improving within 48 hours."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["No signs of bite", "Blister, ulcer, pain"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["Remove any stinger, head of tick, or other biting apparatus. Clean site with betadine solution.", "Apply calamine lotion or hydrocortisone 1% cream every 6 hours as needed for itching. Apply an ice pack as needed for swelling.", "<strong>Follow-up:</strong> RTC if symptoms worsen, new symptoms develop, or symptoms are not improving within 48 hours."] }, "no": { "disposition": "MCP", "details": ["Remove any stinger, head of tick, or other biting apparatus. Clean site with betadine solution.", "Apply calamine lotion or hydrocortisone 1% cream every 6 hours as needed for itching. Apply an ice pack as needed for swelling.", "<strong>Follow-up:</strong> RTC if symptoms worsen, new symptoms develop, or symptoms are not improving within 48 hours."] } }
+                    }
+                }
+            }
+        },
+        "L": {
+            "category": "Miscellaneous Complaints",
+            "protocols": {
+                "L-1": {
+                    "title": "Exposed to Hepatitis or HIV",
+                    "red_flags": ["Known source is positive for infection", "High Risk Contact/Exposure"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["High risk exposure (e.g., needlestick, sexual assault)", "Exposure in a lab setting"], "action_on_yes": "Perform wound care. Document exposure.", "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check the timing and nature of exposure:", "checklist": [">7 days from exposure", "No risk exposure (e.g., intact skin, non-infectious fluid)"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "Provider Now" } }
+                    }
+                },
+                "L-2": {
+                    "title": "Dental Problems",
+                    "red_flags": ["Exposed Pulp", "Avulsed Tooth", "Severe Pain", "Trauma", "Chest Pain, SOB"],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check for signs of acute dental infection or emergency:", "checklist": ["Loosened tooth", "Abscess", "Temporomandibular gingivitis", "Cellulitis"], "yes": { "disposition": "Specialty Referral", "details": ["Refer to Dentist or Emergency Room Immediately."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Check for other urgent dental issues:", "checklist": ["Broken tooth", "Jaw related trauma", "Jaw related fresh trauma"], "yes": { "disposition": "Specialty Referral", "details": ["Refer to Dentist or Advanced Enlisted Medic (AEM) Now."] }, "no": { "disposition": "MCP", "details": ["<strong>Furry Tongue:</strong> Brush tongue with toothpaste and soft toothbrush 3x/day.", "<strong>White Plaques (Leukoplakia):</strong> Counsel Soldier on link to smokeless tobacco. Refer to dentist for surveillance.", "<strong>Bad Breath:</strong> Counsel on proper oral hygiene (brushing 3x/day, flossing daily). Refer to dentist if no improvement in 1 week."] } }
+                    }
+                },
+                "L-3": {
+                    "title": "Sores in the Mouth",
+                    "red_flags": ["Diffuse sores", "Bloody Diarrhea", "Painless lesion", "Lesion also located in groin", "Diffuse rash", "Present >2 weeks"],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Oral Exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for multiple or large ulcers:", "checklist": ["Cluster of ulcers", ">5 mm ulcer"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now", "mcp_context": ["<strong>Aphthous Ulcer (canker sore):</strong> Apply 1/4 inch of triamcinolone oral paste to the ulcer at bedtime. Should resolve in 10-14 days.", "<strong>Hand, Foot, and Mouth Disease:</strong> Supportive care. Acetaminophen for fever, ibuprofen for malaise. Cepacol lozenges, salt water gargles for sore throat.", "<strong>Follow-up:</strong> RTC if symptoms worsen, new symptoms develop, or not resolved within 2 weeks."] }, "no": { "disposition": "MCP", "details": ["<strong>Aphthous Ulcer (canker sore):</strong> Apply 1/4 inch of triamcinolone oral paste to the ulcer at bedtime. Should resolve in 10-14 days.", "<strong>Hand, Foot, and Mouth Disease:</strong> Supportive care. Acetaminophen for fever, ibuprofen for malaise. Cepacol lozenges, salt water gargles for sore throat.", "<strong>Follow-up:</strong> RTC if symptoms worsen, new symptoms develop, or not resolved within 2 weeks."] } }
+                    }
+                },
+                "L-4": {
+                    "title": "Prescription Refill",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Is this a refill for any of the following medication types?", "checklist": ["Narcotic", "Psych med", "Sleeping med", "Birth control", "Chronic medication"], "yes": { "disposition": "Specialty Referral", "details": ["Place Secure Message or T-Con for Provider to review and approve refill."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Is this a request for a medication for an acute condition that failed initial treatment?", "checklist": ["Acute condition that failed initial treatment"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "MCP", "details": ["Provide acute OTC medication if appropriate and within protocol. If medication was lost, review record and re-provide if appropriate after consulting AEM/Provider."] } }
+                    }
+                },
+                "L-5": {
+                    "title": "Requests a Vasectomy",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Provide counseling on the permanent nature of a vasectomy, the procedure, and alternatives.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following counseling points:", "checklist": ["Not in a stable relationship", "No children", "Under 30 years old", "PCC performs vasectomies"], "yes": { "disposition": "Specialty Referral", "details": ["Schedule appointment with Primary Care Provider (PCC) for further counseling and evaluation."] }, "no": { "disposition": "Specialty Referral", "details": ["Send Secure Message to Provider or follow local policy to initiate referral for vasectomy."] } }
+                    }
+                },
+                "L-6": {
+                    "title": "Needs an Immunization",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Provide counseling on the requested immunization.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following issues:", "checklist": ["Rabies vaccine requested", "Immunization not required", "Requested early", "Contraindication for immunization", "Medic not trained to administer"], "yes": { "disposition": "Provider Now" }, "no": { "disposition": "MCP", "details": ["If you don't have the immunization, refer to the appropriate location (readiness clinic, etc.).", "Obtain approval from the AEM. Counsel the patient on the vaccine. Confirm no contraindications.", "Provide the vaccine according to the package insert. Document the vaccination information.", "<strong>Follow-up:</strong> RTC if symptoms develop after the vaccine (redness, infection, rash, anaphylaxis, seizure, or other serious symptoms)."] } }
+                    }
+                },
+                "L-7": {
+                    "title": "Lymph Node Enlargement",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform lymph node exam.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for any of the following concerning signs:", "checklist": ["Multiple body areas", "Unexplained weight loss", "Supraclavicular node", "Posterior Cervical node", "Not mobile", "Not soft", "No recent infection"], "yes": { "disposition": "Provider Now" }, "no": { "disposition": "link", "text": "Screen for associated infection symptoms.", "target": [] } }
+                    }
+                },
+                 "L-8": {
+                    "title": "Blood Pressure Check",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Check blood pressure in both arms.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check for abnormal blood pressure readings:", "checklist": ["Greater than 150/90", "Lower than 90 systolic", "Difference >15mmHg between arms"], "action_on_yes": "Lay in dark, quiet room if BP elevated.", "yes": { "disposition": "Provider Now", "mcp_context": ["Blood pressure is within normal limits. Remind the Soldier to return for their next scheduled check if applicable."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Is this the last day of a 5-day BP check, or is there orthostatic hypotension?", "checklist": ["Last day of 5 day blood pressure check", "Orthostatic Hypotension"], "action_on_yes": "Start IVF if orthostatic.", "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "No action needed", "details": ["Blood pressure is within normal limits. Remind the Soldier to return for their next scheduled check if applicable."] } }
+                    }
+                },
+                "L-9": {
+                    "title": "Medical Screening for Overseas PCS",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Perform Medical Record Review.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Is MEDPROS red?", "checklist": ["MEDPROS RED"], "yes": { "disposition": "Specialty Referral", "details": ["Schedule appointment or refer for service to correct medical readiness deficiencies."] }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Check for any of the following:", "checklist": ["Non-deployable profile", "Behavioral Health care", "Specialty Care"], "yes": { "disposition": "Specialty Referral", "details": ["Schedule appointment with provider for further evaluation before signing form."] }, "no": { "disposition": "MCP", "details": ["Fill out paper for Provider to review and sign."] } }
+                    }
+                },
+                 "L-10": {
+                    "title": "Weight Reduction",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Check if the Soldier meets criteria for provider evaluation:", "checklist": ["Enrolled in ABCP", "BMI >30 and not muscular build", "Struggling with weight for >6 months", "H/O failing HT/WT/Tape"], "action_on_yes": "Order screening labs, provide IBHC/Dietician referral.", "yes": { "disposition": "Specialty Referral", "details": ["Schedule Provider Appointment for medical evaluation of weight gain."] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Is this a new issue or related to a recent profile?", "checklist": ["New issue", "BMI > or equal to 25", "Recent profile"], "yes": { "disposition": "Specialty Referral", "details": ["Refer to Wellness Center or Dietician for assistance with weight control."] }, "no": { "disposition": "No action needed", "details": ["Provide general counseling on healthy lifestyle choices."] } }
+                    }
+                },
+                 "L-11": {
+                    "title": "Complaint Not on the List",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Does the Soldier appear sick or unstable?", "checklist": ["Appears sick", "Altered Mental Status, uncomfortable", "HR >100, RR > 20", "BP <150/90", "Moderate - Severe Pain"], "yes": { "disposition": "Provider Now" }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Does the complaint apply to another algorithm on the list?", "yes": { "disposition": "link", "text": "Screen based on the identified salient symptom.", "target": [] }, "no": { "disposition": "Advanced Enlisted Medic (AEM) Now" } }
+                    }
+                },
+                "L-12": {
+                    "title": "Request for Nonprescription or Traveling Medication",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "decision", "question": "Are current symptoms present?", "checklist": ["Current symptoms are present"], "yes": { "disposition": "link", "text": "Screen symptoms using the appropriate protocol.", "target": [] }, "no": "step2" },
+                        "step2": { "type": "decision", "question": "Is the Soldier traveling on Temporary Duty to a location without easy access to medical care?", "checklist": ["Traveling on Temporary Duty to a location without easy access to medical care"], "yes": { "disposition": "Provider Now", "details": ["Discuss with Provider. Provide travel pack medications per local SOP as authorized by supervising provider (e.g., ibuprofen, diphenhydramine, pseudoephedrine, loperamide, ciprofloxacin, doxycycline)."] }, "no": { "disposition": "No action needed", "details": ["No medications indicated at this time."] } }
+                    }
+                }
+            }
+        },
+        "M": {
+            "category": "Miscellaneous Reasons for Return",
+            "protocols": {
+                "M-1": {
+                    "title": "No Signs of Improvement",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Rescreen using the original algorithm.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if any of the following apply:", "checklist": ["Worsening on treatment", "Previously saw Provider or AEM"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Was the patient previously screened as Self Care or AEM?", "checklist": ["Screened as Self Care or AEM"], "yes": { "disposition": "Advanced Enlisted Medic (AEM) Now" }, "no": { "disposition": "Provider Now" } }
+                    }
+                },
+                "M-2": {
+                    "title": "Return Requested by Provider",
+                    "red_flags": [],
+                    "steps": {
+                        "start": { "type": "action", "text": "Rescreen if acutely ill.", "next_step": "step2" },
+                        "step2": { "type": "decision", "question": "Check if the condition has worsened or is not improving:", "checklist": ["Screening dispositioned as Provider Now", "Condition Worsening", "Not improving"], "yes": { "disposition": "Provider Now" }, "no": "step3" },
+                        "step3": { "type": "decision", "question": "Was the patient previously seen by a Provider or Specialty Clinic for follow-up?", "checklist": ["Previously seen by Provider or Specialty Clinic requesting Soldier to follow-up"], "yes": { "disposition": "Specialty Referral", "details": ["Schedule appointment with the original provider if possible, or follow local policy for follow-up scheduling."] }, "no": { "disposition": "Advanced Enlisted Medic (AEM) Now" } }
+                    }
+                }
+            }
+        }
+    };
+
+    // --- APPLICATION STATE & LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const appState = {
+            currentProtocol: null,
+            currentStepId: null,
+            history: [],
+        };
+
+        const homeScreen = document.getElementById('home-screen');
+        const protocolScreen = document.getElementById('protocol-screen');
+        const dispositionScreen = document.getElementById('disposition-screen');
+        const redFlagsListScreen = document.getElementById('red-flags-list-screen');
+        const contentArea = document.getElementById('content-area');
+        const homeButton = document.getElementById('home-button');
+        const checklistContainer = document.getElementById('checklist-container');
+
+        function initApp() {
+            // Reset state
+            appState.currentProtocol = null;
+            appState.currentStepId = null;
+            appState.history = [];
+
+            // Show/hide screens
+            homeScreen.classList.remove('hidden');
+            protocolScreen.classList.add('hidden');
+            dispositionScreen.classList.add('hidden');
+            redFlagsListScreen.classList.add('hidden');
+            homeButton.classList.add('hidden');
+
+            // Populate home screen
+            populateHomeScreen();
+            populateAllRedFlags();
+
+            // Reset search
+            document.getElementById('search-bar').value = '';
+        }
+
+        function populateHomeScreen() {
+            const protocolListDiv = document.getElementById('protocol-list');
+            protocolListDiv.innerHTML = '';
+
+            Object.keys(adtmcProtocols).forEach(categoryKey => {
+                const category = adtmcProtocols[categoryKey];
+                const categoryContainer = document.createElement('div');
+
+                const categoryHeader = document.createElement('h3');
+                categoryHeader.className = 'text-lg font-semibold text-gray-700 cursor-pointer p-2 rounded-md hover:bg-gray-100';
+                categoryHeader.textContent = `► ${category.category}`;
+
+                const protocolLinksContainer = document.createElement('div');
+                protocolLinksContainer.className = 'pl-4 mt-2 space-y-2 border-l-2 border-gray-200 hidden';
+
+                categoryHeader.addEventListener('click', () => {
+                    protocolLinksContainer.classList.toggle('hidden');
+                    if (protocolLinksContainer.classList.contains('hidden')) {
+                        categoryHeader.textContent = `► ${category.category}`;
+                    } else {
+                        categoryHeader.textContent = `▼ ${category.category}`;
+                    }
+                });
+
+                categoryContainer.appendChild(categoryHeader);
+
+                Object.keys(category.protocols).forEach(protocolKey => {
+                    const protocol = category.protocols[protocolKey];
+                    const protocolLink = document.createElement('div');
+                    protocolLink.className = 'protocol-card bg-gray-50 p-3 rounded-lg cursor-pointer border border-gray-200';
+                    protocolLink.innerHTML = `<span class="font-semibold text-blue-600">${protocolKey}:</span> ${protocol.title}`;
+                    protocolLink.dataset.protocolKey = protocolKey;
+                    protocolLinksContainer.appendChild(protocolLink);
+                });
+
+                categoryContainer.appendChild(protocolLinksContainer);
+                protocolListDiv.appendChild(categoryContainer);
+            });
+        }
+
+        function populateAllRedFlags() {
+            const contentDiv = document.getElementById('all-red-flags-content');
+            contentDiv.innerHTML = '';
+
+            Object.keys(adtmcProtocols).forEach(categoryKey => {
+                const category = adtmcProtocols[categoryKey];
+                Object.keys(category.protocols).forEach(protocolKey => {
+                    const protocol = category.protocols[protocolKey];
+                    if (protocol.red_flags && protocol.red_flags.length > 0) {
+                        const protocolContainer = document.createElement('div');
+
+                        const protocolHeader = document.createElement('h3');
+                        protocolHeader.className = 'font-bold text-lg text-gray-800';
+                        protocolHeader.innerHTML = `<span class="font-semibold text-blue-600">${protocolKey}:</span> ${protocol.title}`;
+                        protocolContainer.appendChild(protocolHeader);
+
+                        const flagsList = document.createElement('ul');
+                        flagsList.className = 'list-disc list-inside mt-2 pl-4 space-y-1 text-sm text-red-900 bg-red-50 p-3 rounded-lg border border-red-200';
+                        protocol.red_flags.forEach(flag => {
+                            const li = document.createElement('li');
+                            li.textContent = flag;
+                            flagsList.appendChild(li);
+                        });
+                        protocolContainer.appendChild(flagsList);
+
+                        contentDiv.appendChild(protocolContainer);
+                    }
+                });
+            });
+        }
+
+        function startProtocol(protocolKey) {
+            const categoryKey = protocolKey.split('-')[0];
+            const protocolData = adtmcProtocols[categoryKey]?.protocols[protocolKey];
+
+            if (!protocolData) {
+                console.error("Protocol not found for key:", protocolKey);
+                return;
+            }
+
+            appState.currentProtocol = protocolData;
+            appState.currentStepId = 'start';
+            appState.history = [];
+
+            homeScreen.classList.add('hidden');
+            protocolScreen.classList.remove('hidden');
+            homeButton.classList.remove('hidden');
+
+            document.getElementById('decision-point-container').classList.add('hidden');
+
+            // Setup Red Flags
+            const redFlagsContainer = document.getElementById('red-flags-container');
+            if (appState.currentProtocol.red_flags && appState.currentProtocol.red_flags.length > 0) {
+                redFlagsContainer.classList.remove('hidden');
+                const redFlagsList = document.getElementById('red-flags-list');
+                redFlagsList.innerHTML = '';
+                appState.currentProtocol.red_flags.forEach(flag => {
+                    const li = document.createElement('li');
+                    li.textContent = flag;
+                    redFlagsList.appendChild(li);
+                });
+            } else {
+                redFlagsContainer.classList.add('hidden');
+                // If no red flags, skip that screen
+                document.getElementById('red-flags-container').classList.add('hidden');
+                appState.history.push({ question: 'Red Flags Check', answer: 'N/A for this protocol' });
+                renderStep('start');
+            }
+            document.getElementById('protocol-title').textContent = `${protocolKey}: ${appState.currentProtocol.title}`;
+        }
+
+        function renderStep(stepId) {
+            const step = appState.currentProtocol.steps[stepId];
+            if (!step) {
+                console.error('Step not found:', stepId);
+                return;
+            }
+
+            const decisionPointContainer = document.getElementById('decision-point-container');
+            const questionText = document.getElementById('question-text');
+            const actionContainer = document.getElementById('action-container');
+            const decisionButtons = document.getElementById('decision-buttons');
+
+            // Reset visibility and content
+            decisionPointContainer.classList.remove('hidden');
+            questionText.classList.add('hidden');
+            actionContainer.classList.add('hidden');
+            checklistContainer.innerHTML = '';
+            decisionButtons.innerHTML = '';
+
+            // Render based on step type
+            if (step.type === 'decision') {
+                questionText.classList.remove('hidden');
+                questionText.innerHTML = `<p class="font-semibold">${step.question}</p>`;
+
+                if (step.checklist) {
+                    step.checklist.forEach((item, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center';
+                        div.innerHTML = `
+                            <input id="check-${index}" type="checkbox" value="${item}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                            <label for="check-${index}" class="ml-2 block text-sm text-gray-900">${item}</label>
+                        `;
+                        checklistContainer.appendChild(div);
+                    });
+                }
+
+                if (step.logic === 'count') {
+                     const continueBtn = document.createElement('button');
+                     continueBtn.textContent = 'Continue';
+                     continueBtn.className = 'w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors';
+                     continueBtn.onclick = () => {
+                         const checkedCount = checklistContainer.querySelectorAll('input:checked').length;
+                         const checkedItems = Array.from(checklistContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+                         appState.history.push({ question: step.question, answer: `Checked (${checkedCount}): ${checkedItems.join(', ')}` });
+
+                         let nextStepId = null;
+                         for (const key in step.options) {
+                             if (key.includes('+') && checkedCount >= parseInt(key)) {
+                                 nextStepId = step.options[key];
+                                 break;
+                             } else if (key.includes('-')) {
+                                const range = key.split('-').map(Number);
+                                if(checkedCount >= range[0] && checkedCount <= range[1]) {
+                                    nextStepId = step.options[key];
+                                    break;
+                                }
+                             }
+                         }
+                         if(nextStepId) processNextStep(nextStepId);
+                         else console.error("No matching option for count:", checkedCount);
+                     };
+                     decisionButtons.appendChild(continueBtn);
+
+                } else if(step.options) { // Buttons like Positive/Negative
+                     Object.keys(step.options).forEach(optionText => {
+                        const btn = document.createElement('button');
+                        btn.textContent = optionText;
+                        btn.className = 'w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors';
+                        btn.onclick = () => {
+                             appState.history.push({ question: step.question, answer: optionText });
+                             processNextStep(step.options[optionText]);
+                        };
+                        decisionButtons.appendChild(btn);
+                     });
+                } else if (step.checklist && step.yes && step.no) { // Checklist-based Yes/No
+                    const continueBtn = document.createElement('button');
+                    continueBtn.textContent = 'Continue';
+                    continueBtn.className = 'w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors';
+                    continueBtn.onclick = () => {
+                        const isChecked = checklistContainer.querySelectorAll('input:checked').length > 0;
+                        handleDecision(step, isChecked ? 'yes' : 'no');
+                    };
+                    decisionButtons.appendChild(continueBtn);
+                } else if (step.yes && step.no) { // Standard Yes/No without checklist
+                    const yesBtn = document.createElement('button');
+                    yesBtn.textContent = 'Yes';
+                    yesBtn.className = 'w-full bg-green-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors';
+                    yesBtn.onclick = () => handleDecision(step, 'yes');
+                    decisionButtons.appendChild(yesBtn);
+
+                    const noBtn = document.createElement('button');
+                    noBtn.textContent = 'No';
+                    noBtn.className = 'w-full bg-red-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-red-700 transition-colors';
+                    noBtn.onclick = () => handleDecision(step, 'no');
+                    decisionButtons.appendChild(noBtn);
+                }
+
+            } else if (step.type === 'action') {
+                actionContainer.classList.remove('hidden');
+                actionContainer.innerHTML = `<p class="font-semibold">Action Required:</p><p>${step.text}</p>`;
+                appState.history.push({ question: 'Action', answer: step.text });
+
+                // Add a manual continue button instead of auto-advancing
+                const continueBtn = document.createElement('button');
+                continueBtn.textContent = 'Continue';
+                continueBtn.className = 'w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors';
+                continueBtn.onclick = () => processNextStep(step.next_step);
+                decisionButtons.appendChild(continueBtn);
+
+            } else if (step.type === 'link') {
+                showDisposition(step.default_disposition, `Linked Protocol Check: ${step.text}`);
+            }
+        }
+
+        function handleDecision(step, choice) {
+            let answerText = choice.toUpperCase();
+            if (step.checklist) {
+                const checkedItems = Array.from(checklistContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+                if (checkedItems.length > 0) {
+                     answerText += `: ${checkedItems.join(', ')}`;
+                } else if (choice === 'no') {
+                    answerText = `NO: None of the following - ${step.checklist.join(', ')}`;
+                }
+            }
+            appState.history.push({ question: step.question, answer: answerText });
+            if(step[`action_on_${choice}`]) {
+                appState.history.push({ question: 'Automatic Action', answer: step[`action_on_${choice}`] });
+            }
+            processNextStep(step[choice]);
+        }
+
+        function processNextStep(nextStep) {
+            if (typeof nextStep === 'string') {
+                appState.currentStepId = nextStep;
+                renderStep(nextStep);
+            } else if (nextStep && nextStep.disposition) {
+                showDisposition(nextStep);
+            }
+        }
+
+        function showDisposition(dispositionObj, triggeringQuestion = null) {
+            protocolScreen.classList.add('hidden');
+            dispositionScreen.classList.remove('hidden');
+
+            const dispositionResult = document.getElementById('disposition-result');
+            const mcpContainer = document.getElementById('mcp-container');
+            const mcpDetails = document.getElementById('mcp-details');
+            const mcpHeader = mcpContainer.querySelector('h4');
+
+            dispositionResult.textContent = dispositionObj.disposition;
+            dispositionResult.className = 'text-3xl font-bold mb-4 ';
+
+            if (dispositionObj.disposition === 'Provider Now') {
+                dispositionResult.classList.add('text-red-600');
+            } else if (dispositionObj.disposition === 'Advanced Enlisted Medic (AEM) Now') {
+                 dispositionResult.classList.add('text-yellow-600');
+            } else if (dispositionObj.disposition === 'Specialty Referral') {
+                dispositionResult.classList.add('text-blue-600');
+            } else {
+                 dispositionResult.classList.add('text-green-600');
+            }
+
+            const mcpContent = dispositionObj.details || dispositionObj.mcp_context;
+
+            if (mcpContent) {
+                mcpContainer.classList.remove('hidden');
+                mcpDetails.innerHTML = mcpContent.map(d => `<p>${d}</p>`).join('');
+                if (dispositionObj.mcp_context) {
+                    mcpHeader.textContent = "Contextual MCP for Review:";
+                } else {
+                    mcpHeader.textContent = "Treatment Protocol / Plan:";
+                }
+            } else {
+                mcpContainer.classList.add('hidden');
+            }
+
+            generateSummary(dispositionObj, triggeringQuestion);
+        }
+
+        function generateSummary(dispositionObj, triggeringQuestion) {
+            const summaryText = document.getElementById('summary-text');
+            const finalDisposition = dispositionObj.disposition;
+            const protocolKey = Object.entries(adtmcProtocols)
+                .flatMap(([catKey, cat]) => Object.keys(cat.protocols).map(protoKey => [protoKey, cat.protocols[protoKey]]))
+                .find(([key, proto]) => proto === appState.currentProtocol)[0];
+
+            let summary = `Chief Complaint: ${appState.currentProtocol.title} (Protocol ${protocolKey})\n\n`;
+            summary += `S: Patient presents for evaluation. Triage path below:\n`;
+
+            appState.history.forEach(item => {
+                summary += `- ${item.question}: ${item.answer}\n`;
+            });
+
+            if(triggeringQuestion) {
+                 summary += `- Note: ${triggeringQuestion}\n`;
+            }
+
+            summary += `\nO: (As per medic exam)\n`;
+            summary += `\nA: Per ADTMC Protocol ${protocolKey}, patient screens to ${finalDisposition}.\n`;
+
+            let pdSection = `\nP/D: Disposition to ${finalDisposition}.`;
+
+            const mcpContent = dispositionObj.details || dispositionObj.mcp_context;
+
+            if (mcpContent) {
+                 if (dispositionObj.disposition === 'MCP' || dispositionObj.disposition === 'Specialty Referral' || dispositionObj.disposition === 'No action needed') {
+                    pdSection += ' Provided education/plan.\n\n';
+                    pdSection += '--- Treatment Protocol / Plan ---\n';
+                } else if (dispositionObj.disposition === 'Advanced Enlisted Medic (AEM) Now' || dispositionObj.disposition === 'Provider Now') {
+                    pdSection += '\n\n';
+                    pdSection += '--- Contextual MCP for Review ---\n';
+                }
+
+                const cleanDetails = mcpContent
+                    .map(d => d.replace(/<[^>]*>/g, '')) // Strips all HTML tags
+                    .join('\n');
+                pdSection += cleanDetails;
+            }
+
+            summary += pdSection;
+
+            summaryText.textContent = summary;
+        }
+
+        // --- EVENT LISTENERS ---
+        document.getElementById('search-bar').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            const categoryContainers = document.querySelectorAll('#protocol-list > div');
+
+            // If search is empty, reset to default collapsed view
+            if (searchTerm === "") {
+                categoryContainers.forEach(container => {
+                    const header = container.querySelector('h3');
+                    const linksContainer = container.querySelector('.pl-4');
+                    if (!linksContainer.classList.contains('hidden')) {
+                        linksContainer.classList.add('hidden');
+                        header.textContent = `► ${header.textContent.substring(2)}`;
+                    }
+
+                    // Make all cards visible again for the next search
+                    linksContainer.querySelectorAll('.protocol-card').forEach(card => {
+                        card.style.display = 'block';
+                    });
+                });
+                return;
+            }
+
+            categoryContainers.forEach(container => {
+                const header = container.querySelector('h3');
+                const linksContainer = container.querySelector('.pl-4');
+                const cards = container.querySelectorAll('.protocol-card');
+                let categoryHasMatch = false;
+
+                cards.forEach(card => {
+                    const title = card.textContent.toLowerCase();
+                    if (title.includes(searchTerm)) {
+                        card.style.display = 'block';
+                        categoryHasMatch = true;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                if (categoryHasMatch) {
+                    linksContainer.classList.remove('hidden');
+                    header.textContent = `▼ ${header.textContent.substring(2)}`;
+                } else {
+                    linksContainer.classList.add('hidden');
+                    header.textContent = `► ${header.textContent.substring(2)}`;
+                }
+            });
+        });
+
+        document.getElementById('protocol-list').addEventListener('click', (e) => {
+            const card = e.target.closest('.protocol-card');
+            if (card) {
+                startProtocol(card.dataset.protocolKey);
+            }
+        });
+
+        document.getElementById('view-all-red-flags-btn').addEventListener('click', () => {
+            homeScreen.classList.add('hidden');
+            redFlagsListScreen.classList.remove('hidden');
+            homeButton.classList.remove('hidden');
+        });
+
+        document.getElementById('red-flag-present-btn').addEventListener('click', () => {
+            appState.history.push({ question: 'Red Flags Check', answer: 'PRESENT' });
+            const currentProtocol = appState.currentProtocol;
+            let mcpContext = null;
+
+            // Helper to recursively find the first MCP details in a protocol's steps
+            const findMcp = (obj) => {
+                for (const key in obj) {
+                    if (typeof obj[key] === 'object' && obj[key] !== null) {
+                        if (obj[key].disposition === 'MCP' && obj[key].details) {
+                            return obj[key].details;
+                        } else if (obj[key].mcp_context) {
+                            return obj[key].mcp_context;
+                        }
+                        const found = findMcp(obj[key]);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            if (currentProtocol && currentProtocol.steps) {
+                mcpContext = findMcp(currentProtocol.steps);
+            }
+
+            showDisposition({ disposition: 'Provider Now', mcp_context: mcpContext });
+        });
+
+        document.getElementById('no-red-flags-btn').addEventListener('click', () => {
+            document.getElementById('red-flags-container').classList.add('hidden');
+             appState.history.push({ question: 'Red Flags Check', answer: 'None present' });
+            renderStep('start');
+        });
+
+        homeButton.addEventListener('click', initApp);
+
+        document.getElementById('copy-summary-btn').addEventListener('click', () => {
+            const summary = document.getElementById('summary-text').textContent;
+            // Use execCommand for broader compatibility, especially in iFrames
+            const textarea = document.createElement('textarea');
+            textarea.value = summary;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                // Show toast notification
+                const toast = document.getElementById('toast-notification');
+                toast.classList.remove('opacity-0', 'translate-y-2');
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', 'translate-y-2');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text: ', err);
+            }
+            document.body.removeChild(textarea);
+        });
+
+        // Initial load
+        initApp();
+    });
+    </script>
+</body>
+</html>
