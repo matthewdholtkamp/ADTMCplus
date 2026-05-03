@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#1b1f23"/>
-  <rect x="24" y="24" width="464" height="464" rx="24" ry="24" fill="none" stroke="#c6a15b" stroke-width="16"/>
-  <text x="256" y="230" text-anchor="middle" fill="#e9ecef" font-size="128" font-family="Arial" font-weight="700">A+</text>
-  <text x="256" y="310" text-anchor="middle" fill="#b0b8c0" font-size="42" font-family="Arial">ADTMC+</text>
-</svg>
