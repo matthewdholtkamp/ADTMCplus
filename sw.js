@@ -1,19 +1,13 @@
-const CACHE = 'adtmcplus-v4';
-const TOOL_CACHE = 'adtmcplus-tool-html-v1';
+const CACHE = 'adtmcplus-v10-clinical-ai';
 const ASSETS = [
   './',
   './index.html',
-  './manifest.webmanifest',
-  './icon.svg',
-  './apps/adtmc/',
-  './apps/adtmc/index.html',
-  './apps/msktool/',
-  './apps/msktool/index.html'
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './ask-dr-holtkamp.css',
+  './ask-dr-holtkamp.js'
 ];
-const TOOL_URLS = new Set([
-  'https://cdn.jsdelivr.net/gh/matthewdholtkamp/ADTMC@main/index.html',
-  'https://cdn.jsdelivr.net/gh/matthewdholtkamp/MSKTool@main/index.html'
-]);
 
 self.addEventListener('install', evt => {
   evt.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)));
@@ -24,7 +18,7 @@ self.addEventListener('activate', evt => {
   evt.waitUntil(
     caches.keys().then(keys => Promise.all(
       keys
-        .filter(key => key !== CACHE && key !== TOOL_CACHE)
+        .filter(key => key !== CACHE)
         .map(key => caches.delete(key))
     )).then(() => self.clients.claim())
   );
@@ -33,20 +27,6 @@ self.addEventListener('activate', evt => {
 self.addEventListener('fetch', evt => {
   const { request } = evt;
   if (request.method !== 'GET') return;
-
-  if (TOOL_URLS.has(request.url)) {
-    evt.respondWith(
-      fetch(request).then(res => {
-        const clone = res.clone();
-        caches.open(TOOL_CACHE).then(cache => cache.put(request, clone));
-        return res;
-      }).catch(() => caches.match(request).then(cached => cached || new Response('Tool unavailable offline.', {
-        status: 503,
-        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-      })))
-    );
-    return;
-  }
 
   evt.respondWith(
     caches.match(request).then(cached => cached || fetch(request).then(res => {

@@ -1,0 +1,50 @@
+name: Deploy ADTMC+ Clinical AI Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "adtmcplus-clinical-ai/**"
+      - ".github/workflows/deploy-clinical-ai.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: adtmcplus-clinical-ai
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: adtmcplus-clinical-ai/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Worker
+        run: npm run check
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: adtmcplus-clinical-ai
+          command: deploy
+          secrets: |
+            GEMINI_API_KEY
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}

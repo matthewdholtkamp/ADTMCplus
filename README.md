@@ -7,6 +7,13 @@
 * **Session Isolation**: Automatically resets all clinical forms and symptom checkboxes when navigating between tools, preventing cross-patient data leakage in shared clinical environments.
 * **Print-Optimized**: Features a dedicated stylesheet for printing. Printing a disposition screen automatically hides navigation menus, sidebars, and non-essential UI elements to generate a clean, SOAP-note-ready document.
 * **Section 508 Compliant**: Includes ARIA landmarks, skip-to-content links, focus-visible indicators, and optimized touch targets for accessibility.
+* **Ask Dr. Holtkamp Clinical Navigator**: A read-only clinical AI drawer that uses only the ADTMC+ and MSK algorithms loaded from this repository. It can explain coded guidance and open the matching pathway without selecting answers or changing clinical state.
+
+## Clinical AI Privacy Boundary
+
+The navigator is for nonspecific, de-identified clinical questions only. Every message requires an explicit no-PHI attestation, and likely identifiers are blocked in the browser and Worker before a Gemini request. Chat history remains in memory and is erased when the page reloads. Users must never enter names, IDs, dates of birth, contact information, addresses, exact identifying dates, or other patient identifiers.
+
+The Gemini API key is stored only as the Cloudflare Worker secret `GEMINI_API_KEY`; it is never included in the static site. Worker source and deployment instructions are in [`adtmcplus-clinical-ai/`](adtmcplus-clinical-ai/README.md).
 
 ## Deployment & Installation
 
