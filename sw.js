@@ -1,4 +1,4 @@
-const CACHE = 'adtmcplus-v10-clinical-ai';
+const CACHE = 'adtmcplus-v12-persona';
 const ASSETS = [
   './',
   './index.html',

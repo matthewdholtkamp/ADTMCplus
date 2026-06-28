@@ -93,6 +93,7 @@ describe("privacy guard", () => {
     "Call the patient at 573-555-1212",
     "DOB: 01/02/1999",
     "SGT Smith has knee pain",
+    "Patient John Smith has knee pain",
     "MRN 12345678",
     "Email soldier@example.mil"
   ])("blocks likely identifying information: %s", (text) => {
@@ -154,6 +155,9 @@ describe("request and result validation", () => {
     const validated = validateClinicalResult(closest, parsed);
     expect(validated?.whatCodeSays).toEqual([]);
     expect(validated?.urgency).toBe("unknown");
+    expect(validated?.nextStep).toBe(
+      "No supported coded next step was found. Open the closest pathway to review its questions without selecting an answer."
+    );
   });
 });
 
@@ -220,6 +224,8 @@ describe("Worker API", () => {
     const init = upstream.mock.calls[0][1];
     expect(init?.headers).toMatchObject({ "x-goog-api-key": "test-gemini-key" });
     expect(JSON.stringify(init?.body)).not.toContain("patient phone");
+    expect(JSON.stringify(init?.body)).toContain("brief hallway conversation");
+    expect(JSON.stringify(init?.body)).toContain("never as the real person");
   });
 
   it("falls back to Gemini 3.5 Flash when the primary model fails", async () => {

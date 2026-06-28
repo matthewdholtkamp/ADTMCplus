@@ -19,6 +19,8 @@
     isSending: false,
     entries: [],
     history: [],
+    contextObserver: null,
+    contextRefreshTimer: null,
     els: {}
   };
 
@@ -65,7 +67,7 @@
     },
     {
       label: "patient name",
-      pattern: /\b(?:patient|name)\s*(?:is|:)\s*[A-Z][A-Za-z'-]{1,}(?:\s+[A-Z][A-Za-z'-]{1,})?\b/
+      pattern: /\b(?:(?:[Pp]atient|[Nn]ame)\s*(?:is|:)\s*[A-Z][A-Za-z'-]{1,}(?:\s+[A-Z][A-Za-z'-]{1,})?|[Pp]atient\s+[A-Z][A-Za-z'-]{1,}\s+[A-Z][A-Za-z'-]{1,})\b/
     }
   ];
 
@@ -292,7 +294,7 @@
       callout.setAttribute("aria-label", "Ask Dr. Holtkamp clinical guidance");
 
       const title = document.createElement("h2");
-      title.textContent = "Ask Dr. Holtkamp for guidance";
+      title.textContent = "Ask Dr. Holtkamp's Persona";
       callout.appendChild(title);
       callout.appendChild(createButton("ask-launch-pill", "Ask Dr. Holtkamp"));
       toolGrid.parentNode.insertBefore(callout, toolGrid);
@@ -312,11 +314,6 @@
   function injectDrawer() {
     if (document.getElementById("ask-dr-holtkamp-panel")) return;
 
-    const backdrop = document.createElement("div");
-    backdrop.id = "ask-backdrop";
-    backdrop.className = "ask-backdrop";
-    backdrop.setAttribute("aria-hidden", "true");
-
     const panel = document.createElement("section");
     panel.id = "ask-dr-holtkamp-panel";
     panel.className = "ask-panel";
@@ -328,7 +325,7 @@
         <div class="ask-header-title">
           <div class="ask-avatar" aria-hidden="true">★</div>
           <div>
-            <div class="ask-panel-kicker">ADTMC+ Clinical Navigator</div>
+            <div class="ask-panel-kicker">ADTMC+ Clinical AI Persona</div>
             <h2 id="ask-panel-title">Ask Dr. Holtkamp</h2>
           </div>
         </div>
@@ -342,12 +339,12 @@
         <strong>Do not enter PHI.</strong> Use a nonspecific case only—no names, IDs, dates of birth,
         contact information, addresses, exact identifying dates, or other patient identifiers.
       </div>
-      <div class="ask-messages" id="ask-messages" aria-live="polite"></div>
-      <div class="ask-suggestions" aria-label="Suggested clinical questions">
-        <button type="button" data-ask-prompt="Which ADTMC algorithm fits a nonspecific sore throat case?">Find an ADTMC pathway</button>
-        <button type="button" data-ask-prompt="Show me the coded red flags for knee pain.">Review red flags</button>
-        <button type="button" data-ask-prompt="Which MSK pathway covers an acute ankle injury?">Find an MSK pathway</button>
+      <div class="ask-context" aria-live="polite">
+        <span class="ask-context-label">Current page</span>
+        <strong id="ask-context-value">ADTMC+ Home</strong>
       </div>
+      <div class="ask-messages" id="ask-messages" aria-live="polite"></div>
+      <div class="ask-suggestions" id="ask-suggestions" aria-label="Questions for the current page"></div>
       <form class="ask-form" id="ask-form">
         <label class="sr-only" for="ask-input">Ask a de-identified clinical algorithm question</label>
         <div class="ask-input-wrapper">
@@ -367,16 +364,16 @@
       </div>
     `;
 
-    document.body.appendChild(backdrop);
     document.body.appendChild(panel);
 
     state.els = {
-      backdrop,
       panel,
       close: panel.querySelector("#ask-close"),
       newChat: panel.querySelector("#ask-new-chat"),
       status: panel.querySelector("#ask-status"),
+      contextValue: panel.querySelector("#ask-context-value"),
       messages: panel.querySelector("#ask-messages"),
+      suggestions: panel.querySelector("#ask-suggestions"),
       form: panel.querySelector("#ask-form"),
       input: panel.querySelector("#ask-input"),
       send: panel.querySelector("#ask-send"),
@@ -386,7 +383,6 @@
   }
 
   function bindEvents() {
-    state.els.backdrop.addEventListener("click", close);
     state.els.close.addEventListener("click", close);
     state.els.newChat.addEventListener("click", newChat);
     state.els.form.addEventListener("submit", (event) => {
@@ -405,19 +401,33 @@
       }
     });
     state.els.attestation.addEventListener("change", updateSendState);
-    state.els.panel.querySelectorAll("[data-ask-prompt]").forEach((button) => {
-      button.addEventListener("click", () => {
-        state.els.input.value = button.dataset.askPrompt || "";
-        state.els.attestation.checked = false;
-        autoSizeInput();
-        updateSendState();
-        state.els.input.focus();
-      });
+    state.els.suggestions.addEventListener("click", (event) => {
+      if (!(event.target instanceof Element)) return;
+      const button = event.target.closest("[data-ask-prompt]");
+      if (!button) return;
+      state.els.input.value = button.dataset.askPrompt || "";
+      state.els.attestation.checked = false;
+      state.els.error.textContent = "";
+      autoSizeInput();
+      updateSendState();
+      state.els.input.focus();
     });
     window.addEventListener("online", updateConnectivity);
     window.addEventListener("offline", updateConnectivity);
+    document.addEventListener("click", scheduleContextRefresh);
+    document.addEventListener("change", scheduleContextRefresh);
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape" && state.isOpen) close();
+    });
+
+    state.contextObserver = new MutationObserver(scheduleContextRefresh);
+    document.querySelectorAll(".app-container").forEach((container) => {
+      state.contextObserver.observe(container, {
+        attributes: true,
+        attributeFilter: ["class"],
+        childList: true,
+        subtree: true
+      });
     });
   }
 
@@ -463,19 +473,16 @@
   function open() {
     state.isOpen = true;
     state.els.panel.classList.add("open");
-    state.els.backdrop.classList.add("open");
-    state.els.backdrop.setAttribute("aria-hidden", "false");
     document.querySelectorAll("[aria-controls='ask-dr-holtkamp-panel']").forEach((button) => {
       button.setAttribute("aria-expanded", "true");
     });
+    refreshContextUI();
     window.setTimeout(() => state.els.input.focus(), 120);
   }
 
   function close() {
     state.isOpen = false;
     state.els.panel.classList.remove("open");
-    state.els.backdrop.classList.remove("open");
-    state.els.backdrop.setAttribute("aria-hidden", "true");
     document.querySelectorAll("[aria-controls='ask-dr-holtkamp-panel']").forEach((button) => {
       button.setAttribute("aria-expanded", "false");
     });
@@ -499,7 +506,7 @@
   function addInitialMessage() {
     createTextMessage(
       "assistant",
-      "Describe a nonspecific clinical situation or ask where to find guidance. I will use only the ADTMC+ and MSK algorithms loaded on this page."
+      "I’m Dr. Holtkamp’s AI persona—not Dr. Holtkamp at a keyboard. Tell me what you’re working through, without PHI, and I’ll stay inside the ADTMC+ and MSK code on this page."
     );
   }
 
@@ -521,7 +528,7 @@
 
     const label = document.createElement("div");
     label.className = "ask-message-label";
-    label.textContent = role === "user" ? "You" : "Dr. Holtkamp AI navigator";
+    label.textContent = role === "user" ? "You" : "Dr. Holtkamp AI persona";
 
     const body = document.createElement("div");
     body.className = "ask-message-body";
@@ -547,10 +554,10 @@
     return body;
   }
 
-  function addSection(body, title, content) {
+  function addSection(body, title, content, className = "") {
     if (!content || (Array.isArray(content) && content.length === 0)) return;
     const section = document.createElement("section");
-    section.className = "ask-structured-section";
+    section.className = `ask-structured-section ${className}`.trim();
     const heading = document.createElement("h3");
     heading.textContent = title;
     section.appendChild(heading);
@@ -598,44 +605,81 @@
     };
   }
 
+  function addNavigationButton(body, result) {
+    const navigation = validateNavigation(result.navigation);
+    if (!navigation) return;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "ask-open-target";
+    button.textContent = `Open and highlight — ${navigation.label}`;
+    button.addEventListener("click", () => {
+      void performNavigation(navigation);
+    });
+    body.appendChild(button);
+  }
+
+  function addSources(body, sourcesList) {
+    if (!Array.isArray(sourcesList) || sourcesList.length === 0) return;
+    const section = document.createElement("section");
+    section.className = "ask-structured-section";
+    const heading = document.createElement("h3");
+    heading.textContent = "Sources";
+    const sources = document.createElement("div");
+    sources.className = "ask-sources";
+    sourcesList.forEach((source) => {
+      const chip = document.createElement("span");
+      chip.className = "ask-source";
+      chip.textContent = source.label || `${source.tool.toUpperCase()} ${source.protocolId}`;
+      sources.appendChild(chip);
+    });
+    section.append(heading, sources);
+    body.appendChild(section);
+  }
+
+  function getPersonaLead(result) {
+    if (result.urgency === "red_flag") return "Stop here—the code has a red flag.";
+    if (result.coverage === "clarify") {
+      return "I need one detail before I can put you in the right coded lane.";
+    }
+    if (result.coverage === "closest") {
+      return "The code does not directly answer this, but I found the closest lane.";
+    }
+    if (result.coverage === "unsupported") {
+      return "The code does not give me a supported answer here.";
+    }
+    return "Here’s how I’d run the code.";
+  }
+
   function renderStructuredResult(body, result, model) {
     body.replaceChildren();
     body.removeAttribute("aria-label");
+    body.classList.toggle("ask-urgent", result.urgency === "red_flag");
+
+    const lead = document.createElement("p");
+    lead.className = "ask-persona-lead";
+    lead.textContent = getPersonaLead(result);
+    body.appendChild(lead);
+
     if (result.urgency === "red_flag") {
-      body.classList.add("ask-urgent");
       const badge = document.createElement("div");
       badge.className = "ask-urgent-badge";
       badge.textContent = "Coded red flag";
       body.appendChild(badge);
     }
 
-    addSection(body, "Algorithm match", result.algorithmMatch);
-    addSection(body, "What the code says", result.whatCodeSays);
-    addSection(body, "Next step", result.nextStep);
-    addSection(body, "Limit", result.limitation);
-
-    if (Array.isArray(result.sources) && result.sources.length > 0) {
-      const sources = document.createElement("div");
-      sources.className = "ask-sources";
-      result.sources.forEach((source) => {
-        const chip = document.createElement("span");
-        chip.className = "ask-source";
-        chip.textContent = source.label || `${source.tool.toUpperCase()} ${source.protocolId}`;
-        sources.appendChild(chip);
-      });
-      body.appendChild(sources);
-    }
-
-    const navigation = validateNavigation(result.navigation);
-    if (navigation) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "ask-open-target";
-      button.textContent = `Open and highlight — ${navigation.label}`;
-      button.addEventListener("click", () => {
-        void performNavigation(navigation);
-      });
-      body.appendChild(button);
+    if (result.coverage === "clarify") {
+      addSection(body, "One detail I need", result.nextStep || result.algorithmMatch, "ask-action-section");
+      addSection(body, "What the code says", result.whatCodeSays);
+      addSources(body, result.sources);
+      addSection(body, "Limit", result.limitation);
+    } else {
+      const actionTitle = result.coverage === "matched" ? "Coded next step" : "Code boundary";
+      addSection(body, actionTitle, result.nextStep, "ask-action-section");
+      addNavigationButton(body, result);
+      addSection(body, "Algorithm match", result.algorithmMatch);
+      addSection(body, "What the code says", result.whatCodeSays);
+      addSources(body, result.sources);
+      addSection(body, "Limit", result.limitation);
     }
 
     if (model) {
@@ -699,6 +743,143 @@
     return context;
   }
 
+  function titleCaseIdentifier(value) {
+    return String(value || "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, (letter) => letter.toUpperCase())
+      .trim();
+  }
+
+  function getContextPresentation() {
+    const context = getPageContext();
+    const activeTool =
+      context.activeTool === "adtmc-app"
+        ? "adtmc"
+        : context.activeTool === "msk-app"
+          ? "msk"
+          : "";
+    const activeEntry = state.entries.find(
+      (entry) => entry.tool === activeTool && entry.id === context.protocolId
+    );
+
+    if (context.activeTool === "landing-page" || context.activeTool === "unknown") {
+      return {
+        label: "ADTMC+ Home",
+        prompts: [
+          ["Find an ADTMC pathway", "Help me find the closest ADTMC pathway for a nonspecific case. Use only the loaded code."],
+          ["Find an MSK pathway", "Help me find the closest MSK pathway for a nonspecific case. Use only the loaded code."]
+        ]
+      };
+    }
+
+    if (context.activeTool === "adtmc-app") {
+      if (context.visibleScreen === "home-screen") {
+        return {
+          label: "ADTMC · Protocol Menu",
+          prompts: [
+            ["Find the right pathway", "Help me find the closest ADTMC pathway for a nonspecific case. Use only the loaded code."],
+            ["Review coded red flags", "Help me locate the ADTMC pathway with the relevant coded red flags. Do not add medical knowledge."]
+          ]
+        };
+      }
+
+      if (context.visibleScreen === "red-flags-list-screen") {
+        return {
+          label: "ADTMC · All Red Flags",
+          prompts: [
+            ["Summarize this screen", "Summarize the ADTMC red-flag screen I am viewing. Use only the loaded code."],
+            ["Find the matching pathway", "Help me find the matching ADTMC pathway for a nonspecific red-flag question. Use only the loaded code."]
+          ]
+        };
+      }
+
+      const protocolLabel = context.protocolId || activeEntry?.id || "Protocol";
+      const redFlagsVisible = context.visibleScreen === "protocol-screen" &&
+        !document.getElementById("red-flags-container")?.classList.contains("hidden");
+      const stage = context.visibleScreen === "disposition-screen"
+        ? "Disposition"
+        : redFlagsVisible
+          ? "Red Flags"
+          : context.visiblePrompt
+            ? "Current Question"
+            : "Protocol";
+
+      return {
+        label: `ADTMC ${protocolLabel} · ${stage}`,
+        prompts: [
+          ["Summarize this screen", `Summarize the ADTMC ${protocolLabel} screen I am viewing. Use only the loaded code and current page state.`],
+          ["What does the code say next?", `Using only ADTMC ${protocolLabel} and the current page state, what is the coded next step? Do not select an answer for me.`],
+          ["Show coded red flags", `Show the coded red flags for ADTMC ${protocolLabel} and offer to open that section. Use only the loaded code.`]
+        ]
+      };
+    }
+
+    if (context.activeTool === "msk-app") {
+      const root = document.getElementById("msk-app-root");
+      const heading = root?.querySelector("h1, h2")?.textContent?.trim() || "";
+      if (heading === "Select Protocol") {
+        return {
+          label: "MSK · Protocol Menu",
+          prompts: [
+            ["Find the right pathway", "Help me find the closest MSK pathway for a nonspecific case. Use only the loaded code."],
+            ["Open clinical references", "Open the MSK clinical references without changing any pathway selections."]
+          ]
+        };
+      }
+      if (heading.includes("Clinical References")) {
+        return {
+          label: "MSK · Clinical References",
+          prompts: [
+            ["Summarize this screen", "Summarize how the loaded MSK code uses the references on this screen. Do not add outside medical knowledge."],
+            ["Return to a pathway", "Help me find the closest MSK pathway using only the loaded code."]
+          ]
+        };
+      }
+
+      const protocolName = activeEntry?.title
+        ?.replace(/^Traumatic or Acute\s+/i, "")
+        ?.replace(/\s+Pain$/i, "") || titleCaseIdentifier(context.protocolId) || "Pathway";
+      const stage = context.visiblePrompt
+        ? titleCaseIdentifier(context.visiblePrompt)
+        : context.visitType
+          ? `${titleCaseIdentifier(context.visitType)} Consult`
+          : "Pathway";
+
+      return {
+        label: `MSK ${protocolName} · ${stage}`,
+        prompts: [
+          ["Summarize this screen", `Summarize the MSK ${protocolName} screen I am viewing. Use only the loaded code and current page state.`],
+          ["What does the code say next?", `Using only the MSK ${protocolName} code and current page state, what is the coded next step? Do not select an answer for me.`],
+          ["Open clinical references", "Open the MSK clinical references without changing any pathway selections."]
+        ]
+      };
+    }
+
+    return { label: "ADTMC+ Clinical Tools", prompts: [] };
+  }
+
+  function refreshContextUI() {
+    if (!state.els.contextValue || !state.els.suggestions) return;
+    const presentation = getContextPresentation();
+    state.els.contextValue.textContent = presentation.label;
+    state.els.suggestions.replaceChildren();
+    presentation.prompts.forEach(([label, prompt]) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.dataset.askPrompt = prompt;
+      state.els.suggestions.appendChild(button);
+    });
+  }
+
+  function scheduleContextRefresh() {
+    if (state.contextRefreshTimer) window.clearTimeout(state.contextRefreshTimer);
+    state.contextRefreshTimer = window.setTimeout(() => {
+      state.contextRefreshTimer = null;
+      refreshContextUI();
+    }, 60);
+  }
+
   function buildRequestPayload(question) {
     const ranked = rankAlgorithms(question);
     const candidates = ranked.map(({ entry }) => entry);
@@ -733,9 +914,14 @@
   function renderLocalFallback(body, question, reason) {
     body.replaceChildren();
     body.removeAttribute("aria-label");
+    body.classList.remove("ask-urgent");
+    const lead = document.createElement("p");
+    lead.className = "ask-persona-lead";
+    lead.textContent = "I can’t reach the clinical model right now.";
+    body.appendChild(lead);
     const intro = document.createElement("p");
     intro.textContent = reason ||
-      "Clinical AI interpretation is unavailable. Local matching can only locate likely pathways; it cannot interpret the case.";
+      "I can still locate likely coded pathways, but I cannot interpret the case.";
     body.appendChild(intro);
 
     const matches = rankAlgorithms(question, 3);
@@ -863,7 +1049,6 @@
   async function performNavigation(navigation) {
     const valid = validateNavigation(navigation);
     if (!valid) return;
-    close();
 
     if (valid.kind === "adtmc_protocol" || valid.kind === "adtmc_red_flags") {
       navigateTo("adtmc");
@@ -877,6 +1062,7 @@
         ? document.getElementById("red-flags-container")
         : document.getElementById("protocol-title")?.closest(".bg-white") || document.getElementById("protocol-screen");
       highlightTarget(target);
+      refreshContextUI();
       return;
     }
 
@@ -890,6 +1076,7 @@
       if (button) button.click();
       await waitForPaint();
       highlightTarget(document.querySelector("#msk-app-root .slide-in"));
+      refreshContextUI();
       return;
     }
 
@@ -899,6 +1086,7 @@
       if (typeof msk_renderReferences === "function") msk_renderReferences();
       await waitForPaint();
       highlightTarget(document.querySelector("#msk-app-root .slide-in"));
+      refreshContextUI();
     }
   }
 
@@ -909,6 +1097,7 @@
     injectDrawer();
     bindEvents();
     addInitialMessage();
+    refreshContextUI();
     updateConnectivity();
     void probeWorker();
 
@@ -921,6 +1110,7 @@
       rankAlgorithms,
       getAlgorithmCatalog: () => state.entries.map(({ searchText, ...entry }) => entry),
       getPageContext,
+      getContextPresentation,
       performNavigation
     };
   }

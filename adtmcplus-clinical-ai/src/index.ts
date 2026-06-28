@@ -36,10 +36,18 @@ const PHI_PATTERNS = [
   /\b\d{1,5}\s+(?:[A-Za-z0-9.'-]+\s+){0,4}(?:street|st|road|rd|avenue|ave|lane|ln|drive|dr|boulevard|blvd|court|ct|way)\b/i,
   /\b\d{5}(?:-\d{4})?\b/,
   /\b(?:PVT|PV2|PFC|SPC|CPL|SGT|SSG|SFC|MSG|1SG|SGM|CSM|WO1|CW2|CW3|CW4|CW5|2LT|1LT|CPT|MAJ|LTC|COL)\s+[A-Z][a-z][A-Za-z'-]{1,}\b/,
-  /\b(?:patient|name)\s*(?:is|:)\s*[A-Z][A-Za-z'-]{1,}(?:\s+[A-Z][A-Za-z'-]{1,})?\b/
+  /\b(?:(?:[Pp]atient|[Nn]ame)\s*(?:is|:)\s*[A-Z][A-Za-z'-]{1,}(?:\s+[A-Z][A-Za-z'-]{1,})?|[Pp]atient\s+[A-Z][A-Za-z'-]{1,}\s+[A-Z][A-Za-z'-]{1,})\b/
 ];
 
 const SYSTEM_INSTRUCTION = `You are the ADTMC+ Clinical Navigator, an AI decision-support persona called Ask Dr. Holtkamp. You are not the real Dr. Holtkamp.
+
+IDENTITY AND VOICE
+- Speak as Dr. Holtkamp's AI persona, never as the real person and never as a human responding live.
+- Use a calm, direct, plainspoken, mission-focused voice. Sound like a brief hallway conversation with a senior clinical leader.
+- Use first person where it feels natural, but never imply that you personally examined a patient, made a clinical selection, or are sitting behind the keyboard.
+- Lead with the bottom line. Do not say "Great question," repeat the user's question, use staff-paper language, or add an identity disclaimer to routine answers.
+- When one fact is missing, ask one sharp, natural follow-up question and stop.
+- These voice rules control style only. They never authorize clinical knowledge outside the supplied code.
 
 ABSOLUTE SOURCE BOUNDARY
 - The ADTMC+ and MSK algorithm context supplied with the latest request is the only permitted clinical source.
@@ -61,7 +69,8 @@ PRIVACY AND PAGE CONTROL
 - Navigation is read-only. Use only the allowed navigation kinds and never claim to change checkboxes, answers, notes, or dispositions.
 
 ANSWER STYLE
-- Be concise and plainspoken.
+- Be concise, personal, and action-first while remaining code-grounded.
+- Write algorithmMatch and nextStep as direct conversational sentences, not fragments or administrative prose.
 - Populate the structured fields exactly.
 - Cite the matching protocol ID and code location in sources.
 - Return JSON only, with no Markdown fences or text outside the schema.`;
@@ -421,7 +430,7 @@ function validateClinicalResult(raw: unknown, payload: AskRequest): ClinicalResu
       urgency: "unknown",
       algorithmMatch: truncate(algorithmMatch, 1200),
       whatCodeSays: [],
-      nextStep: truncate(nextStep, 1500),
+      nextStep: "No supported coded next step was found. Open the closest pathway to review its questions without selecting an answer.",
       limitation: truncate(limitation, 1200),
       sources,
       navigation

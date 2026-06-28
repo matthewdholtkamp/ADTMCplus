@@ -86,23 +86,6 @@
   white-space: nowrap;
 }
 
-.ask-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 8200;
-  background: rgba(5, 6, 4, 0.52);
-  -webkit-backdrop-filter: blur(7px);
-  backdrop-filter: blur(7px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 220ms ease;
-}
-
-.ask-backdrop.open {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .ask-panel {
   position: fixed;
   top: 0;
@@ -278,6 +261,34 @@
   color: #ffd1c9;
 }
 
+.ask-context {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 0.58rem 1.2rem;
+  border-bottom: 1px solid var(--ask-border-soft);
+  background: rgba(216, 183, 92, 0.055);
+  color: var(--ask-text);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
+.ask-context-label {
+  flex: 0 0 auto;
+  color: var(--ask-gold);
+  font-size: 0.57rem;
+  font-weight: 900;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.ask-context strong {
+  overflow: hidden;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .ask-messages {
   display: flex;
   flex: 1;
@@ -340,8 +351,11 @@
   border-bottom-left-radius: 4px;
 }
 
-.ask-structured-section + .ask-structured-section {
+.ask-structured-section {
   margin-top: 0.68rem;
+}
+
+.ask-structured-section:not(.ask-action-section) {
   padding-top: 0.62rem;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
 }
@@ -365,6 +379,33 @@
   margin: 0;
   padding-left: 1.05rem;
   list-style: disc;
+}
+
+.ask-persona-lead {
+  margin: 0 0 0.58rem;
+  color: #fff9e9;
+  font-size: 0.86rem;
+  font-weight: 800;
+  line-height: 1.42;
+}
+
+.ask-action-section {
+  margin-top: 0;
+  padding: 0.68rem 0.72rem;
+  border: 1px solid rgba(216, 183, 92, 0.34);
+  border-radius: 9px;
+  background: rgba(216, 183, 92, 0.09);
+}
+
+.ask-action-section h3 {
+  color: #f6d77e;
+}
+
+.ask-action-section p {
+  color: #fffaf0;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.48;
 }
 
 .ask-urgent {
@@ -647,6 +688,7 @@
 
   .ask-status,
   .ask-privacy-banner,
+  .ask-context,
   .ask-messages,
   .ask-form {
     padding-right: 0.95rem;
@@ -689,7 +731,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ask-panel,
-  .ask-backdrop,
   .ask-message,
   .ask-target-highlight,
   .ask-typing span {
@@ -702,7 +743,6 @@
 @media print {
   .ask-landing-callout,
   .ask-header-launch,
-  .ask-backdrop,
   .ask-panel {
     display: none !important;
   }
