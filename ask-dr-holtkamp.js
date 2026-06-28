@@ -325,43 +325,55 @@
         <div class="ask-header-title">
           <div class="ask-avatar" aria-hidden="true">★</div>
           <div>
-            <div class="ask-panel-kicker">ADTMC+ Clinical AI Persona</div>
+            <div class="ask-panel-kicker">ADTMC+ Clinical AI</div>
             <h2 id="ask-panel-title">Ask Dr. Holtkamp</h2>
           </div>
         </div>
         <div class="ask-header-controls">
           <button class="ask-new-chat" id="ask-new-chat" type="button">New Chat</button>
-          <button class="ask-close" id="ask-close" type="button" aria-label="Close assistant">×</button>
+          <button class="ask-close" id="ask-close" type="button" aria-label="Close assistant">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
-      </div>
-      <div class="ask-status" id="ask-status">Checking clinical AI service…</div>
-      <div class="ask-privacy-banner">
-        <strong>Do not enter PHI.</strong> Use a nonspecific case only—no names, IDs, dates of birth,
-        contact information, addresses, exact identifying dates, or other patient identifiers.
       </div>
       <div class="ask-context" aria-live="polite">
         <span class="ask-context-label">Current page</span>
         <strong id="ask-context-value">ADTMC+ Home</strong>
       </div>
+      <div class="ask-status" id="ask-status" role="status" aria-live="polite">
+        Checking clinical AI service…
+      </div>
       <div class="ask-messages" id="ask-messages" aria-live="polite"></div>
       <div class="ask-suggestions" id="ask-suggestions" aria-label="Questions for the current page"></div>
       <form class="ask-form" id="ask-form">
         <label class="sr-only" for="ask-input">Ask a de-identified clinical algorithm question</label>
+        <div class="ask-attestation-card" id="ask-attestation-card" hidden>
+          <div class="ask-attestation-copy">
+            <strong>Confirm before sending</strong>
+            <span>No names, IDs, dates of birth, contact details, addresses, or identifying dates.</span>
+          </div>
+          <label class="ask-attestation">
+            <input id="ask-attestation" type="checkbox">
+            <span>This message contains no PHI or identifying patient information.</span>
+          </label>
+        </div>
         <div class="ask-input-wrapper">
           <textarea id="ask-input" maxlength="${MAX_QUESTION_LENGTH}" rows="1"
-            placeholder="Describe a nonspecific case without patient identifiers…"></textarea>
-          <button class="ask-send" id="ask-send" type="submit" disabled aria-label="Send question">➤</button>
+            placeholder="Ask a de-identified clinical question…"></textarea>
+          <button class="ask-send" id="ask-send" type="submit" disabled aria-label="Send question">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
         </div>
-        <label class="ask-attestation">
-          <input id="ask-attestation" type="checkbox">
-          <span>I confirm this message contains no name or identifying patient information.</span>
-        </label>
         <div class="ask-input-error" id="ask-input-error" role="alert"></div>
       </form>
-      <div class="ask-note">
-        AI clinical decision-support persona—not the real Dr. Holtkamp. Answers are limited to the
-        algorithms loaded on this page and do not replace clinical judgment or provider evaluation.
-      </div>
     `;
 
     document.body.appendChild(panel);
@@ -377,6 +389,7 @@
       form: panel.querySelector("#ask-form"),
       input: panel.querySelector("#ask-input"),
       send: panel.querySelector("#ask-send"),
+      attestationCard: panel.querySelector("#ask-attestation-card"),
       attestation: panel.querySelector("#ask-attestation"),
       error: panel.querySelector("#ask-input-error")
     };
@@ -392,15 +405,24 @@
     state.els.input.addEventListener("input", () => {
       state.els.error.textContent = "";
       autoSizeInput();
+      syncAttestationCard();
       updateSendState();
     });
     state.els.input.addEventListener("keydown", (event) => {
       if (event.key === "Enter" && !event.shiftKey) {
         event.preventDefault();
-        if (!state.els.send.disabled) void send();
+        if (state.els.input.value.trim() && !state.els.attestation.checked) {
+          requestAttestationAttention();
+        } else if (!state.els.send.disabled) {
+          void send();
+        }
       }
     });
-    state.els.attestation.addEventListener("change", updateSendState);
+    state.els.attestation.addEventListener("change", () => {
+      if (state.els.attestation.checked) state.els.error.textContent = "";
+      syncAttestationCard();
+      updateSendState();
+    });
     state.els.suggestions.addEventListener("click", (event) => {
       if (!(event.target instanceof Element)) return;
       const button = event.target.closest("[data-ask-prompt]");
@@ -409,6 +431,7 @@
       state.els.attestation.checked = false;
       state.els.error.textContent = "";
       autoSizeInput();
+      syncAttestationCard();
       updateSendState();
       state.els.input.focus();
     });
@@ -434,6 +457,7 @@
   function setStatus(text, tone = "") {
     state.els.status.textContent = text;
     state.els.status.className = `ask-status ${tone}`.trim();
+    state.els.status.hidden = tone === "ready" || !text;
   }
 
   function updateConnectivity() {
@@ -477,6 +501,7 @@
       button.setAttribute("aria-expanded", "true");
     });
     refreshContextUI();
+    autoSizeInput();
     window.setTimeout(() => state.els.input.focus(), 120);
   }
 
@@ -499,6 +524,35 @@
     state.els.send.disabled = state.isSending || !hasText || !state.els.attestation.checked;
   }
 
+  function syncAttestationCard() {
+    const hasText = state.els.input.value.trim().length > 0;
+    if (!hasText) {
+      state.els.attestation.checked = false;
+      state.els.attestationCard.classList.remove("needs-attention");
+    }
+    state.els.attestationCard.hidden = !hasText;
+    state.els.attestationCard.classList.toggle(
+      "confirmed",
+      hasText && state.els.attestation.checked
+    );
+    if (state.els.attestation.checked) {
+      state.els.attestationCard.classList.remove("needs-attention");
+    }
+  }
+
+  function requestAttestationAttention(message = "Confirm this message contains no PHI before sending.") {
+    if (!state.els.input.value.trim()) return;
+    state.els.attestationCard.hidden = false;
+    state.els.attestationCard.classList.remove("needs-attention");
+    void state.els.attestationCard.offsetWidth;
+    state.els.attestationCard.classList.add("needs-attention");
+    state.els.error.textContent = message;
+    state.els.attestation.focus({ preventScroll: true });
+    window.setTimeout(() => {
+      state.els.attestationCard.classList.remove("needs-attention");
+    }, 1400);
+  }
+
   function clearMessages() {
     state.els.messages.replaceChildren();
   }
@@ -518,6 +572,7 @@
     state.els.attestation.checked = false;
     state.els.error.textContent = "";
     autoSizeInput();
+    syncAttestationCard();
     updateSendState();
     state.els.input.focus();
   }
@@ -621,7 +676,7 @@
   function addSources(body, sourcesList) {
     if (!Array.isArray(sourcesList) || sourcesList.length === 0) return;
     const section = document.createElement("section");
-    section.className = "ask-structured-section";
+    section.className = "ask-structured-section ask-sources-section";
     const heading = document.createElement("h3");
     heading.textContent = "Sources";
     const sources = document.createElement("div");
@@ -650,7 +705,7 @@
     return "Here’s how I’d run the code.";
   }
 
-  function renderStructuredResult(body, result, model) {
+  function renderStructuredResult(body, result) {
     body.replaceChildren();
     body.removeAttribute("aria-label");
     body.classList.toggle("ask-urgent", result.urgency === "red_flag");
@@ -669,24 +724,17 @@
 
     if (result.coverage === "clarify") {
       addSection(body, "One detail I need", result.nextStep || result.algorithmMatch, "ask-action-section");
-      addSection(body, "What the code says", result.whatCodeSays);
+      addSection(body, "What the Algorithm Says", result.whatCodeSays, "ask-evidence-section");
       addSources(body, result.sources);
-      addSection(body, "Limit", result.limitation);
+      addSection(body, "Limit", result.limitation, "ask-limit-section");
     } else {
       const actionTitle = result.coverage === "matched" ? "Coded next step" : "Code boundary";
       addSection(body, actionTitle, result.nextStep, "ask-action-section");
       addNavigationButton(body, result);
-      addSection(body, "Algorithm match", result.algorithmMatch);
-      addSection(body, "What the code says", result.whatCodeSays);
+      addSection(body, "Algorithm match", result.algorithmMatch, "ask-match-section");
+      addSection(body, "What the Algorithm Says", result.whatCodeSays, "ask-evidence-section");
       addSources(body, result.sources);
-      addSection(body, "Limit", result.limitation);
-    }
-
-    if (model) {
-      const modelBadge = document.createElement("div");
-      modelBadge.className = "ask-model-badge";
-      modelBadge.textContent = `Model: ${model}`;
-      body.appendChild(modelBadge);
+      addSection(body, "Limit", result.limitation, "ask-limit-section");
     }
 
     state.els.messages.scrollTop = state.els.messages.scrollHeight;
@@ -808,7 +856,7 @@
         label: `ADTMC ${protocolLabel} · ${stage}`,
         prompts: [
           ["Summarize this screen", `Summarize the ADTMC ${protocolLabel} screen I am viewing. Use only the loaded code and current page state.`],
-          ["What does the code say next?", `Using only ADTMC ${protocolLabel} and the current page state, what is the coded next step? Do not select an answer for me.`],
+          ["What does the algorithm say next?", `Using only ADTMC ${protocolLabel} and the current page state, what is the coded next step? Do not select an answer for me.`],
           ["Show coded red flags", `Show the coded red flags for ADTMC ${protocolLabel} and offer to open that section. Use only the loaded code.`]
         ]
       };
@@ -849,7 +897,7 @@
         label: `MSK ${protocolName} · ${stage}`,
         prompts: [
           ["Summarize this screen", `Summarize the MSK ${protocolName} screen I am viewing. Use only the loaded code and current page state.`],
-          ["What does the code say next?", `Using only the MSK ${protocolName} code and current page state, what is the coded next step? Do not select an answer for me.`],
+          ["What does the algorithm say next?", `Using only the MSK ${protocolName} code and current page state, what is the coded next step? Do not select an answer for me.`],
           ["Open clinical references", "Open the MSK clinical references without changing any pathway selections."]
         ]
       };
@@ -951,13 +999,23 @@
 
   async function send() {
     const question = state.els.input.value.trim();
-    if (!question || state.isSending || !state.els.attestation.checked) return;
+    if (!question || state.isSending) return;
+    if (!state.els.attestation.checked) {
+      requestAttestationAttention();
+      return;
+    }
 
     const phi = detectPhi(question);
     if (phi.detected) {
       state.els.error.textContent =
         `Message blocked before sending. Remove possible ${phi.matches.join(", ")} and describe only a nonspecific case.`;
       state.els.attestation.checked = false;
+      syncAttestationCard();
+      state.els.attestationCard.classList.add("needs-attention");
+      window.setTimeout(() => {
+        state.els.attestationCard.classList.remove("needs-attention");
+      }, 1400);
+      state.els.input.focus({ preventScroll: true });
       updateSendState();
       return;
     }
@@ -969,6 +1027,7 @@
     state.els.attestation.checked = false;
     state.els.error.textContent = "";
     autoSizeInput();
+    syncAttestationCard();
 
     const pendingBody = createPendingMessage();
     if (!navigator.onLine) {
@@ -1009,7 +1068,7 @@
         throw new Error(data?.error || `Clinical AI returned HTTP ${response.status}.`);
       }
 
-      renderStructuredResult(pendingBody, data.result, data.model);
+      renderStructuredResult(pendingBody, data.result);
       state.history.push({ role: "assistant", text: resultToHistoryText(data.result) });
       setStatus("Ready — code-grounded clinical guidance", "ready");
     } catch (error) {
