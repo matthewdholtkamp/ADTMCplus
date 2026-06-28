@@ -1,4 +1,4 @@
-const CACHE = 'adtmcplus-v15-calm';
+const CACHE = 'adtmcplus-v16-guided';
 const ASSETS = [
   './',
   './index.html',

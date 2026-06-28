@@ -11,12 +11,25 @@ const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 const ORIGIN = "https://matthewdholtkamp.github.io";
 
 const validPayload = {
-  question: "A nonspecific adult has acute ankle pain. Which coded pathway applies?",
+  question: "A nonspecific adult has acute ankle pain. Which pathway applies?",
   history: [],
   pageContext: {
-    activeTool: "landing-page",
-    protocolId: "",
-    selectedOptions: []
+    activeTool: "msk-app",
+    protocolId: "ankle",
+    visibleScreen: "msk-pathway",
+    selectedOptions: [],
+    currentStep: {
+      id: "visit_type",
+      type: "decision",
+      question: "Select the reason for today's encounter.",
+      instruction: "",
+      answers: [
+        { index: 0, text: "Initial Consult", destination: "ankle_red_flags" },
+        { index: 1, text: "Follow-Up", destination: "ankle_followup" }
+      ],
+      pathwayHistory: []
+    },
+    stepSignature: "msk-app:ankle:visit_type:initial"
   },
   source: {
     repository: "matthewdholtkamp/ADTMCplus"
@@ -49,7 +62,7 @@ const validResult = {
   urgency: "routine",
   algorithmMatch: "MSK ankle: Acute Ankle Pain",
   whatCodeSays: ["Begin at the visit type question."],
-  nextStep: "Open the ankle pathway and complete its coded questions.",
+  nextStep: "Open the ankle pathway and complete its questions.",
   limitation: "Use clinical judgment and make each pathway selection yourself.",
   sources: [{
     tool: "msk",
@@ -102,7 +115,7 @@ describe("privacy guard", () => {
 });
 
 describe("request and result validation", () => {
-  it("accepts a bounded code-grounded request", () => {
+  it("accepts a bounded algorithm-grounded request", () => {
     expect(parseAskRequest(validPayload)).not.toBeNull();
   });
 
@@ -156,8 +169,27 @@ describe("request and result validation", () => {
     expect(validated?.whatCodeSays).toEqual([]);
     expect(validated?.urgency).toBe("unknown");
     expect(validated?.nextStep).toBe(
-      "No supported coded next step was found. Open the closest pathway to review its questions without selecting an answer."
+      "No supported next step was found in the algorithm. Open the closest pathway to review its questions without selecting an answer."
     );
+  });
+
+  it("normalizes prohibited clinical terminology in model output", () => {
+    const parsed = parseAskRequest(validPayload);
+    expect(parsed).not.toBeNull();
+    if (!parsed) return;
+
+    const result = structuredClone(validResult);
+    result.algorithmMatch = "This code matches the ankle pathway.";
+    result.whatCodeSays = ["The coded question asks for visit type."];
+    result.nextStep = "Follow the coded next step.";
+    const validated = validateClinicalResult(result, parsed);
+    const visibleText = [
+      validated?.algorithmMatch,
+      ...(validated?.whatCodeSays || []),
+      validated?.nextStep,
+      validated?.limitation
+    ].join(" ");
+    expect(visibleText).not.toMatch(/\bcode(d)?\b/i);
   });
 });
 
@@ -226,6 +258,11 @@ describe("Worker API", () => {
     expect(JSON.stringify(init?.body)).not.toContain("patient phone");
     expect(JSON.stringify(init?.body)).toContain("brief hallway conversation");
     expect(JSON.stringify(init?.body)).toContain("never as the real person");
+    expect(JSON.stringify(init?.body)).toContain("CURRENT READ-ONLY PAGE STATE");
+    expect(JSON.stringify(init?.body)).toContain("The CURRENT READ-ONLY PAGE STATE is authoritative");
+    expect(JSON.stringify(init?.body)).toContain("explain each branch conditionally");
+    expect(JSON.stringify(init?.body)).toContain("Select the reason for today's encounter.");
+    expect(JSON.stringify(init?.body)).toContain("Initial Consult");
   });
 
   it("falls back to Gemini 3.5 Flash when the primary model fails", async () => {

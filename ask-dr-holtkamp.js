@@ -58,7 +58,7 @@
       pattern: /\b\d{1,5}\s+(?:[A-Za-z0-9.'-]+\s+){0,4}(?:street|st|road|rd|avenue|ave|lane|ln|drive|dr|boulevard|blvd|court|ct|way)\b/i
     },
     {
-      label: "ZIP code",
+      label: "postal identifier",
       pattern: /\b\d{5}(?:-\d{4})?\b/
     },
     {
@@ -466,7 +466,7 @@
       return;
     }
     if (!state.isSending) {
-      setStatus("Ready — code-grounded clinical guidance", "ready");
+      setStatus("Ready — algorithm-guided clinical support", "ready");
     }
   }
 
@@ -488,7 +488,7 @@
       });
       window.clearTimeout(timer);
       if (!response.ok) throw new Error("Worker health check failed");
-      setStatus("Ready — code-grounded clinical guidance", "ready");
+      setStatus("Ready — algorithm-guided clinical support", "ready");
     } catch (_) {
       setStatus("Clinical AI unavailable — local pathway finder ready", "error");
     }
@@ -560,7 +560,7 @@
   function addInitialMessage() {
     createTextMessage(
       "assistant",
-      "I’m Dr. Holtkamp’s AI persona—not Dr. Holtkamp at a keyboard. Tell me what you’re working through, without PHI, and I’ll stay inside the ADTMC+ and MSK code on this page."
+      "I’m Dr. Holtkamp’s AI persona—not Dr. Holtkamp at a keyboard. Tell me what you’re working through, without PHI, and I’ll stay inside the ADTMC+ and MSK algorithms on this page."
     );
   }
 
@@ -692,17 +692,17 @@
   }
 
   function getPersonaLead(result) {
-    if (result.urgency === "red_flag") return "Stop here—the code has a red flag.";
+    if (result.urgency === "red_flag") return "Stop here—the algorithm identifies a red flag.";
     if (result.coverage === "clarify") {
-      return "I need one detail before I can put you in the right coded lane.";
+      return "I need one detail before I can place this in the right pathway.";
     }
     if (result.coverage === "closest") {
-      return "The code does not directly answer this, but I found the closest lane.";
+      return "The algorithm does not directly address this, but I found the closest pathway.";
     }
     if (result.coverage === "unsupported") {
-      return "The code does not give me a supported answer here.";
+      return "The algorithm does not provide a supported answer here.";
     }
-    return "Here’s how I’d run the code.";
+    return "Here’s how I’d walk through the algorithm.";
   }
 
   function renderStructuredResult(body, result) {
@@ -718,7 +718,7 @@
     if (result.urgency === "red_flag") {
       const badge = document.createElement("div");
       badge.className = "ask-urgent-badge";
-      badge.textContent = "Coded red flag";
+      badge.textContent = "Algorithm red flag";
       body.appendChild(badge);
     }
 
@@ -728,7 +728,9 @@
       addSources(body, result.sources);
       addSection(body, "Limit", result.limitation, "ask-limit-section");
     } else {
-      const actionTitle = result.coverage === "matched" ? "Coded next step" : "Code boundary";
+      const actionTitle = result.coverage === "matched"
+        ? "Next Step in the Algorithm"
+        : "Algorithm Boundary";
       addSection(body, actionTitle, result.nextStep, "ask-action-section");
       addNavigationButton(body, result);
       addSection(body, "Algorithm match", result.algorithmMatch, "ask-match-section");
@@ -756,12 +758,25 @@
       protocolId: getActiveProtocolId(),
       visibleScreen: "",
       visiblePrompt: "",
-      selectedOptions: []
+      selectedOptions: [],
+      currentStep: null,
+      stepSignature: ""
     };
 
     if (active?.id === "adtmc-app") {
       const screen = ["home-screen", "protocol-screen", "disposition-screen", "red-flags-list-screen"]
         .find((id) => !document.getElementById(id)?.classList.contains("hidden"));
+      const question = document.getElementById("question-text")?.textContent?.trim() || "";
+      const instruction = document.getElementById("action-container")?.textContent?.trim() || "";
+      const answerButtons = Array.from(
+        document.querySelectorAll("#decision-buttons button")
+      ).map((button) => button.textContent?.trim() || "").filter(Boolean).slice(0, 20);
+      const checklistAnswers = Array.from(
+        document.querySelectorAll("#checklist-container label")
+      ).map((label) => label.textContent?.trim() || "").filter(Boolean).slice(0, 30);
+      const redFlagsContainer = document.getElementById("red-flags-container");
+      const redFlagsVisible = screen === "protocol-screen" &&
+        !redFlagsContainer?.classList.contains("hidden");
       context.visibleScreen = screen || "";
       context.visiblePrompt = [
         document.getElementById("question-text"),
@@ -773,20 +788,104 @@
 
       if (screen === "disposition-screen") {
         context.visiblePrompt = document.getElementById("disposition-result")?.textContent?.trim() || "";
+        context.currentStep = {
+          id: "disposition",
+          type: "disposition",
+          question: context.visiblePrompt,
+          instruction: document.getElementById("mcp-details")?.textContent?.trim() || "",
+          answers: []
+        };
+      } else if (redFlagsVisible) {
+        const redFlags = Array.from(document.querySelectorAll("#red-flags-list li"))
+          .map((item) => item.textContent?.trim() || "")
+          .filter(Boolean)
+          .slice(0, 30);
+        const redFlagAnswers = Array.from(redFlagsContainer.querySelectorAll("button"))
+          .map((button) => button.textContent?.trim() || "")
+          .filter(Boolean)
+          .slice(0, 10);
+        context.visiblePrompt = "Red Flags Check";
+        context.currentStep = {
+          id: "red_flags",
+          type: "red_flags",
+          question: "Does the nonspecific case have any of these red flags?",
+          instruction: "Use the red flags displayed on the active protocol screen.",
+          answers: redFlagAnswers.map((text, index) => ({ index, text })),
+          visibleItems: redFlags
+        };
+      } else if (screen === "protocol-screen" && (question || instruction)) {
+        const answers = checklistAnswers.length > 0 ? checklistAnswers : answerButtons;
+        context.currentStep = {
+          id: question || instruction,
+          type: question ? (checklistAnswers.length > 0 ? "checklist" : "decision") : "action",
+          question: question || instruction,
+          instruction: question ? instruction : "",
+          answers: answers.map((text, index) => ({ index, text }))
+        };
+      } else if (screen === "red-flags-list-screen") {
+        context.currentStep = {
+          id: "all_red_flags",
+          type: "reference",
+          question: "ADTMC master red flags list",
+          instruction: "",
+          answers: []
+        };
       }
     }
 
     if (active?.id === "msk-app") {
-      context.visibleScreen = "msk-pathway";
+      const root = document.getElementById("msk-app-root");
+      const heading = root?.querySelector("h1, h2")?.textContent?.trim() || "";
+      if (heading === "Select Protocol") {
+        context.visibleScreen = "msk-menu";
+        context.protocolId = "";
+      } else if (heading.includes("Clinical References")) {
+        context.visibleScreen = "msk-references";
+        context.protocolId = "";
+      } else {
+        context.visibleScreen = "msk-pathway";
+      }
       try {
-        context.visiblePrompt = typeof currentNodeId !== "undefined" && currentNodeId
+        const nodeId = typeof currentNodeId !== "undefined" && currentNodeId
           ? String(currentNodeId)
           : "";
+        const node = nodeId && typeof currentProtocol !== "undefined" && currentProtocol?.nodes
+          ? currentProtocol.nodes[nodeId]
+          : null;
+        context.visiblePrompt = context.visibleScreen === "msk-pathway" ? nodeId : "";
         context.visitType = typeof visitTypeState !== "undefined" ? String(visitTypeState) : "";
+        context.protocolTitle = typeof currentProtocol !== "undefined"
+          ? String(currentProtocol?.title || "")
+          : "";
+        if (node && context.visibleScreen === "msk-pathway") {
+          context.currentStep = {
+            id: nodeId,
+            type: String(node.type || "question"),
+            question: stripHtml(node.question || node.assessment || node.plan || ""),
+            instruction: stripHtml(node.instruction || ""),
+            answers: Array.isArray(node.options)
+              ? node.options.slice(0, 20).map((option, index) => ({
+                  index,
+                  text: stripHtml(option.text || ""),
+                  destination: typeof option.next === "string" ? option.next : ""
+                }))
+              : [],
+            pathwayHistory: typeof clinicalHistory !== "undefined" && Array.isArray(clinicalHistory)
+              ? clinicalHistory.slice(-20).map((item) => stripHtml(item))
+              : []
+          };
+        }
       } catch (_) {
         context.visiblePrompt = "";
       }
     }
+
+    context.stepSignature = [
+      context.activeTool,
+      context.protocolId,
+      context.currentStep?.id || context.visibleScreen,
+      context.visitType || ""
+    ].join(":");
 
     return context;
   }
@@ -814,8 +913,8 @@
       return {
         label: "ADTMC+ Home",
         prompts: [
-          ["Find an ADTMC pathway", "Help me find the closest ADTMC pathway for a nonspecific case. Use only the loaded code."],
-          ["Find an MSK pathway", "Help me find the closest MSK pathway for a nonspecific case. Use only the loaded code."]
+          ["Find an ADTMC pathway", "Help me find the closest ADTMC pathway for a nonspecific case. Use only the loaded algorithms."],
+          ["Find an MSK pathway", "Help me find the closest MSK pathway for a nonspecific case. Use only the loaded algorithms."]
         ]
       };
     }
@@ -825,8 +924,8 @@
         return {
           label: "ADTMC · Protocol Menu",
           prompts: [
-            ["Find the right pathway", "Help me find the closest ADTMC pathway for a nonspecific case. Use only the loaded code."],
-            ["Review coded red flags", "Help me locate the ADTMC pathway with the relevant coded red flags. Do not add medical knowledge."]
+            ["Find the right pathway", "Help me find the closest ADTMC pathway for a nonspecific case. Use only the loaded algorithms."],
+            ["Review algorithm red flags", "Help me locate the ADTMC pathway with the relevant algorithm red flags. Do not add medical knowledge."]
           ]
         };
       }
@@ -835,8 +934,8 @@
         return {
           label: "ADTMC · All Red Flags",
           prompts: [
-            ["Summarize this screen", "Summarize the ADTMC red-flag screen I am viewing. Use only the loaded code."],
-            ["Find the matching pathway", "Help me find the matching ADTMC pathway for a nonspecific red-flag question. Use only the loaded code."]
+            ["Summarize this screen", "Summarize the ADTMC red-flag screen I am viewing. Use only the loaded algorithms."],
+            ["Find the matching pathway", "Help me find the matching ADTMC pathway for a nonspecific red-flag question. Use only the loaded algorithms."]
           ]
         };
       }
@@ -851,14 +950,21 @@
           : context.visiblePrompt
             ? "Current Question"
             : "Protocol";
+      const prompts = context.visibleScreen === "disposition-screen"
+        ? [
+            ["Summarize this result", `Summarize the ADTMC ${protocolLabel} result on the current page using only the loaded algorithm.`],
+            ["Explain this plan", `Explain the ADTMC ${protocolLabel} plan displayed on the current page without adding outside medical knowledge.`],
+            ["Review the pathway", `Review the ADTMC ${protocolLabel} pathway that led to this result using only the current page and loaded algorithm.`]
+          ]
+        : [
+            ["Guide me through this step", `Walk me through the current ADTMC ${protocolLabel} step. Explain the question and visible choices, but do not choose an answer or move the page.`],
+            ["Explain these answers", `Explain the visible answers for the current ADTMC ${protocolLabel} step using only the loaded algorithm. Do not choose one for me.`],
+            ["What does each answer lead to?", `Explain what each visible answer on the current ADTMC ${protocolLabel} step leads to. Stay inside the loaded algorithm and do not select an answer.`]
+          ];
 
       return {
         label: `ADTMC ${protocolLabel} · ${stage}`,
-        prompts: [
-          ["Summarize this screen", `Summarize the ADTMC ${protocolLabel} screen I am viewing. Use only the loaded code and current page state.`],
-          ["What does the algorithm say next?", `Using only ADTMC ${protocolLabel} and the current page state, what is the coded next step? Do not select an answer for me.`],
-          ["Show coded red flags", `Show the coded red flags for ADTMC ${protocolLabel} and offer to open that section. Use only the loaded code.`]
-        ]
+        prompts
       };
     }
 
@@ -869,7 +975,7 @@
         return {
           label: "MSK · Protocol Menu",
           prompts: [
-            ["Find the right pathway", "Help me find the closest MSK pathway for a nonspecific case. Use only the loaded code."],
+            ["Find the right pathway", "Help me find the closest MSK pathway for a nonspecific case. Use only the loaded algorithms."],
             ["Open clinical references", "Open the MSK clinical references without changing any pathway selections."]
           ]
         };
@@ -878,8 +984,8 @@
         return {
           label: "MSK · Clinical References",
           prompts: [
-            ["Summarize this screen", "Summarize how the loaded MSK code uses the references on this screen. Do not add outside medical knowledge."],
-            ["Return to a pathway", "Help me find the closest MSK pathway using only the loaded code."]
+            ["Summarize this screen", "Summarize how the loaded MSK algorithms use the references on this screen. Do not add outside medical knowledge."],
+            ["Return to a pathway", "Help me find the closest MSK pathway using only the loaded algorithms."]
           ]
         };
       }
@@ -892,14 +998,22 @@
         : context.visitType
           ? `${titleCaseIdentifier(context.visitType)} Consult`
           : "Pathway";
+      const isEndpoint = context.currentStep?.type === "endpoint";
+      const prompts = isEndpoint
+        ? [
+            ["Summarize this result", `Summarize the current MSK ${protocolName} result using only the loaded algorithm.`],
+            ["Explain this plan", `Explain the plan on the current MSK ${protocolName} result without adding outside medical knowledge.`],
+            ["Review the pathway", `Review the MSK ${protocolName} pathway that led to this result using only the current page and loaded algorithm.`]
+          ]
+        : [
+            ["Guide me through this step", `Walk me through the current MSK ${protocolName} step. Explain the question and visible choices, but do not choose an answer or move the page.`],
+            ["Explain these answers", `Explain the visible answers for the current MSK ${protocolName} step using only the loaded algorithm. Do not choose one for me.`],
+            ["What does each answer lead to?", `Explain what each visible answer on the current MSK ${protocolName} step leads to. Stay inside the loaded algorithm and do not select an answer.`]
+          ];
 
       return {
         label: `MSK ${protocolName} · ${stage}`,
-        prompts: [
-          ["Summarize this screen", `Summarize the MSK ${protocolName} screen I am viewing. Use only the loaded code and current page state.`],
-          ["What does the algorithm say next?", `Using only the MSK ${protocolName} code and current page state, what is the coded next step? Do not select an answer for me.`],
-          ["Open clinical references", "Open the MSK clinical references without changing any pathway selections."]
-        ]
+        prompts
       };
     }
 
@@ -931,16 +1045,21 @@
   function buildRequestPayload(question) {
     const ranked = rankAlgorithms(question);
     const candidates = ranked.map(({ entry }) => entry);
-    const activeProtocolId = getActiveProtocolId();
-    const activeEntry = state.entries.find((entry) => entry.id === activeProtocolId);
-    if (activeEntry && !candidates.some((entry) => entry.id === activeEntry.id)) {
+    const pageContext = getPageContext();
+    const activeTool = pageContext.activeTool === "adtmc-app" ? "adtmc" : "msk";
+    const activeEntry = state.entries.find((entry) => (
+      entry.tool === activeTool && entry.id === pageContext.protocolId
+    ));
+    if (activeEntry && !candidates.some((entry) => (
+      entry.tool === activeEntry.tool && entry.id === activeEntry.id
+    ))) {
       candidates.push(activeEntry);
     }
 
     return {
       question,
       history: state.history.slice(-MAX_HISTORY_MESSAGES),
-      pageContext: getPageContext(),
+      pageContext,
       algorithmContext: {
         catalog: state.entries.map((entry) => ({
           tool: entry.tool,
@@ -969,7 +1088,7 @@
     body.appendChild(lead);
     const intro = document.createElement("p");
     intro.textContent = reason ||
-      "I can still locate likely coded pathways, but I cannot interpret the case.";
+      "I can still locate likely pathways, but I cannot interpret the case.";
     body.appendChild(intro);
 
     const matches = rankAlgorithms(question, 3);
@@ -1070,7 +1189,7 @@
 
       renderStructuredResult(pendingBody, data.result);
       state.history.push({ role: "assistant", text: resultToHistoryText(data.result) });
-      setStatus("Ready — code-grounded clinical guidance", "ready");
+      setStatus("Ready — algorithm-guided clinical support", "ready");
     } catch (error) {
       const reason = error?.name === "AbortError"
         ? "The clinical AI request timed out. Local matching can only locate likely pathways."
