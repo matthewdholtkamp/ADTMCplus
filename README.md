@@ -1,13 +1,22 @@
 # ADTMC+ Medic Support Tool
 
-**ADTMC+** is a unified, offline-capable clinical decision support application designed specifically for military medical personnel. It combines the **ADTMC Triage Assistant** and the **MSK Screening Tool** into a single, high-performance web application.
+**ADTMC+** is a unified, offline-capable clinical decision support application designed specifically for military medical personnel. It combines the **ADTMC Triage Assistant**, the **MSK Screening Tool**, and the **Male Hypogonadism Evaluation** tool into a single, high-performance web application.
 
 ## Features
-* **Standalone Architecture**: The entire application (HTML, CSS, JavaScript, and fonts) is bundled into a single `index.html` file (~1.2MB), allowing it to run completely offline without external dependencies.
+* **Standalone Architecture**: The entire application (HTML, CSS, JavaScript, and fonts) is bundled into a single `index.html` file (~1.3MB), allowing it to run completely offline without external dependencies.
 * **Session Isolation**: Automatically resets all clinical forms and symptom checkboxes when navigating between tools, preventing cross-patient data leakage in shared clinical environments.
 * **Print-Optimized**: Features a dedicated stylesheet for printing. Printing a disposition screen automatically hides navigation menus, sidebars, and non-essential UI elements to generate a clean, SOAP-note-ready document.
 * **Section 508 Compliant**: Includes ARIA landmarks, skip-to-content links, focus-visible indicators, and optimized touch targets for accessibility.
-* **Ask Dr. Holtkamp Clinical Navigator**: A read-only clinical AI drawer that uses only the ADTMC+ and MSK algorithms loaded from this repository. It can explain coded guidance and open the matching pathway without selecting answers or changing clinical state.
+* **Ask Dr. Holtkamp Clinical Navigator**: A read-only clinical AI drawer that uses only the algorithms loaded from this repository. It can explain coded guidance and open the matching ADTMC or MSK pathway without selecting answers or changing clinical state. Hypogonadism algorithm content is readable by the navigator; direct navigation to it requires the Worker's navigation schema to be extended.
+
+## Male Hypogonadism Evaluation
+
+Reproduces **Algorithm 1 — Evaluation of Male Hypogonadism** from the DHA/Department of War clinical guidance for testosterone deficiency. The pathway covers both zones of the published algorithm:
+
+* **Mandated universal screening** — annual PHA immunoassay total testosterone for male ADSMs aged 30 and older (threshold < 300 ng/dL), including the PHA symptom-screening branch for normal results.
+* **Targeted screening** — LC/MS confirmatory testing (threshold < 300 ng/dL), with the low-SHBG risk-factor gate selecting either the 2-component or 3-component precision panel.
+
+Diagnosis requires **both** clinical symptoms and laboratory results; the tool enforces this and routes lab-positive/symptom-negative cases to a separate endpoint. Pseudohypogonadism (low total T with normal free T) is called out as its own endpoint with TRT explicitly not recommended. **Algorithm 2 (Management)**, TRT contraindications, and the informed-consent Patient Agreement are included as read-only reference panels at the diagnostic endpoint, not as click-through pathways.
 
 ## Clinical AI Privacy Boundary
 

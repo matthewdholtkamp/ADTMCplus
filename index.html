@@ -122,7 +122,8 @@
 
         /* ===== UNIFIED HEADER STYLE ===== */
         #adtmc-app > header,
-        #msk-app > header {
+        #msk-app > header,
+        #hypo-app > header {
             background-color: var(--army-black) !important;
             border-bottom: 3px solid var(--army-gold);
         }
@@ -302,25 +303,30 @@
         /* ===== MSK MINOR TWEAKS ===== */
 
         /* MSK header already good, ensure border matches */
-        #msk-app header {
+        #msk-app header,
+        #hypo-app header {
             border-bottom: 3px solid var(--army-gold) !important;
         }
 
         /* MSK decision point cards → unified border-top */
-        #msk-app .border-t-4.border-army {
+        #msk-app .border-t-4.border-army,
+        #hypo-app .border-t-4.border-army {
             border-top-color: var(--army-green) !important;
         }
 
         /* MSK option buttons → match unified style */
-        #msk-app .hover\:bg-army:hover {
+        #msk-app .hover\:bg-army:hover,
+        #hypo-app .hover\:bg-army:hover {
             background-color: var(--army-green) !important;
         }
 
         /* MSK copy button → ensure consistent */
-        #msk-app .bg-army {
+        #msk-app .bg-army,
+        #hypo-app .bg-army {
             background-color: var(--army-green) !important;
         }
-        #msk-app .hover\:bg-army-dark:hover {
+        #msk-app .hover\:bg-army-dark:hover,
+        #hypo-app .hover\:bg-army-dark:hover {
             background-color: var(--army-dark) !important;
         }
 
@@ -343,7 +349,7 @@
     .bg-gray-50, pre { border: 1px solid #ccc !important; box-shadow: none !important; }
     #disposition-screen > div { border-top: 3px solid #333 !important; }
     pre { font-size: 11px !important; }
-    #msk-app .bg-gray-50 { page-break-inside: avoid; }
+    #msk-app .bg-gray-50, #hypo-app .bg-gray-50 { page-break-inside: avoid; }
   }
   .print-btn {
     display: inline-flex; align-items: center; gap: 0.375rem;
@@ -365,8 +371,8 @@
     cursor: pointer;
   }
   /* Touch targets (min 44x44) */
-  #adtmc-app button, #msk-app button,
-  #adtmc-app .protocol-card, #msk-app .protocol-card {
+  #adtmc-app button, #msk-app button, #hypo-app button,
+  #adtmc-app .protocol-card, #msk-app .protocol-card, #hypo-app .protocol-card {
     min-height: 44px;
   }
   /* Responsive fixes */
@@ -374,10 +380,10 @@
     .landing-hero h1 { font-size: 2rem !important; }
     .tool-card { padding: 1.5rem 1.25rem !important; }
     .tool-icon-bg { width: 56px !important; height: 56px !important; font-size: 1.5rem !important; }
-    #adtmc-app main, #msk-app main { padding: 1rem !important; }
+    #adtmc-app main, #msk-app main, #hypo-app main { padding: 1rem !important; }
     #adtmc-app #decision-buttons { flex-direction: column !important; }
     #adtmc-app #decision-buttons button { width: 100% !important; }
-    #msk-app .grid { grid-template-columns: 1fr !important; }
+    #msk-app .grid, #hypo-app .grid { grid-template-columns: 1fr !important; }
     pre { font-size: 0.75rem !important; }
   }
   @media (max-width: 480px) {
@@ -396,7 +402,7 @@
     font-weight: 700; text-align: center; z-index: 10000;
   }
 </style>
-<link rel="stylesheet" href="./ask-dr-holtkamp.css?v=20260628-guided1">
+<link rel="stylesheet" href="./ask-dr-holtkamp.css?v=20260814-hypo1">
 </head>
 <body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
     <a href="#content-area" class="skip-link">Skip to main content</a>
@@ -405,8 +411,8 @@
       <div style="background:white;border-radius:1rem;max-width:32rem;width:100%;padding:2rem;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
         <div style="text-align:center;margin-bottom:1.5rem;">
           <div style="font-size:2.5rem;color:#c5a44e;margin-bottom:0.5rem;">&#9733;</div>
-          <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin:0 0 0.25rem;">ADTMC+ v1.0.0</h2>
-          <p style="font-size:0.75rem;color:#6b7280;margin:0;">Build 2026-05-03 &bull; 5ff0dc3a</p>
+          <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin:0 0 0.25rem;">ADTMC+ v1.1.0</h2>
+          <p style="font-size:0.75rem;color:#6b7280;margin:0;">Build 2026-08-14 &bull; a7f21c94</p>
         </div>
         <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:0.5rem;padding:1rem;margin-bottom:1.5rem;">
           <p style="font-size:0.8125rem;color:#991b1b;font-weight:600;margin:0 0 0.5rem;">⚠ Clinical Use Disclaimer</p>
@@ -428,7 +434,7 @@
                 <p class="text-lg text-gray-300 font-light tracking-wider uppercase cursor-default select-none">Medic Support Tool</p>
                 <div class="mt-4 w-24 h-0.5 mx-auto rounded" style="background: linear-gradient(90deg, transparent, #c5a44e, transparent);"></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl w-full px-4 slide-in" style="animation-delay: 0.15s;">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl w-full px-4 slide-in" style="animation-delay: 0.15s;">
                 <div class="tool-card" onclick="navigateTo('adtmc')" id="card-adtmc">
                     <div class="tool-icon-bg" style="background: rgba(197, 164, 78, 0.15);">
                         <i class="fa-solid fa-clipboard-list" style="color: #c5a44e;"></i>
@@ -446,6 +452,17 @@
                     </div>
                     <h2 class="text-xl font-bold text-white mb-2">MSK Screening Tool</h2>
                     <p class="text-gray-400 text-sm leading-relaxed">Musculoskeletal screening and referral decision support. Navigate clinical algorithms for neck, hip, knee, shoulder, and more.</p>
+                    <div class="mt-4 flex items-center text-sm font-medium" style="color: #c5a44e;">
+                        <span>Launch Tool</span>
+                        <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </div>
+                </div>
+                <div class="tool-card" onclick="navigateTo('hypo')" id="card-hypo">
+                    <div class="tool-icon-bg" style="background: rgba(197, 164, 78, 0.15);">
+                        <i class="fa-solid fa-heart-pulse" style="color: #c5a44e;"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-white mb-2">Male Hypogonadism Evaluation</h2>
+                    <p class="text-gray-400 text-sm leading-relaxed">Algorithm 1 for testosterone deficiency screening. Interpret PHA screening labs, apply risk factors, and confirm the diagnosis with precision testing.</p>
                     <div class="mt-4 flex items-center text-sm font-medium" style="color: #c5a44e;">
                         <span>Launch Tool</span>
                         <i class="fa-solid fa-arrow-right ml-2"></i>
@@ -616,6 +633,28 @@
         </main>
     </div>
 
+
+    <!-- ==================== HYPOGONADISM APP CONTAINER ==================== -->
+    <div id="hypo-app" role="main" aria-label="Male Hypogonadism Evaluation Tool" class="app-container">
+        <header class="bg-army text-white shadow-md cursor-default select-none">
+            <div class="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+                <div class="flex items-center">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iYmdHcmFkIiBjeD0iMzUlIiBjeT0iMzAlIiByPSI4NSUiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjM0E1QTNBIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iNjAlIiBzdG9wLWNvbG9yPSIjMUYyRDFGIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzBBMTQwQSIvPgogICAgPC9yYWRpYWxHcmFkaWVudD4KCiAgICA8bGluZWFyR3JhZGllbnQgaWQ9ImdvbGRHcmFkIiB4MT0iMjAlIiB5MT0iMCUiIHgyPSI4MCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRTg5QSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjQwJSIgc3RvcC1jb2xvcj0iI0YwQzg0QSIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjgwJSIgc3RvcC1jb2xvcj0iI0M5OTIyMCIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiM4QjYzMTAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJnb2xkSGlnaGxpZ2h0IiB4MT0iNTAlIiB5MT0iMCUiIHgyPSI1MCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIgc3RvcC1vcGFjaXR5PSIwLjU1Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iNTAlIiBzdG9wLWNvbG9yPSIjRkZGRkZGIiBzdG9wLW9wYWNpdHk9IjAiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CgogICAgPGZpbHRlciBpZD0iYmlnR2xvdyIgeD0iLTMwJSIgeT0iLTMwJSIgd2lkdGg9IjE2MCUiIGhlaWdodD0iMTYwJSI+CiAgICAgIDxmZUdhdXNzaWFuQmx1ciBzdGREZXZpYXRpb249IjEwIiByZXN1bHQ9ImJsdXIiLz4KICAgICAgPGZlRmxvb2QgZmxvb2QtY29sb3I9IiNGMEM4NEEiIGZsb29kLW9wYWNpdHk9IjAuNiIvPgogICAgICA8ZmVDb21wb3NpdGUgaW4yPSJibHVyIiBvcGVyYXRvcj0iaW4iLz4KICAgICAgPGZlTWVyZ2U+CiAgICAgICAgPGZlTWVyZ2VOb2RlLz4KICAgICAgICA8ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz4KICAgICAgPC9mZU1lcmdlPgogICAgPC9maWx0ZXI+CgogICAgPGZpbHRlciBpZD0iY3Jvc3NTaGFkb3ciIHg9Ii01MCUiIHk9Ii01MCUiIHdpZHRoPSIyMDAlIiBoZWlnaHQ9IjIwMCUiPgogICAgICA8ZmVHYXVzc2lhbkJsdXIgaW49IlNvdXJjZUFscGhhIiBzdGREZXZpYXRpb249IjMiLz4KICAgICAgPGZlT2Zmc2V0IGR4PSIwIiBkeT0iMyIgcmVzdWx0PSJvZmZzZXRibHVyIi8+CiAgICAgIDxmZUNvbXBvbmVudFRyYW5zZmVyPjxmZUZ1bmNBIHR5cGU9ImxpbmVhciIgc2xvcGU9IjAuNyIvPjwvZmVDb21wb25lbnRUcmFuc2Zlcj4KICAgICAgPGZlTWVyZ2U+CiAgICAgICAgPGZlTWVyZ2VOb2RlLz4KICAgICAgICA8ZmVNZXJnZU5vZGUgaW49IlNvdXJjZUdyYXBoaWMiLz4KICAgICAgPC9mZU1lcmdlPgogICAgPC9maWx0ZXI+CgogICAgPGxpbmVhckdyYWRpZW50IGlkPSJyaW0iIHgxPSIwJSIgeTE9IjAlIiB4Mj0iMCUiIHkyPSIxMDAlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iI0ZGRkZGRiIgc3RvcC1vcGFjaXR5PSIwLjI1Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzAwMDAwMCIgc3RvcC1vcGFjaXR5PSIwLjQiLz4KICAgIDwvbGluZWFyR3JhZGllbnQ+CiAgPC9kZWZzPgoKICA8cmVjdCB4PSIxNiIgeT0iMTYiIHdpZHRoPSI0ODAiIGhlaWdodD0iNDgwIiByeD0iODAiIHJ5PSI4MCIgZmlsbD0idXJsKCNiZ0dyYWQpIi8+CiAgPHJlY3QgeD0iMTYiIHk9IjE2IiB3aWR0aD0iNDgwIiBoZWlnaHQ9IjQ4MCIgcng9IjgwIiByeT0iODAiCiAgICAgICAgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ1cmwoI3JpbSkiIHN0cm9rZS13aWR0aD0iMyIvPgoKICA8ZyBmaWx0ZXI9InVybCgjYmlnR2xvdykiPgogICAgPHBvbHlnb24gcG9pbnRzPSIyNTYuMCw4Ni4wIDMwMy4wLDIwNS4zIDQzMS4wLDIxMy4xIDMzMy4xLDI5NC43IDM2NC4yLDQxOC45IDI1Ni4wLDM1MC4wIDE0Ny44LDQxOC45IDE3OS45LDI5NC43IDgxLjAsMjEzLjEgMjA5LjAsMjA1LjMiCiAgICAgICAgICAgICBmaWxsPSJ1cmwoI2dvbGRHcmFkKSIKICAgICAgICAgICAgIHN0cm9rZT0iIzVBM0QwOCIKICAgICAgICAgICAgIHN0cm9rZS13aWR0aD0iMyIKICAgICAgICAgICAgIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICA8L2c+CgogIDxwb2x5Z29uIHBvaW50cz0iMjU2LjAsODYuMCAzMDMuMCwyMDUuMyA0MzEuMCwyMTMuMSAzMzIuMSwyOTQuNyAzNjQuMiw0MTguOSAyNTYuMCwzNTAuMCAxNDcuOCw0MTguOSAxNzkuOSwyOTQuNyA4MS4wLDIxMy4xIDIwOS4wLDIwNS4zIgogICAgICAgICAgIGZpbGw9InVybCgjZ29sZEhpZ2hsaWdodCkiCiAgICAgICAgICAgY2xpcC1wYXRoPSJpbnNldCgwIDAgNTUlIDApIi8+CgogIDxnIGZpbHRlcj0idXJsKCNjcm9zc1NoYWRvdykiPgogICAgPHJlY3QgeD0iMjM0LjAiIHk9IjIxNi4wIiB3aWR0aD0iNDQiIGhlaWdodD0iMTA4IiByeD0iNiIgZmlsbD0iI0ZGRkZGRiIKICAgICAgICAgIHN0cm9rZT0iI0Q4RDhEOCIgc3Ryb2tlLXdpZHRoPSIxIi8+CiAgICA8cmVjdCB4PSIyMDIuMCIgeT0iMjQ4LjAiIHdpZHRoPSIxMDgiIGhlaWdodD0iNDQiIHJ4PSI2IiBmaWxsPSIjRkZGRkZGIgogICAgICAgICAgc3Ryb2tlPSIjRDhEOEQ4IiBzdHJva2Utd2lkdGg9IjEiLz4KICA8L2c+Cjwvc3ZnPg==" alt="ADTMC+ Logo" class="w-10 h-10 mr-3 shadow-md rounded-[20%]">
+                    <div>
+                        <h1 class="text-xl font-bold uppercase tracking-wider">ADTMC+ <span class="text-sm font-normal opacity-75">Hypogonadism Evaluation</span></h1>
+                        <p class="text-sm text-gray-300">Male Testosterone Deficiency Screening</p>
+                    </div>
+                </div>
+                <button onclick="navigateTo('landing')" class="back-to-home text-white hover:text-army-gold hover:bg-white/10">
+                    <i class="fa-solid fa-house"></i> Home
+                </button>
+            </div>
+        </header>
+        <main class="flex-grow w-full max-w-4xl mx-auto px-4 py-8" id="hypo-app-root">
+            <!-- Content injected by Hypogonadism JS -->
+        </main>
+    </div>
+
     <!-- ==================== NAVIGATION SCRIPT ==================== -->
     <script>
         
@@ -632,6 +671,9 @@
             } else if (view === 'msk') {
                 document.getElementById('msk-app').classList.add('active');
                 if (typeof msk_renderHome === 'function') msk_renderHome();
+            } else if (view === 'hypo') {
+                document.getElementById('hypo-app').classList.add('active');
+                if (typeof hypo_renderHome === 'function') hypo_renderHome();
             }
             
             // Session isolation: reset forms and state
@@ -5065,10 +5107,898 @@ P: ${plan}
         // Initialize MSK on first load (but don't render since container is hidden)
         // msk_renderHome() will be called by navigateTo('msk')
     </script>
-    <script src="./ask-dr-holtkamp.js?v=20260628-guided1"></script>
+
+    <!-- ==================== HYPOGONADISM APPLICATION SCRIPT ==================== -->
+    <script>
+
+        // --- CLINICAL REFERENCES & TOOLS (Male Hypogonadism) ---
+        const hypoClinicalTools = {
+
+            hypoSpecimenRules: {
+                title: "Specimen Requirements — Total Testosterone",
+                collapsible: false,
+                content: `
+                    <div class="bg-white p-4 rounded-lg border-2 border-red-300 shadow-sm text-sm text-gray-800">
+                        <ul class="list-none space-y-5">
+                            <li>
+                                <h4 class="font-bold text-red-800 text-base mb-1">Required Draw Conditions</h4>
+                                <ul class="list-disc pl-6 space-y-1">
+                                    <li><strong>Fasting</strong> &mdash; 6 to 12 hours</li>
+                                    <li><strong>Time-limited</strong> &mdash; drawn between 0700 and 1000</li>
+                                    <li>Patient <strong>not acutely ill</strong>, sleep-deprived, or overly fatigued</li>
+                                </ul>
+                                <p class="mt-2 text-gray-700">Total testosterone levels fluctuate up to <strong>20% lower</strong> later in the day. Testing outside these conditions is not interpretable for screening.</p>
+                            </li>
+                            <li>
+                                <h4 class="font-bold text-red-800 text-base mb-1">Shift Workers</h4>
+                                <p class="text-gray-700">If the Service Member works non-traditional night/swing shifts, testing should occur as close to baseline circadian rhythm as possible with adequate rest/sleep.</p>
+                                <p class="text-gray-700 mt-1"><em>Example:</em> night shift ending at 0700 with the SM resting/sleeping until 1500&ndash;1600 &rarr; draw labs as close to 1600&ndash;1700 as possible.</p>
+                            </li>
+                            <li>
+                                <h4 class="font-bold text-red-800 text-base mb-1">Before Interpreting a Low Result</h4>
+                                <ul class="list-disc pl-6 space-y-1">
+                                    <li>Rule out exogenous anabolic steroid use</li>
+                                    <li>Consider sleep deprivation and obstructive sleep apnea &mdash; retest with 7&ndash;9 hours of sleep</li>
+                                    <li>Review medications that suppress testosterone (see Clinical Assessment reference)</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                `
+            },
+
+            hypoThresholds: {
+                title: "Diagnostic Thresholds & Reference Ranges",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b-2 border-gray-300">
+                                        <th class="py-2 pr-3 font-bold">Measure</th>
+                                        <th class="py-2 pr-3 font-bold">Threshold</th>
+                                        <th class="py-2 font-bold">Source / Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="align-top">
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Total T &mdash; immunoassay (screening)</td>
+                                        <td class="py-2 pr-3 font-semibold">&lt; 300 ng/dL</td>
+                                        <td class="py-2">AUA definition of testosterone deficiency</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Total T &mdash; LC/MS (confirmatory)</td>
+                                        <td class="py-2 pr-3 font-semibold">&lt; 300 ng/dL</td>
+                                        <td class="py-2">Set to maintain consistency with DoW clinical guidance</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Normal screening range</td>
+                                        <td class="py-2 pr-3 font-semibold">300&ndash;900 ng/dL</td>
+                                        <td class="py-2">Reference ranges vary by assay &mdash; refer to the range reported with the result</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Abnormally high total T</td>
+                                        <td class="py-2 pr-3 font-semibold">&gt; 900 ng/dL</td>
+                                        <td class="py-2">Requires additional workup by PCM or specialty care</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 pr-3">Free testosterone &mdash; lower limit of normal</td>
+                                        <td class="py-2 pr-3 font-semibold">53&ndash;216 pg/mL</td>
+                                        <td class="py-2">Reference range not fully established</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
+                            <p><strong>Note:</strong> Total T &lt; 300 or &gt; 900 ng/dL is abnormal. This algorithm is intended to evaluate <strong>low</strong> testosterone levels. Any abnormally high total testosterone requires separate workup.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoPhaScreening: {
+                title: "PHA Screening Questions for Low Testosterone",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <p class="mb-3">The Periodic Health Assessment (<strong>DD Form 3024</strong>) has been modified to include the following screening questions for testosterone deficiency:</p>
+                            <ol class="list-decimal pl-6 space-y-2">
+                                <li>Have you experienced <strong>diminished physical and work performance, reduced endurance, and/or reduced lean muscle mass</strong>?</li>
+                                <li>Have you experienced <strong>brain fog</strong> or had trouble concentrating, remembering things, or organizing your thoughts?</li>
+                                <li>Have you experienced a <strong>decrease in your sexual health or interest</strong>?</li>
+                            </ol>
+                        </div>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg">
+                            <p><strong>Population:</strong> Male ADSMs aged 30 and older receive annual laboratory testing as part of the PHA. Male ADSMs aged 29 and under may be screened if desired.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoLowTCauses: {
+                title: "Clinical Assessment — Signs, Symptoms & Conditions That Lower Total Testosterone",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Signs & Symptoms of Testosterone Deficiency</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Diminished physical/work performance, reduced endurance, reduced lean muscle mass</li>
+                                <li>Cognitive complaints &mdash; "brain fog," poor concentration, memory difficulty</li>
+                                <li>Decreased libido, reduced sexual interest or function</li>
+                                <li>Fatigue, low mood or mild depressive symptoms</li>
+                                <li>Decreased bone density; mild anemia</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Reversible & Secondary Causes to Address First</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li><strong>Medications:</strong> opioids, glucocorticoids, and agents causing hyperprolactinemia &mdash; discontinue the offending agent, if possible, prior to starting any TRT</li>
+                                <li><strong>Exogenous anabolic steroid use</strong> &mdash; must be ruled out before TRT</li>
+                                <li><strong>Sleep deprivation</strong> &mdash; retest after 7&ndash;9 hours of sleep</li>
+                                <li><strong>Obstructive sleep apnea</strong> &mdash; positive STOP-BANG score warrants sleep study referral and/or CBT for insomnia</li>
+                                <li><strong>Obesity / insulin resistance / diabetes</strong> &mdash; lower SHBG and total testosterone</li>
+                                <li><strong>Acute illness, overtraining, or excessive fatigue</strong> at time of draw</li>
+                            </ul>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
+                            <p><strong>Diagnosis requires BOTH</strong> clinical symptoms <strong>and</strong> laboratory results. Laboratory abnormality alone does not establish hypogonadism.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoRiskFactorDetail: {
+                title: "Low SHBG Risk Factors — Why They Change the Panel",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Risk Factors</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li><strong>Body Mass Index &ge; 27</strong></li>
+                                <li><strong>Diabetes</strong></li>
+                                <li><strong>Borderline total T &lt; 350 ng/dL with clinical symptoms</strong></li>
+                            </ul>
+                            <p class="mt-3 text-gray-700">The DHA narrative guidance describes the borderline band as a total testosterone of <strong>200&ndash;400 ng/dL</strong> on LC/MS; Algorithm 1 states <strong>&lt; 350 ng/dL with clinical symptoms</strong>. Either framing selects the same patients for the expanded panel.</p>
+                        </div>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg">
+                            <p><strong>Rationale:</strong> Obesity and insulin resistance lower Sex Hormone-Binding Globulin (SHBG), possibly through hepatic fat accumulation. Low SHBG produces a <em>low total</em> testosterone with a <em>normal free</em> testosterone &mdash; pseudohypogonadism. Free testosterone must be measured in these patients or they will be misdiagnosed.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoPrecisionPanel2: {
+                title: "Precision Laboratory Testing — 2 Components (No Risk Factors)",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Order Both Components</h4>
+                            <ol class="list-decimal pl-6 space-y-2">
+                                <li><strong>Luteinizing Hormone (LH) and Follicle-Stimulating Hormone (FSH)</strong></li>
+                                <li><strong>Fasting morning total testosterone by mass spectrometry (LC/MS)</strong> &mdash; repeat</li>
+                            </ol>
+                            <p class="mt-3 text-gray-700">Confirmatory testing is analyzed via Liquid Chromatography-Tandem Mass Spectrometry using <strong>CDC Hormone Standardization Program (HoSt) certified</strong> reference laboratories. Obtain LH and FSH concurrently with the confirmatory total testosterone.</p>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
+                            <p>Same specimen rules apply: fasting &gt; 6 hours, drawn 0700&ndash;1000, patient not ill/sleep-deprived/fatigued.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoPrecisionPanel3: {
+                title: "Precision Laboratory Testing — 3 Components (Risk Factors Present)",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Order All Components</h4>
+                            <ol class="list-decimal pl-6 space-y-2">
+                                <li><strong>Luteinizing Hormone (LH) and Follicle-Stimulating Hormone (FSH)</strong></li>
+                                <li><strong>Fasting morning total testosterone by LC/MS with free testosterone by equilibrium dialysis (EqD)</strong>, <em>or</em></li>
+                                <li><strong>Fasting morning total testosterone by LC/MS with calculated free testosterone</strong> (requires SHBG and albumin)</li>
+                            </ol>
+                            <p class="mt-3 text-gray-700">Both free testosterone options are <strong>send-out labs</strong>. For calculated free testosterone, order LC/MS total testosterone, SHBG, and albumin together.</p>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
+                            <p>Same specimen rules apply: fasting &gt; 6 hours, drawn 0700&ndash;1000, patient not ill/sleep-deprived/fatigued.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoResultPatterns: {
+                title: "Interpreting the Confirmatory Panel",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b-2 border-gray-300">
+                                        <th class="py-2 pr-3 font-bold">Total T</th>
+                                        <th class="py-2 pr-3 font-bold">Free T</th>
+                                        <th class="py-2 font-bold">Interpretation</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="align-top">
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Normal</td>
+                                        <td class="py-2 pr-3">Not obtained</td>
+                                        <td class="py-2">No further testing required</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Normal</td>
+                                        <td class="py-2 pr-3">Normal</td>
+                                        <td class="py-2">No further testing required</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Low</td>
+                                        <td class="py-2 pr-3">Normal</td>
+                                        <td class="py-2"><strong>Pseudohypogonadism</strong> &mdash; no further testing; TRT not recommended</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Low</td>
+                                        <td class="py-2 pr-3">Not obtained</td>
+                                        <td class="py-2">Meets laboratory criteria (total T only)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Low</td>
+                                        <td class="py-2 pr-3">Low</td>
+                                        <td class="py-2">Meets laboratory criteria</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 pr-3">Normal</td>
+                                        <td class="py-2 pr-3">Low</td>
+                                        <td class="py-2">Meets laboratory criteria</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
+                            <p>Laboratory criteria alone do not establish the diagnosis. <strong>Clinical symptoms must also be present.</strong></p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoManagementPreview: {
+                title: "Algorithm 2 — Management of Male Hypogonadism (Next Steps)",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg">
+                            <p>This tool reproduces <strong>Algorithm 1 (Evaluation)</strong>. The content below is Algorithm 2, provided as reference only &mdash; it is not a click-through pathway.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Step 1 — Determine Etiology from LH / FSH</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li><strong>LH and FSH elevated &rarr; Primary hypogonadism.</strong> Consider karyotyping for Klinefelter syndrome. Refer to urology or endocrinology based on locally available services. Specialty care initiates life-long TRT.</li>
+                                <li><strong>LH and FSH low or inappropriately normal &rarr; Secondary hypogonadism.</strong> Proceed to the secondary workup below.</li>
+                            </ul>
+                            <p class="mt-2 text-gray-700">Perform focused physical examination including testicular volume (Prader orchidometer if available). Normal volume &ge; 15 mL; volume &le; 12 mL is abnormal.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Step 2 — Secondary Hypogonadism Workup</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Physical exam for Cushing syndrome (skin striae) and testicular atrophy</li>
+                                <li>Fasting serum prolactin, free thyroxine (T4), and TSH</li>
+                                <li>Complete blood count (CBC) or hematocrit</li>
+                                <li>Serum iron saturation and ferritin if age &le; 50 or history of multiple transfusions</li>
+                                <li>PSA for males age &gt; 40</li>
+                                <li><strong>Sella MRI</strong> if panhypopituitarism, persistently elevated fasting prolactin, total T &le; 150 ng/dL, visual field defects, or worsening headaches</li>
+                            </ul>
+                            <p class="mt-2 text-gray-700">Evaluate for reversible causes (sleep deprivation, obstructive sleep apnea); consider referral for lifestyle modification education as clinically indicated.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Step 3 — Disposition</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li><strong>Abnormal results</strong> &rarr; refer to specialty care as indicated</li>
+                                <li><strong>Normal results, BMI &ge; 27</strong> &rarr; obesity-induced secondary hypogonadism. Weight loss (&gt; 5&ndash;10% body weight) for 3&ndash;6 months; may consider trial TRT for 3&ndash;6 months concurrently following informed consent. <em>Stop TRT if no improvement of symptoms.</em></li>
+                                <li><strong>Normal results, BMI &lt; 27</strong> &rarr; refer to urology or endocrinology based on locally available services</li>
+                                <li><strong>Fertility desired?</strong> Yes &rarr; refer to urology. TRT is contraindicated in men actively involved in fertility planning; alternatives that preserve spermatogenesis include clomiphene and hCG.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Monitoring, If TRT Is Initiated</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Titrate to the minimal dose restoring total T to mid-normal range (<strong>450&ndash;600 ng/dL</strong>)</li>
+                                <li>Clinical follow-up at <strong>3 months</strong> to assess symptom response</li>
+                                <li>Total testosterone and hematocrit at <strong>3 and 6 months</strong> after initiation or dose modification, then <strong>annually</strong></li>
+                                <li>Discontinue or reduce dose if hematocrit exceeds <strong>54%</strong> or adverse events develop</li>
+                                <li>Baseline PSA at age 40+, then annually by shared decision-making; refer to urology if PSA &gt; 3</li>
+                                <li>If target levels achieved without symptom improvement, TRT may be discontinued and other etiologies investigated</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoContraindications: {
+                title: "Contraindications to TRT",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border-2 border-red-300">
+                            <h4 class="font-bold text-red-800 text-base mb-2">Absolute Contraindications</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Breast cancer (male or female)</li>
+                                <li>Metastatic/active prostate cancer, unevaluated prostate nodule, or <strong>PSA &gt; 3 ng/mL</strong></li>
+                                <li>Pregnancy (women)</li>
+                                <li>Hypersensitivity to any component of the formulation</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-yellow-700 text-base mb-2">Relative Contraindications</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li><strong>Hematocrit &gt; 50%</strong></li>
+                                <li>Myocardial infarction / acute coronary syndrome or stroke within the past 6 months</li>
+                                <li>Uncontrolled heart failure</li>
+                                <li>Active fertility planning</li>
+                                <li>Severe lower urinary tract symptoms</li>
+                                <li>Thrombophilia / history of venous thromboembolism</li>
+                                <li>Untreated obstructive sleep apnea</li>
+                                <li>Untreated arrhythmia / atrial fibrillation</li>
+                                <li>Pregnant females exposed to topical formulations &mdash; may be teratogenic</li>
+                            </ul>
+                            <p class="mt-3 text-gray-700">Additional precautions are formulation-specific and should be evaluated prior to prescribing: hepatic or renal impairment, hypercalcemia, mental health conditions.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoConsentSummary: {
+                title: "Informed Consent — Patient Agreement for Testosterone Therapy (Appendix 1)",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg">
+                            <p>Informed consent is required <strong>before initiating TRT</strong> (Algorithm 2). Summarized here for reference &mdash; use the official <em>Patient Agreement for Testosterone Therapy</em> form for signature.</p>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Risks Requiring Documented Counseling</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Infertility (potentially permanent)</li>
+                                <li>Arrhythmia; venous thromboembolism; possible increased risk of MACE</li>
+                                <li>Polycythemia / elevated hematocrit, especially with injections</li>
+                                <li>Lower urinary tract symptoms; acute kidney injury; increased risk of fractures</li>
+                                <li>Prostate enlargement; possible increased risk of prostate cancer including PSA rise</li>
+                                <li>Breast tenderness or enlargement (permanent unless surgically removed)</li>
+                                <li>Mood changes or irritability; male pattern hair loss; acne; high blood pressure</li>
+                                <li>Testicular atrophy (up to 30% volume loss)</li>
+                                <li>Transference to others/family and virilization of women or children with topical products</li>
+                                <li>Application/injection site reactions; injury to muscle, blood vessel, or nerve</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Patient Agreement Terms</h4>
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Follow the prescribed dose, schedule, and route exactly; do not self-adjust</li>
+                                <li>Safeguard medication from loss or theft &mdash; early or additional refills will not be authorized</li>
+                                <li>Do not sell, share, or distribute &mdash; testosterone is a DEA controlled substance; storage in a lockbox or safe is recommended</li>
+                                <li>Participate in all required hormone lab testing &mdash; failure will result in termination of therapy</li>
+                                <li>Follow up in clinic at least every 6 months, or more frequently as required</li>
+                                <li>Target testosterone level is <strong>450&ndash;600 ng/dL</strong> per AUA guidelines; supraphysiologic levels will not be pursued</li>
+                                <li>If no clinical improvement in 3&ndash;4 months, agree to discontinue</li>
+                                <li>Report adverse effects; do not obtain testosterone from any other source</li>
+                            </ul>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
+                            <p><strong>TRICARE does not cover sperm banking or fertility treatments.</strong> Men with any potential desire for future fertility are not recommended to take exogenous testosterone, but are candidates for alternative therapies.</p>
+                        </div>
+                    </div>
+                `
+            },
+
+            hypoDtcWarning: {
+                title: "Direct-to-Consumer TRT & Dietary Supplements",
+                content: `
+                    <div class="space-y-3 text-sm text-gray-800">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <ul class="list-disc pl-6 space-y-1">
+                                <li>Direct-to-consumer TRT and "testosterone booster" supplements increase the risk of inaccurate diagnosis, diversion, and overdose</li>
+                                <li>ADSMs should be strongly discouraged from obtaining TRT from these sources, outside compounding pharmacies, or supplements &mdash; concerns include purity, contaminants, unreliable bioavailability, prohibited ingredients, and dose variance</li>
+                                <li>ADSMs can be <strong>prosecuted</strong> if they test positive on urinalysis for substances on the DoW drug testing panel or the DoD Prohibited Dietary Supplement Ingredients List, per DoDI 6130.06</li>
+                                <li>Operation Supplement Safety (OPSS) provides educational materials for providers and patients</li>
+                            </ul>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        // --- ALGORITHM 1: EVALUATION OF MALE HYPOGONADISM ---
+        const hypoAlgorithms = {
+            male_hypogonadism: {
+                title: "Evaluation of Male Hypogonadism",
+                nodes: {
+                    visit_type: {
+                        question: "Male Hypogonadism Evaluation: Select the reason for today's encounter.",
+                        instruction: "Algorithm 1 — Evaluation of Male Hypogonadism (DHA / Department of War clinical guidance).",
+                        options: [
+                            { text: "Mandated Universal Screening (male ADSM ≥ 30 y/o, annual PHA)", onSelect: () => { hypoScreenState = 'universal'; }, next: "specimen_check", soap: "Visit Type: Mandated universal annual PHA testosterone screening, male ADSM ≥ 30 y/o." },
+                            { text: "Optional Screening (ADSM < 30 y/o, by request)", onSelect: () => { hypoScreenState = 'optional'; }, next: "specimen_check", soap: "Visit Type: Optional testosterone screening requested by ADSM < 30 y/o." },
+                            { text: "Follow-Up (reviewing confirmatory LC/MS precision labs)", onSelect: () => { hypoScreenState = 'confirm'; }, next: "confirm_symptoms", soap: "Visit Type: Follow-up to review confirmatory precision (LC/MS) laboratory results." }
+                        ]
+                    },
+
+                    specimen_check: {
+                        question: "Specimen Validity Check: was the total testosterone drawn under the required conditions?",
+                        instruction: "A result drawn outside these conditions is not interpretable for hypogonadism screening.",
+                        tools: ["hypoSpecimenRules"],
+                        options: [
+                            { text: "Yes — fasting, drawn 0700–1000, patient not ill/sleep-deprived/fatigued", next: "initial_t", soap: "Specimen conditions verified: fasting, time-limited draw 0700-1000, patient not acutely ill, sleep-deprived, or fatigued." },
+                            { text: "No — one or more conditions not met", next: "invalid_specimen", soap: "Specimen conditions NOT met for valid interpretation." }
+                        ]
+                    },
+
+                    invalid_specimen: {
+                        question: "Result Not Interpretable: Repeat Under Required Conditions.",
+                        type: "endpoint",
+                        tools: ["hypoSpecimenRules"],
+                        assessment: "Total testosterone obtained outside required specimen conditions; result not interpretable for hypogonadism screening.",
+                        consults: "None at this time",
+                        plan: "• Do not act on the current result\n• Repeat total testosterone: fasting 6-12 hours, drawn 0700-1000\n• Patient must not be acutely ill, sleep-deprived, or overly fatigued at time of draw\n• Shift workers: draw as close to baseline circadian rhythm as possible after adequate rest\n• Re-enter this algorithm with the repeat result"
+                    },
+
+                    initial_t: {
+                        question: "Initial total testosterone (immunoassay) result:",
+                        instruction: "Universal/mandatory total testosterone immunoassay blood testing (fasting, 0700-1000) for male ADSMs ≥ 30 y/o.",
+                        tools: ["hypoThresholds"],
+                        options: [
+                            { text: "Total T < 300 ng/dL (low)", next: "pcm_followup", soap: "Screening immunoassay total testosterone < 300 ng/dL." },
+                            { text: "Total T 300–900 ng/dL (normal)", next: "pha_screen", soap: "Screening immunoassay total testosterone within normal limits (300-900 ng/dL)." },
+                            { text: "Total T > 900 ng/dL (abnormally high)", next: "high_t", soap: "Screening immunoassay total testosterone abnormally elevated (> 900 ng/dL)." }
+                        ]
+                    },
+
+                    high_t: {
+                        question: "Abnormally High Total Testosterone — Outside This Algorithm.",
+                        type: "endpoint",
+                        tools: ["hypoThresholds", "hypoDtcWarning"],
+                        assessment: "Abnormally elevated total testosterone (typically > 900 ng/dL). This algorithm evaluates low testosterone; elevated levels require separate workup.",
+                        consults: "Primary Care Manager; endocrinology or urology as indicated",
+                        plan: "• Additional workup required by PCM or specialty care\n• Confirm against the reference range reported with the specific lab result — ranges vary by assay\n• Assess for exogenous testosterone or anabolic steroid use, including direct-to-consumer and supplement sources\n• Counsel on DoW drug testing panel and DoDI 6130.06 implications if non-prescribed use is suspected"
+                    },
+
+                    pha_screen: {
+                        question: "PHA screening questions for low testosterone — patient responses:",
+                        tools: ["hypoPhaScreening"],
+                        options: [
+                            { text: "Negative response to ALL PHA screening questions", next: "normal_baseline", soap: "Negative response to all PHA screening questions for low testosterone." },
+                            { text: "Positive response to 1 or more PHA screening questions", next: "pcm_non_t", soap: "Positive response to one or more PHA screening questions for low testosterone." }
+                        ]
+                    },
+
+                    normal_baseline: {
+                        question: "No Further Testing Required — Baseline Established.",
+                        type: "endpoint",
+                        assessment: "Normal total testosterone (300-900 ng/dL) with negative PHA screening for low testosterone. No evidence of testosterone deficiency.",
+                        consults: "None",
+                        plan: "• No further testing required for hypogonadism\n• Baseline established for future comparison\n• Rescreen at next annual PHA per universal screening policy"
+                    },
+
+                    pcm_non_t: {
+                        question: "Normal Testosterone with Positive Symptom Screen — Evaluate Non-Testosterone Causes.",
+                        type: "endpoint",
+                        tools: ["hypoLowTCauses"],
+                        assessment: "Normal total testosterone (300-900 ng/dL) with one or more positive PHA screening responses. Symptoms are not attributable to testosterone deficiency on this result.",
+                        consults: "Primary Care Manager",
+                        plan: "• No further hypogonadism testing indicated on the basis of this result\n• Follow up with Primary Care Manager to evaluate non-testosterone causes of symptoms\n• Consider sleep quality/OSA, mood, overtraining, nutrition, thyroid disease, anemia, and medication effects\n• Baseline testosterone established for future comparison"
+                    },
+
+                    pcm_followup: {
+                        question: "Low Screening Testosterone — Follow Up with Primary Care Manager or Extender.",
+                        type: "action",
+                        instruction: "A low immunoassay result requires PCM/extender follow-up and clinical assessment before precision testing is ordered.",
+                        options: [
+                            { text: "Continue to Clinical Assessment", next: "clinical_assessment", soap: "Referred for follow-up with Primary Care Manager or extender for clinical assessment." }
+                        ]
+                    },
+
+                    clinical_assessment: {
+                        question: "Clinical Assessment: are signs or symptoms of hypogonadism present?",
+                        instruction: "Assess for hypogonadal signs and symptoms, and for conditions or medications that could lower total testosterone.",
+                        tools: ["hypoLowTCauses"],
+                        options: [
+                            { text: "Yes — clinical signs/symptoms of hypogonadism present", onSelect: () => { hypoSymptomState = true; }, next: "risk_factors", soap: "Clinical assessment: signs and/or symptoms consistent with hypogonadism are present." },
+                            { text: "No — no clinical signs or symptoms of hypogonadism", onSelect: () => { hypoSymptomState = false; }, next: "risk_factors", soap: "Clinical assessment: no clinical signs or symptoms of hypogonadism identified." }
+                        ]
+                    },
+
+                    risk_factors: {
+                        question: "Any Risk Factors Present?",
+                        instruction: "Body Mass Index ≥ 27  •  Diabetes  •  Borderline total T < 350 ng/dL with clinical symptoms",
+                        tools: ["hypoRiskFactorDetail"],
+                        options: [
+                            { text: "No — none of the above risk factors present", next: "confirm_2", soap: "No low-SHBG risk factors present (BMI ≥ 27, diabetes, or borderline total T < 350 ng/dL with symptoms)." },
+                            { text: "Yes — one or more risk factors present", next: "confirm_3", soap: "One or more low-SHBG risk factors present (BMI ≥ 27, diabetes, or borderline total T < 350 ng/dL with symptoms)." }
+                        ]
+                    },
+
+                    confirm_symptoms: {
+                        question: "Are clinical signs or symptoms of hypogonadism present?",
+                        instruction: "Diagnosis requires BOTH clinical symptoms and laboratory results. Confirm symptom status before interpreting the precision panel.",
+                        tools: ["hypoLowTCauses"],
+                        options: [
+                            { text: "Yes — clinical signs/symptoms present", onSelect: () => { hypoSymptomState = true; }, next: "confirm_which_panel", soap: "Clinical assessment: signs and/or symptoms consistent with hypogonadism are present." },
+                            { text: "No — no clinical signs or symptoms", onSelect: () => { hypoSymptomState = false; }, next: "confirm_which_panel", soap: "Clinical assessment: no clinical signs or symptoms of hypogonadism identified." }
+                        ]
+                    },
+
+                    confirm_which_panel: {
+                        question: "Which confirmatory precision panel was ordered?",
+                        tools: ["hypoRiskFactorDetail"],
+                        options: [
+                            { text: "2-component panel (no risk factors) — LH/FSH + LC/MS total T", next: "confirm_2", soap: "Confirmatory testing: 2-component precision panel (no low-SHBG risk factors)." },
+                            { text: "3-component panel (risk factors present) — adds free testosterone", next: "confirm_3", soap: "Confirmatory testing: 3-component precision panel (low-SHBG risk factors present)." }
+                        ]
+                    },
+
+                    confirm_2: {
+                        question: "Confirm with precision laboratory testing (2 components).",
+                        type: "action",
+                        instruction: "Order both components, then select the result below once precision labs return.",
+                        tools: ["hypoPrecisionPanel2", "hypoResultPatterns"],
+                        options: [
+                            { text: "Normal total T on LC/MS (≥ 300 ng/dL)", next: "normal_lcms", soap: "Confirmatory LC/MS total testosterone within normal limits." },
+                            { text: "Total T below reference level (< 300 ng/dL on LC/MS)", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory LC/MS total testosterone below reference level (< 300 ng/dL). LH and FSH obtained concurrently." }
+                        ]
+                    },
+
+                    confirm_3: {
+                        question: "Confirm with precision laboratory testing (3 components).",
+                        type: "action",
+                        instruction: "Order LH/FSH plus LC/MS total testosterone with free testosterone (equilibrium dialysis or calculated). Select the result pattern below once precision labs return.",
+                        tools: ["hypoPrecisionPanel3", "hypoResultPatterns"],
+                        options: [
+                            { text: "Normal total T and normal free T", next: "normal_lcms", soap: "Confirmatory precision panel: normal total testosterone and normal free testosterone." },
+                            { text: "Low total T and NORMAL free T", next: "pseudohypogonadism", soap: "Confirmatory precision panel: low total testosterone with normal free testosterone." },
+                            { text: "Total T and free T both below reference level", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory precision panel: total testosterone and free testosterone both below reference level. LH and FSH obtained concurrently." },
+                            { text: "Normal total T with free T below reference level", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory precision panel: normal total testosterone with free testosterone below reference level. LH and FSH obtained concurrently." }
+                        ]
+                    },
+
+                    normal_lcms: {
+                        question: "Normal Total Testosterone — No Further Testing Required.",
+                        type: "endpoint",
+                        tools: ["hypoResultPatterns"],
+                        assessment: "Normal testosterone on confirmatory precision (LC/MS) testing. Hypogonadism not confirmed.",
+                        consults: "None",
+                        plan: "• No further testing required for hypogonadism\n• Result established as baseline for future comparison\n• If symptoms persist, follow up with Primary Care Manager to evaluate non-testosterone causes\n• Rescreen at next annual PHA per universal screening policy"
+                    },
+
+                    pseudohypogonadism: {
+                        question: "Pseudohypogonadism — No Further Testing Required.",
+                        type: "endpoint",
+                        tools: ["hypoRiskFactorDetail"],
+                        assessment: "Low total testosterone with normal free testosterone, consistent with pseudohypogonadism from low SHBG (obesity, insulin resistance, diabetes). Patient is not truly hypogonadal.",
+                        consults: "None required; registered dietitian, structured fitness program, or wellness center as indicated",
+                        plan: "• No further hypogonadism testing required\n• TRT is NOT recommended — patient is not truly hypogonadal\n• Lifestyle modification is the most effective first-line treatment\n• Refer for nutrition health coaching as clinically indicated\n• Address obesity, insulin resistance, and diabetes as the underlying drivers of low SHBG\n• Consider resistance training, body composition, sleep quality, nutrition, mental health, and stress management"
+                    },
+
+                    labs_no_symptoms: {
+                        question: "Laboratory Criteria Met Without Clinical Symptoms — Diagnosis Not Established.",
+                        type: "endpoint",
+                        tools: ["hypoLowTCauses"],
+                        assessment: "Laboratory criteria met, but no clinical signs or symptoms of hypogonadism. Diagnosis is NOT established — Algorithm 1 requires both clinical symptoms and laboratory results.",
+                        consults: "Primary Care Manager",
+                        plan: "• Do not initiate TRT — diagnostic criteria are not met\n• Re-assess for signs and symptoms of testosterone deficiency at follow-up\n• Address reversible contributors: sleep deprivation, obstructive sleep apnea, opioids, glucocorticoids, hyperprolactinemia-inducing medications\n• Rule out exogenous anabolic steroid use\n• Repeat testing as clinically indicated under proper specimen conditions"
+                    },
+
+                    hypo_confirmed: {
+                        question: "Hypogonadism Diagnosis Confirmed.",
+                        type: "endpoint",
+                        tools: ["hypoManagementPreview", "hypoContraindications", "hypoConsentSummary"],
+                        assessment: "Hypogonadism diagnosis confirmed — both clinical symptoms and laboratory criteria met.",
+                        consults: "Per Algorithm 2 — urology or endocrinology based on locally available services; urology referral required if fertility is desired",
+                        plan: "• Diagnosis established: clinical symptoms AND laboratory criteria both met\n• Proceed to Algorithm 2 (Management of Male Hypogonadism)\n• Determine etiology from LH/FSH: elevated → primary hypogonadism; low or inappropriately normal → secondary hypogonadism\n• Perform focused exam including testicular volume (normal ≥ 15 mL; ≤ 12 mL abnormal)\n• Assess fertility desires before any TRT — exogenous TRT is contraindicated in men actively involved in fertility planning\n• Address reversible causes and offending medications prior to initiating TRT\n• Obtain informed consent (Patient Agreement for Testosterone Therapy) before initiating TRT"
+                    }
+                }
+            }
+        };
+
+        // --- STATE MANAGEMENT ---
+        let hypoCurrentProtocol = null;
+        let hypoCurrentNodeId = null;
+        let hypoClinicalHistory = [];
+        let hypoScreenState = 'universal';
+        let hypoSymptomState = true;
+
+        // --- BIBLIOGRAPHY / REFERENCES ---
+        const hypoBibliographicReferences = {
+            policy: [
+                "Secretary of War Memorandum, “Health and Human Performance Optimization to Enhance Military Readiness,” July 15, 2026.",
+                "Defense Health Agency Memorandum, “Interim Guidance on Testosterone Deficiency Screenings for Active Duty and Reserve Component Personnel,” July 31, 2026.",
+                "Department of Defense Instruction 6200.06, “Periodic Health Assessment (PHA) Program,” September 8, 2016, as amended.",
+                "DoD Directive 5136.01, “Assistant Secretary of Defense for Health Affairs (ASD(HA)),” September 30, 2013, as amended.",
+                "DoD Directive 5136.13, “Defense Health Agency (DHA),” September 30, 2013, as amended.",
+                "DHA-Procedural Instruction 5025.01, “Publication System,” April 1, 2022."
+            ],
+            guidelines: [
+                "Bhasin S, Brito JP, Cunningham GR, et al. “Testosterone Therapy in Men with Hypogonadism: An Endocrine Society Clinical Practice Guideline.” The Journal of Clinical Endocrinology and Metabolism, 2018.",
+                "Mulhall JP, Trost LW, Brannigan RE, et al. “Evaluation and management of testosterone deficiency: American Urological Association guideline.” The Journal of Urology, 2018.",
+                "Heidelbaugh JJ, Belakovskiy A. “Testosterone replacement therapy for male hypogonadism.” American Family Physician, 2024.",
+                "Anawalt BD, O’Connor KM, Grossmann M. “Adult Male Hypogonadism.” JAMA, 2026.",
+                "Thirumalai A, Anawalt BD. “Epidemiology of male hypogonadism.” Endocrinology and Metabolism Clinics of North America, 2022."
+            ],
+            military: [
+                "Adams SW, Frueh BC, Sabangan J, et al. “Persistent Behavioral, Biological, and Physiological Sequelae in Active-Duty Treatment-Seeking U.S. Special Operations Forces Personnel: A Cross-Sectional Study.” Lancet Regional Health – Americas, 2026.",
+                "Jensen AE, Arrington LJ, Turcotte LP, Kelly KR. “Hormonal Balance and Nutritional Intake in Elite Tactical Athletes.” Steroids, 2019.",
+                "Gomez-Merino D, Chennaoui M, Burnat P, Drogou C, Guezennec CY. “Immune and Hormonal Changes following Intense Military Training.” Military Medicine, December 2003.",
+                "Linderman JK, O’Hara R, Ordway J. “Effect of Special Operations Training on Testosterone, Lean Body Mass, and Strength and the Potential for Therapeutic Testosterone Replacement: A Review of the Literature.” Journal of Special Operations Medicine, Spring 2020.",
+                "Friedl K, Nindl B, Potter A. “Stress-Associated Testosterone Suppression: Central Adaptation or Hypogonadism?” The Journal of Clinical Endocrinology and Metabolism, 2026.",
+                "Rojas-Zambrano JG, Rojas-Zambrano AR, Rojas-Zambrano AF, Barahona-Cueva GE. “Benefits of Testosterone Hormone in the Human Body: A Systematic Review.” Cureus Journal of Medical Science, February 9, 2025."
+            ]
+        };
+
+        // --- UI RENDERING ---
+        function hypo_renderHome() {
+            const root = document.getElementById('hypo-app-root');
+            root.innerHTML = `
+                <div class="slide-in">
+                    <h2 class="text-2xl font-bold mb-6 border-b pb-2 text-gray-800">Select Algorithm</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button onclick="hypo_startProtocol('male_hypogonadism')" class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-army hover:shadow-md transition text-left group">
+                            <h3 class="text-lg font-bold text-army group-hover:text-army-dark"><i class="fa-solid fa-heart-pulse mr-2"></i> Male Hypogonadism</h3>
+                            <p class="text-sm text-gray-500 mt-2">Algorithm 1 &mdash; Evaluation</p>
+                        </button>
+                    </div>
+
+                    <div class="mt-6 bg-white rounded-xl shadow-sm p-5 border-l-4 border-army">
+                        <h3 class="font-bold text-gray-800 mb-2"><i class="fa-solid fa-clipboard-list text-army-gold mr-2"></i> About This Algorithm</h3>
+                        <p class="text-sm text-gray-600 leading-relaxed">Algorithm 1 evaluates male testosterone deficiency across two zones: <strong>mandated universal screening</strong> (immunoassay total testosterone &lt; 300 ng/dL) and <strong>targeted screening</strong> (LC/MS total testosterone &lt; 300 ng/dL). Diagnosis requires <strong>both</strong> clinical symptoms and laboratory results. Management (Algorithm 2) is included as reference at the diagnostic endpoint.</p>
+                    </div>
+
+                    <div class="mt-8 border-t border-gray-200 pt-6">
+                        <button onclick="hypo_renderReferences()" class="w-full bg-white p-4 rounded-lg shadow-sm border border-gray-300 hover:border-army hover:shadow-md transition text-center group flex items-center justify-center">
+                            <i class="fa-solid fa-book-journal-whills text-army-gold text-xl mr-3 group-hover:scale-110 transition-transform"></i>
+                            <span class="text-lg font-bold text-gray-800 group-hover:text-army">View All Clinical References</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function hypo_renderReferences() {
+            const root = document.getElementById('hypo-app-root');
+            let contentHtml = '<div class="space-y-4">';
+
+            const sections = [
+                { id: 'policy', title: 'Policy & Directives' },
+                { id: 'guidelines', title: 'Clinical Practice Guidelines' },
+                { id: 'military', title: 'Military & Operational Literature' }
+            ];
+
+            sections.forEach(section => {
+                const refs = hypoBibliographicReferences[section.id];
+                if (refs && refs.length > 0) {
+                    let listHtml = '<ul class="list-decimal pl-5 space-y-3 text-sm text-gray-700">';
+                    refs.forEach(ref => {
+                        listHtml += `<li>${ref}</li>`;
+                    });
+                    listHtml += '</ul>';
+
+                    contentHtml += `
+                        <details class="group bg-white border border-gray-300 rounded-lg shadow-sm">
+                            <summary class="font-bold text-md p-4 bg-gray-50 text-army flex justify-between items-center rounded-lg hover:bg-gray-100 transition-colors cursor-pointer select-none">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-book-medical mr-2 text-army-gold"></i>
+                                    <span>${section.title}</span>
+                                </div>
+                                <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180 text-gray-500"></i>
+                            </summary>
+                            <div class="p-5 border-t border-gray-200">
+                                ${listHtml}
+                            </div>
+                        </details>
+                    `;
+                }
+            });
+
+            contentHtml += '</div>';
+
+            root.innerHTML = `
+                <div class="slide-in">
+                    <button onclick="hypo_renderHome()" class="text-gray-500 hover:text-army mb-6 text-sm font-medium"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Algorithms</button>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-army mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2"><i class="fa-solid fa-book-journal-whills text-army-gold mr-2"></i> Clinical References & Bibliography</h2>
+                        <p class="text-gray-600 mb-6 text-sm border-b border-gray-200 pb-4">The following policy documents and evidence-based references support the screening thresholds, decision points, and clinical guidance used in the Male Hypogonadism Evaluation algorithm.</p>
+                        ${contentHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function hypo_startProtocol(protocolId) {
+            hypoCurrentProtocol = hypoAlgorithms[protocolId];
+            hypoClinicalHistory = [];
+            hypoScreenState = 'universal';
+            hypoSymptomState = true;
+
+            hypoClinicalHistory.push(`Chief Complaint: Male testosterone deficiency screening — ${hypoCurrentProtocol.title.toLowerCase()}.`);
+
+            hypo_renderNode('visit_type');
+        }
+
+        function hypo_renderNode(nodeId) {
+            hypoCurrentNodeId = nodeId;
+            const node = hypoCurrentProtocol.nodes[nodeId];
+            const root = document.getElementById('hypo-app-root');
+
+            let toolsHtml = '';
+            if (node.tools) {
+                toolsHtml = '<div class="space-y-4 mb-6">';
+                node.tools.forEach(toolId => {
+                    const tool = hypoClinicalTools[toolId];
+                    if (tool) {
+                        if (tool.collapsible === false) {
+                            toolsHtml += `
+                                <div class="bg-white border-2 border-red-200 rounded-lg shadow-sm">
+                                    <div class="font-bold text-md p-3 bg-red-50 border-b border-red-200 text-red-800 flex items-center">
+                                        <i class="fa-solid fa-triangle-exclamation mr-2 text-red-600"></i> ${tool.title}
+                                    </div>
+                                    <div class="p-4 bg-gray-50">
+                                        ${tool.content}
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            toolsHtml += `
+                                <details class="group bg-white border-2 border-blue-300 rounded-lg shadow-sm mb-2">
+                                    <summary class="font-bold text-md p-3 bg-blue-50 text-blue-900 flex justify-between items-center rounded-lg hover:bg-blue-100 transition-colors cursor-pointer select-none">
+                                        <div class="flex items-center">
+                                            <i class="fa-solid fa-book-medical mr-2 text-blue-600"></i>
+                                            <span>Reference: ${tool.title} <span class="text-xs font-normal ml-2 text-blue-600">(Click to Expand)</span></span>
+                                        </div>
+                                        <i class="fa-solid fa-chevron-down transition-transform group-open:rotate-180 text-blue-600"></i>
+                                    </summary>
+                                    <div class="p-4 bg-gray-50 border-t border-blue-200 rounded-b-lg">
+                                        ${tool.content}
+                                    </div>
+                                </details>
+                            `;
+                        }
+                    }
+                });
+                toolsHtml += '</div>';
+            }
+
+            if (node.type === 'endpoint') {
+                hypo_renderEndpoint(node, toolsHtml);
+                return;
+            }
+
+            let optionsHtml = '<div class="space-y-3">';
+            node.options.forEach((opt, index) => {
+                optionsHtml += `
+                    <button onclick="hypo_selectOption('${nodeId}', ${index})" class="w-full text-left bg-white p-4 rounded-lg border border-gray-300 shadow-sm hover:bg-army hover:text-white transition duration-150 font-medium text-gray-800">
+                        ${opt.text}
+                    </button>
+                `;
+            });
+            optionsHtml += '</div>';
+
+            const typeBadge = node.type === 'action'
+                ? '<span class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded font-bold uppercase tracking-wide mb-3"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Action Required</span>'
+                : '';
+
+            const instruction = node.instruction ? `<p class="text-md text-gray-600 mb-6 bg-blue-50 p-4 rounded border border-blue-100"><i class="fa-solid fa-clipboard-check text-blue-500 mr-2"></i> ${node.instruction}</p>` : '';
+
+            root.innerHTML = `
+                <div class="slide-in">
+                    <div class="flex items-center justify-between mb-6">
+                        <button onclick="hypo_renderHome()" class="text-gray-500 hover:text-army text-sm font-medium"><i class="fa-solid fa-arrow-left mr-1"></i> Back to Algorithms</button>
+                        <h1 class="text-lg font-bold text-army-dark">${hypoCurrentProtocol.title}</h1>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-army mb-6">
+                        ${typeBadge}
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">${node.question}</h2>
+                        ${instruction}
+                        ${toolsHtml}
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
+        function hypo_selectOption(nodeId, optionIndex) {
+            const node = hypoCurrentProtocol.nodes[nodeId];
+            const option = node.options[optionIndex];
+
+            if (option.onSelect) {
+                option.onSelect();
+            }
+
+            if (option.soap) {
+                hypoClinicalHistory.push(option.soap);
+            }
+
+            const nextNodeId = typeof option.next === 'function' ? option.next() : option.next;
+            hypo_renderNode(nextNodeId);
+        }
+
+        function hypo_renderEndpoint(node, toolsHtml) {
+            const root = document.getElementById('hypo-app-root');
+
+            const soapDate = new Date().toLocaleDateString();
+            const subjective = hypoClinicalHistory[0];
+            const objective = hypoClinicalHistory.slice(1).join(" ");
+            const assessment = node.assessment || "Pending Provider Assessment";
+
+            const recommendedConsult = node.consults || "appropriate specialty per protocol";
+            const plan = (node.plan || "Follow up as needed.") + `\n\nCoordination:\n- Inform the clinic provider.\n- Recommended Consult: ${recommendedConsult}.`;
+
+            const soapText =
+`DATE: ${soapDate}
+
+S: ${subjective}
+
+O: Algorithm path documented: ${objective}
+
+A: ${assessment}
+
+P: ${plan}
+`;
+
+            root.innerHTML = `
+                <div class="slide-in">
+                    <div class="flex items-center justify-between mb-4">
+                        <button onclick="hypo_renderHome()" class="text-gray-500 hover:text-army text-sm font-medium"><i class="fa-solid fa-arrow-left mr-1"></i> Start Over</button>
+                        <h1 class="text-lg font-bold text-army-dark">${hypoCurrentProtocol.title}</h1>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-red-700 mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 mb-2"><i class="fa-solid fa-flag-checkered text-red-700 mr-2"></i> Endpoint Reached</h2>
+                        <p class="text-gray-700 mb-4">${node.question}</p>
+                        ${toolsHtml}
+                    </div>
+
+                    <div class="bg-gray-50 rounded-xl shadow-inner p-6 border border-gray-200 relative">
+                        <div class="flex justify-between items-center mb-4 border-b border-gray-300 pb-2">
+                            <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-file-medical mr-2"></i> Generated SOAP Note</h3>
+                            <button onclick="hypo_copySoap()" id="hypoCopyBtn" class="bg-army text-white px-3 py-1.5 rounded text-sm hover:bg-army-dark transition flex items-center">
+                                <i class="fa-regular fa-copy mr-1"></i> Copy to Clipboard
+                            </button>
+                        </div>
+                        <pre id="hypoSoapContent" class="whitespace-pre-wrap font-mono text-sm text-gray-800 bg-white p-4 border border-gray-200 rounded">${soapText}</pre>
+                    </div>
+                </div>
+            `;
+        }
+
+        function hypo_copySoap() {
+            const soapContent = document.getElementById('hypoSoapContent').innerText;
+            navigator.clipboard.writeText(soapContent).then(() => {
+                const btn = document.getElementById('hypoCopyBtn');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied!';
+                btn.classList.add('bg-green-600');
+                btn.classList.remove('bg-army');
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.add('bg-army');
+                }, 2000);
+            }).catch(err => {
+                const textArea = document.createElement("textarea");
+                textArea.value = soapContent;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    const btn = document.getElementById('hypoCopyBtn');
+                    btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i> Copied!';
+                } catch (err) {
+                    alert('Failed to copy text. Please select and copy manually.');
+                }
+                document.body.removeChild(textArea);
+            });
+        }
+
+        hypo_renderHome();
+    </script>
+    <script src="./ask-dr-holtkamp.js?v=20260814-hypo1"></script>
     <!-- ==================== VERSION FOOTER ==================== -->
     <footer id="app-footer" style="text-align:center;padding:1rem 0;font-size:0.6875rem;color:#9ca3af;border-top:1px solid #e5e7eb;margin-top:auto;">
-      ADTMC+ v1.0.0 &bull; Built 2026-05-03 &bull; 5ff0dc3a &bull; For authorized medical personnel only
+      ADTMC+ v1.1.0 &bull; Built 2026-08-14 &bull; a7f21c94 &bull; For authorized medical personnel only
     </footer>
 </body>
 </html>

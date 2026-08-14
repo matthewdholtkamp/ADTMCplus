@@ -1,4 +1,4 @@
-const CACHE = 'adtmcplus-v16-guided';
+const CACHE = 'adtmcplus-v17-hypogonadism';
 const ASSETS = [
   './',
   './index.html',

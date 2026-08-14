@@ -191,6 +191,43 @@
       });
     }
 
+    if (typeof hypoAlgorithms !== "undefined") {
+      Object.entries(hypoAlgorithms).forEach(([protocolId, protocol]) => {
+        const toolIds = new Set();
+        Object.values(protocol.nodes || {}).forEach((node) => {
+          (node.tools || []).forEach((toolId) => toolIds.add(toolId));
+        });
+
+        const tools = {};
+        toolIds.forEach((toolId) => {
+          if (typeof hypoClinicalTools !== "undefined" && hypoClinicalTools[toolId]) {
+            tools[toolId] = sanitizeClinicalValue(hypoClinicalTools[toolId]);
+          }
+        });
+
+        const references = typeof hypoBibliographicReferences !== "undefined"
+          ? Object.values(hypoBibliographicReferences).flat()
+          : [];
+
+        const content = {
+          protocolId,
+          title: protocol.title || protocolId,
+          nodes: sanitizeClinicalValue(protocol.nodes || {}),
+          clinicalTools: tools,
+          references: sanitizeClinicalValue(references)
+        };
+
+        entries.push({
+          tool: "hypo",
+          id: protocolId,
+          title: protocol.title || protocolId,
+          category: "Male Hypogonadism Evaluation",
+          content,
+          searchText: collectSearchText(content).join(" ").toLowerCase()
+        });
+      });
+    }
+
     return entries;
   }
 
@@ -215,6 +252,16 @@
     if (active.id === "adtmc-app") {
       const title = document.getElementById("protocol-title")?.textContent || "";
       return title.match(/^([A-Z]-\d+):/)?.[1] || "";
+    }
+
+    if (active.id === "hypo-app" && typeof hypoAlgorithms !== "undefined") {
+      try {
+        if (typeof hypoCurrentProtocol !== "undefined" && hypoCurrentProtocol) {
+          return Object.entries(hypoAlgorithms).find(([, protocol]) => protocol === hypoCurrentProtocol)?.[0] || "";
+        }
+      } catch (_) {
+        // The hypogonadism state may not be initialized yet.
+      }
     }
 
     if (active.id === "msk-app" && typeof algorithms !== "undefined") {
