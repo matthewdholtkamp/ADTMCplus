@@ -330,6 +330,59 @@
             background-color: var(--army-dark) !important;
         }
 
+        /* ===== NEW-FEATURE BADGE (landing cards) ===== */
+        .tool-card.is-new { border-color: rgba(197, 164, 78, 0.55); }
+        .tool-card.is-new::before { opacity: 1; }
+        .new-badge {
+            position: absolute; top: 1rem; right: 1rem; z-index: 2;
+            background: linear-gradient(135deg, var(--army-gold-light), var(--army-gold));
+            color: var(--army-black);
+            font-size: 0.625rem; font-weight: 800; letter-spacing: 0.08em;
+            text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 999px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            animation: new-badge-glow 2.4s ease-in-out infinite;
+        }
+        @keyframes new-badge-glow {
+            0%, 100% { box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 0 0 0 rgba(197,164,78,0.5); }
+            50%      { box-shadow: 0 2px 8px rgba(0,0,0,0.35), 0 0 18px 5px rgba(197,164,78,0.45); }
+        }
+
+        /* ===== HYPOGONADISM START CARD ===== */
+        .bg-army-gold-soft { background-color: rgba(197, 164, 78, 0.18); }
+        #hypo-app .hypo-start-card {
+            border: 2px solid var(--army-green);
+            box-shadow: 0 4px 16px rgba(75, 83, 32, 0.16);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #hypo-app .hypo-start-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 26px rgba(75, 83, 32, 0.26);
+            border-color: var(--army-gold-dark);
+        }
+        #hypo-app .hypo-cta {
+            display: inline-flex; align-items: center; align-self: center;
+            background: var(--army-green); color: #ffffff;
+            font-weight: 700; font-size: 0.9375rem;
+            padding: 0.75rem 1.5rem; border-radius: 0.5rem;
+            box-shadow: 0 2px 8px rgba(75, 83, 32, 0.3);
+            animation: hypo-cta-pulse 2.2s ease-in-out infinite;
+        }
+        #hypo-app .hypo-start-card:hover .hypo-cta {
+            background: var(--army-dark); animation: none;
+        }
+        #hypo-app .hypo-cta i { transition: transform 0.2s; }
+        #hypo-app .hypo-start-card:hover .hypo-cta i { transform: translateX(4px); }
+        @keyframes hypo-cta-pulse {
+            0%, 100% { box-shadow: 0 2px 8px rgba(75,83,32,0.3), 0 0 0 0 rgba(197,164,78,0.55); }
+            50%      { box-shadow: 0 2px 8px rgba(75,83,32,0.3), 0 0 0 8px rgba(197,164,78,0); }
+        }
+
+        /* Respect reduced-motion preferences (Section 508) */
+        @media (prefers-reduced-motion: reduce) {
+            .new-badge, #hypo-app .hypo-cta { animation: none !important; }
+            #hypo-app .hypo-start-card { transition: none !important; }
+        }
+
         /* ===== SHARED SCROLLBAR ===== */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: var(--content-bg); }
@@ -344,6 +397,7 @@
     #view-all-red-flags-btn, #disclaimer-overlay,
     button:not(.no-hide-print), footer, .tool-card { display: none !important; }
     .app-container { display: block !important; }
+    .app-container:not(.active) { display: none !important; }
     .app-container main { padding: 0 !important; max-width: 100% !important; }
     #disposition-screen, #disposition-screen > div,
     .bg-gray-50, pre { border: 1px solid #ccc !important; box-shadow: none !important; }
@@ -457,7 +511,8 @@
                         <i class="fa-solid fa-arrow-right ml-2"></i>
                     </div>
                 </div>
-                <div class="tool-card" onclick="navigateTo('hypo')" id="card-hypo">
+                <div class="tool-card is-new" onclick="navigateTo('hypo')" id="card-hypo">
+                    <span class="new-badge">New</span>
                     <div class="tool-icon-bg" style="background: rgba(197, 164, 78, 0.15);">
                         <i class="fa-solid fa-heart-pulse" style="color: #c5a44e;"></i>
                     </div>
@@ -5258,7 +5313,7 @@ P: ${plan}
                                 <li><strong>Diabetes</strong></li>
                                 <li><strong>Borderline total T &lt; 350 ng/dL with clinical symptoms</strong></li>
                             </ul>
-                            <p class="mt-3 text-gray-700">The DHA narrative guidance describes the borderline band as a total testosterone of <strong>200&ndash;400 ng/dL</strong> on LC/MS; Algorithm 1 states <strong>&lt; 350 ng/dL with clinical symptoms</strong>. Either framing selects the same patients for the expanded panel.</p>
+                            <p class="mt-3 text-gray-700">The governing threshold is <strong>total T &lt; 350 ng/dL with clinical symptoms</strong>, as stated in Algorithm 1. (The DHA narrative text elsewhere describes a borderline band of 200&ndash;400 ng/dL; where the two differ, Algorithm 1 governs.)</p>
                         </div>
                         <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg">
                             <p><strong>Rationale:</strong> Obesity and insulin resistance lower Sex Hormone-Binding Globulin (SHBG), possibly through hepatic fat accumulation. Low SHBG produces a <em>low total</em> testosterone with a <em>normal free</em> testosterone &mdash; pseudohypogonadism. Free testosterone must be measured in these patients or they will be misdiagnosed.</p>
@@ -5388,13 +5443,40 @@ P: ${plan}
                             <p class="mt-2 text-gray-700">Evaluate for reversible causes (sleep deprivation, obstructive sleep apnea); consider referral for lifestyle modification education as clinically indicated.</p>
                         </div>
                         <div class="bg-white p-4 rounded-lg border border-gray-200">
-                            <h4 class="font-bold text-army-dark text-base mb-2">Step 3 — Disposition</h4>
-                            <ul class="list-disc pl-6 space-y-1">
-                                <li><strong>Abnormal results</strong> &rarr; refer to specialty care as indicated</li>
-                                <li><strong>Normal results, BMI &ge; 27</strong> &rarr; obesity-induced secondary hypogonadism. Weight loss (&gt; 5&ndash;10% body weight) for 3&ndash;6 months; may consider trial TRT for 3&ndash;6 months concurrently following informed consent. <em>Stop TRT if no improvement of symptoms.</em></li>
-                                <li><strong>Normal results, BMI &lt; 27</strong> &rarr; refer to urology or endocrinology based on locally available services</li>
-                                <li><strong>Fertility desired?</strong> Yes &rarr; refer to urology. TRT is contraindicated in men actively involved in fertility planning; alternatives that preserve spermatogenesis include clomiphene and hCG.</li>
-                            </ul>
+                            <h4 class="font-bold text-army-dark text-base mb-2">Step 3 — Disposition by Workup Result and BMI</h4>
+
+                            <div class="border-l-4 border-red-400 pl-3 py-1 mb-3">
+                                <p class="font-bold text-gray-800">Abnormal results &mdash; any BMI</p>
+                                <p class="text-gray-700">&rarr; Refer to Specialty Care, as indicated.</p>
+                            </div>
+
+                            <div class="border-l-4 border-yellow-500 pl-3 py-1 mb-3">
+                                <p class="font-bold text-gray-800">Normal results, BMI &ge; 27 &mdash; obesity-induced secondary hypogonadism</p>
+                                <ol class="list-decimal pl-5 space-y-1 mt-1 text-gray-700">
+                                    <li>Weight loss (&gt; 5&ndash;10% body weight) for 3&ndash;6 months</li>
+                                    <li>Then recheck <strong>LC/MS total T and free T4</strong></li>
+                                    <li>
+                                        <strong>Normal</strong> &rarr; Continue lifestyle management &mdash; <strong>TRT not indicated</strong>
+                                    </li>
+                                    <li>
+                                        <strong>Abnormal with no improvement of clinical symptoms</strong> &rarr; <em>Fertility desired?</em>
+                                        <ul class="list-disc pl-5 mt-1">
+                                            <li><strong>Yes</strong> &rarr; Refer to Urology</li>
+                                            <li><strong>No</strong> &rarr; Consider <strong>trial TRT for 3&ndash;6 months</strong> following informed consent (Appendix 1). <em>Stop TRT if no improvement of symptoms.</em></li>
+                                        </ul>
+                                    </li>
+                                </ol>
+                            </div>
+
+                            <div class="border-l-4 border-green-600 pl-3 py-1">
+                                <p class="font-bold text-gray-800">Normal results, BMI &lt; 27 &mdash; <em>Fertility desired?</em></p>
+                                <ul class="list-disc pl-5 mt-1 space-y-1 text-gray-700">
+                                    <li><strong>Yes</strong> &rarr; Refer to Urology or Endocrinology based on locally available services</li>
+                                    <li><strong>No</strong> &rarr; Consider <strong>TRT initiation</strong> following informed consent (Appendix 1)</li>
+                                </ul>
+                            </div>
+
+                            <p class="mt-3 text-gray-700 text-xs">Exogenous TRT is contraindicated in men actively involved in fertility planning. Alternatives that raise testosterone while preserving spermatogenesis include clomiphene and hCG. All patients desiring fertility preservation must be referred to urology for reproductive health evaluation prior to TRT.</p>
                         </div>
                         <div class="bg-white p-4 rounded-lg border border-gray-200">
                             <h4 class="font-bold text-army-dark text-base mb-2">Monitoring, If TRT Is Initiated</h4>
@@ -5732,13 +5814,21 @@ P: ${plan}
             const root = document.getElementById('hypo-app-root');
             root.innerHTML = `
                 <div class="slide-in">
-                    <h2 class="text-2xl font-bold mb-6 border-b pb-2 text-gray-800">Select Algorithm</h2>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <button onclick="hypo_startProtocol('male_hypogonadism')" class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:border-army hover:shadow-md transition text-left group">
-                            <h3 class="text-lg font-bold text-army group-hover:text-army-dark"><i class="fa-solid fa-heart-pulse mr-2"></i> Male Hypogonadism</h3>
-                            <p class="text-sm text-gray-500 mt-2">Algorithm 1 &mdash; Evaluation</p>
-                        </button>
-                    </div>
+                    <h2 class="text-2xl font-bold mb-2 text-gray-800">Male Hypogonadism Evaluation</h2>
+                    <p class="text-gray-600 mb-5 border-b pb-4">Algorithm 1 &mdash; Evaluation of Male Testosterone Deficiency. This is a guided, click-through pathway: answer each screen and the tool builds a SOAP note at the endpoint.</p>
+
+                    <button onclick="hypo_startProtocol('male_hypogonadism')" class="hypo-start-card w-full bg-white p-6 rounded-xl text-left group block">
+                        <div class="flex items-start justify-between gap-4 flex-wrap">
+                            <div class="flex-1 min-w-0">
+                                <span class="inline-block bg-army-gold-soft text-army-dark text-xs font-bold uppercase tracking-wider px-2 py-1 rounded mb-3">Step 1 of 1 &mdash; Start Here</span>
+                                <h3 class="text-xl font-bold text-army group-hover:text-army-dark"><i class="fa-solid fa-heart-pulse mr-2"></i> Male Hypogonadism</h3>
+                                <p class="text-sm text-gray-600 mt-2">Begin the evaluation pathway. Takes about 4&ndash;7 screens depending on the patient.</p>
+                            </div>
+                            <span class="hypo-cta shrink-0">
+                                Begin Evaluation <i class="fa-solid fa-arrow-right ml-2"></i>
+                            </span>
+                        </div>
+                    </button>
 
                     <div class="mt-6 bg-white rounded-xl shadow-sm p-5 border-l-4 border-army">
                         <h3 class="font-bold text-gray-800 mb-2"><i class="fa-solid fa-clipboard-list text-army-gold mr-2"></i> About This Algorithm</h3>
