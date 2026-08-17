@@ -1,7 +1,7 @@
 {
   "name": "ADTMC+ Medic Support Tool",
   "short_name": "ADTMC+",
-  "description": "Unified Medical Triage and MSK Screening Tool for Army Medics",
+  "description": "Unified Medical Triage, MSK Screening, and Male Hypogonadism Evaluation Tool for Army Medics",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#1a1a1a",

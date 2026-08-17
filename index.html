@@ -465,8 +465,8 @@
       <div style="background:white;border-radius:1rem;max-width:32rem;width:100%;padding:2rem;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
         <div style="text-align:center;margin-bottom:1.5rem;">
           <div style="font-size:2.5rem;color:#c5a44e;margin-bottom:0.5rem;">&#9733;</div>
-          <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin:0 0 0.25rem;">ADTMC+ v1.1.0</h2>
-          <p style="font-size:0.75rem;color:#6b7280;margin:0;">Build 2026-08-14 &bull; a7f21c94</p>
+          <h2 style="font-size:1.5rem;font-weight:700;color:#1a1a1a;margin:0 0 0.25rem;">ADTMC+ v3.0.0</h2>
+          <p style="font-size:0.75rem;color:#6b7280;margin:0;">Build 2026-08-17 &bull; bdb2ce97</p>
         </div>
         <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:0.5rem;padding:1rem;margin-bottom:1.5rem;">
           <p style="font-size:0.8125rem;color:#991b1b;font-weight:600;margin:0 0 0.5rem;">⚠ Clinical Use Disclaimer</p>
@@ -5203,7 +5203,7 @@ P: ${plan}
             },
 
             hypoThresholds: {
-                title: "Diagnostic Thresholds & Reference Ranges",
+                title: "Reference Ranges & Laboratory Interpretation",
                 content: `
                     <div class="space-y-3 text-sm text-gray-800">
                         <div class="bg-white p-4 rounded-lg border border-gray-200">
@@ -5236,16 +5236,50 @@ P: ${plan}
                                         <td class="py-2 pr-3 font-semibold">&gt; 900 ng/dL</td>
                                         <td class="py-2">Requires additional workup by PCM or specialty care</td>
                                     </tr>
-                                    <tr>
+                                    <tr class="border-b border-gray-200">
                                         <td class="py-2 pr-3">Free testosterone &mdash; lower limit of normal</td>
                                         <td class="py-2 pr-3 font-semibold">53&ndash;216 pg/mL</td>
-                                        <td class="py-2">Reference range not fully established</td>
+                                        <td class="py-2">Reference range <em>not fully established</em>; varies by method (see below)</td>
+                                    </tr>
+                                    <tr class="border-b border-gray-200">
+                                        <td class="py-2 pr-3">Luteinizing hormone (LH)</td>
+                                        <td class="py-2 pr-3 font-semibold">No universal cutoff</td>
+                                        <td class="py-2">Interpret against the <strong>performing laboratory's</strong> reference range</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 pr-3">Follicle-stimulating hormone (FSH)</td>
+                                        <td class="py-2 pr-3 font-semibold">No universal cutoff</td>
+                                        <td class="py-2">Interpret against the <strong>performing laboratory's</strong> reference range</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
+
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">Free Testosterone &mdash; Why There Is No Single Cutoff</h4>
+                            <p class="text-gray-700">DHA guidance states the lower limit of normal is <strong>53&ndash;216 pg/mL</strong> and explicitly notes the reference range is <strong>not fully established</strong>. It is reported as a band rather than one number because the two accepted methods do not agree:</p>
+                            <ul class="list-disc pl-6 space-y-1 mt-2">
+                                <li><strong>Free testosterone by equilibrium dialysis (EqD)</strong> &mdash; reference method</li>
+                                <li><strong>Calculated free testosterone</strong> &mdash; derived from LC/MS total testosterone, SHBG, and albumin</li>
+                            </ul>
+                            <p class="mt-2 text-gray-700">Both are send-out labs. <strong>Use the reference range printed on the result you actually receive</strong>, not a remembered value &mdash; a result near the limit can fall on either side depending on method.</p>
+                        </div>
+
+                        <div class="bg-white p-4 rounded-lg border border-gray-200">
+                            <h4 class="font-bold text-army-dark text-base mb-2">LH and FSH &mdash; Pattern, Not a Number</h4>
+                            <p class="text-gray-700">DHA guidance publishes <strong>no numeric threshold</strong> for LH or FSH. They are interpreted relative to the performing laboratory's reference range, and it is the <em>pattern</em> relative to a low testosterone that carries the meaning:</p>
+                            <ul class="list-disc pl-6 space-y-1 mt-2">
+                                <li><strong>LH and FSH elevated</strong> + low testosterone &rarr; <strong>primary</strong> hypogonadism (testicular)</li>
+                                <li><strong>LH and FSH below the lower limit of the reference range, or inappropriately normal</strong> + low testosterone &rarr; <strong>secondary</strong> hypogonadism (hypothalamic/pituitary)</li>
+                            </ul>
+                            <p class="mt-2 text-gray-700">"Inappropriately normal" means a result inside the reference range that should have been high: when testosterone is low, a normally functioning axis raises LH and FSH, so a mid-range value in the presence of low testosterone is abnormal.</p>
+                            <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg mt-3">
+                                <p><strong>In Algorithm 1, LH and FSH are obtained but not acted on.</strong> They are drawn concurrently with the confirmatory testosterone so the etiology is already known when you enter <strong>Algorithm 2</strong>, which is where the elevated-versus-low determination directs management.</p>
+                            </div>
+                        </div>
+
                         <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
-                            <p><strong>Note:</strong> Total T &lt; 300 or &gt; 900 ng/dL is abnormal. This algorithm is intended to evaluate <strong>low</strong> testosterone levels. Any abnormally high total testosterone requires separate workup.</p>
+                            <p><strong>Note:</strong> Total T &lt; 300 or &gt; 900 ng/dL is abnormal. This algorithm is intended to evaluate <strong>low</strong> testosterone levels. Any abnormally high total testosterone requires separate workup. Assay reference ranges vary &mdash; always defer to the range reported with the specific lab result.</p>
                         </div>
                     </div>
                 `
@@ -5407,6 +5441,9 @@ P: ${plan}
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-900 p-3 rounded-r-lg">
+                            <p><strong>"Low" and "Normal" above mean: relative to the reference range printed on the result you received.</strong> Total testosterone has a fixed DoW threshold of &lt; 300 ng/dL. Free testosterone does not &mdash; its lower limit of normal is reported as 53&ndash;216 pg/mL and varies by method (equilibrium dialysis vs. calculated), so always read the range issued with the specimen.</p>
                         </div>
                         <div class="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-900 p-3 rounded-r-lg">
                             <p>Laboratory criteria alone do not establish the diagnosis. <strong>Clinical symptoms must also be present.</strong></p>
@@ -5716,7 +5753,7 @@ P: ${plan}
                         question: "Confirm with precision laboratory testing (2 components).",
                         type: "action",
                         instruction: "Order both components, then select the result below once precision labs return.",
-                        tools: ["hypoPrecisionPanel2", "hypoResultPatterns"],
+                        tools: ["hypoPrecisionPanel2", "hypoResultPatterns", "hypoThresholds"],
                         options: [
                             { text: "Normal total T on LC/MS (≥ 300 ng/dL)", next: "normal_lcms", soap: "Confirmatory LC/MS total testosterone within normal limits." },
                             { text: "Total T below reference level (< 300 ng/dL on LC/MS)", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory LC/MS total testosterone below reference level (< 300 ng/dL). LH and FSH obtained concurrently." }
@@ -5726,13 +5763,13 @@ P: ${plan}
                     confirm_3: {
                         question: "Confirm with precision laboratory testing (3 components).",
                         type: "action",
-                        instruction: "Order LH/FSH plus LC/MS total testosterone with free testosterone (equilibrium dialysis or calculated). Select the result pattern below once precision labs return.",
-                        tools: ["hypoPrecisionPanel3", "hypoResultPatterns"],
+                        instruction: "Order LH/FSH plus LC/MS total testosterone with free testosterone (equilibrium dialysis or calculated). Judge each value against the reference range printed on the result. Total T low = < 300 ng/dL; free T lower limit of normal = 53–216 pg/mL (method-dependent).",
+                        tools: ["hypoPrecisionPanel3", "hypoResultPatterns", "hypoThresholds"],
                         options: [
-                            { text: "Normal total T and normal free T", next: "normal_lcms", soap: "Confirmatory precision panel: normal total testosterone and normal free testosterone." },
-                            { text: "Low total T and NORMAL free T", next: "pseudohypogonadism", soap: "Confirmatory precision panel: low total testosterone with normal free testosterone." },
-                            { text: "Total T and free T both below reference level", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory precision panel: total testosterone and free testosterone both below reference level. LH and FSH obtained concurrently." },
-                            { text: "Normal total T with free T below reference level", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory precision panel: normal total testosterone with free testosterone below reference level. LH and FSH obtained concurrently." }
+                            { text: "Normal total T (≥ 300 ng/dL) and normal free T", next: "normal_lcms", soap: "Confirmatory precision panel: normal total testosterone and normal free testosterone (per performing laboratory reference range)." },
+                            { text: "Low total T (< 300 ng/dL) and NORMAL free T", next: "pseudohypogonadism", soap: "Confirmatory precision panel: low total testosterone with normal free testosterone (per performing laboratory reference range)." },
+                            { text: "Total T (< 300 ng/dL) and free T both below reference level", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory precision panel: total testosterone and free testosterone both below reference level. LH and FSH obtained concurrently for etiology determination in Algorithm 2." },
+                            { text: "Normal total T (≥ 300 ng/dL) with free T below reference level", next: () => hypoSymptomState ? "hypo_confirmed" : "labs_no_symptoms", soap: "Confirmatory precision panel: normal total testosterone with free testosterone below reference level. LH and FSH obtained concurrently for etiology determination in Algorithm 2." }
                         ]
                     },
 
@@ -6088,7 +6125,7 @@ P: ${plan}
     <script src="./ask-dr-holtkamp.js?v=20260814-hypo1"></script>
     <!-- ==================== VERSION FOOTER ==================== -->
     <footer id="app-footer" style="text-align:center;padding:1rem 0;font-size:0.6875rem;color:#9ca3af;border-top:1px solid #e5e7eb;margin-top:auto;">
-      ADTMC+ v1.1.0 &bull; Built 2026-08-14 &bull; a7f21c94 &bull; For authorized medical personnel only
+      ADTMC+ v3.0.0 &bull; Built 2026-08-17 &bull; bdb2ce97 &bull; For authorized medical personnel only
     </footer>
 </body>
 </html>
